@@ -1,7 +1,10 @@
 import { describe, test, expect, beforeEach } from "@jest/globals";
 import { container } from "../../src/di/container";
-import { Lifetime, ScopeContext, STATIC_INJECT_KEY, STATIC_INJECT_LIFETIME } from "../../src/di/types";
 import { TokenNotFoundError } from "../../src/di/exceptions/TokenNotFoundError";
+import { STATIC_INJECT_KEY, STATIC_INJECT_LIFETIME } from "../../src/di/constants";
+import { Lifetime } from "../../src/di/types/Registration";
+import { ScopeContext } from "../../src/di/ScopeContext";
+import { UndefinedScopeError } from "../../src/di/exceptions/UndefinedScopeError";
 
 describe("dependency Injection container", () => {
     beforeEach(() => {
@@ -60,7 +63,6 @@ describe("dependency Injection container", () => {
             test("should register and resolve singleton", () => {
                 class TestClass {
                     public propertyA = "test";
-                    constructor() {}
                 }
                 container.register(TestClass, TestClass, { lifetime: Lifetime.Singleton });
                 const value = container.resolve<TestClass>(TestClass);
@@ -74,7 +76,6 @@ describe("dependency Injection container", () => {
             test("should register and resolve transient", () => {
                 class TestClass {
                     public propertyA = "test";
-                    constructor() {}
                 }
                 container.register(TestClass, TestClass, { lifetime: Lifetime.Transient });
                 const value = container.resolve<TestClass>(TestClass);
@@ -88,7 +89,6 @@ describe("dependency Injection container", () => {
             test("should register and resolve scoped correctly", () => {
                 class TestClass {
                     public propertyA = "test";
-                    constructor() {}
                 }
                 const scope = container.createScope();
                 container.register(TestClass, TestClass, { lifetime: Lifetime.Scoped });
@@ -103,7 +103,6 @@ describe("dependency Injection container", () => {
             test("should register and resolve scoped wrongly because scope is diferent", () => {
                 class TestClass {
                     public propertyA = "test";
-                    constructor() {}
                 }
                 const scope = container.createScope();
                 container.register(TestClass, TestClass, { lifetime: Lifetime.Scoped });
@@ -115,6 +114,11 @@ describe("dependency Injection container", () => {
                 const value2 = container.resolve<TestClass>(TestClass, scope2);
                 expect(value2).toBeInstanceOf(TestClass);
                 expect(value2.propertyA).toBe("test");
+            });
+            test("should throw an error when trying to instanciate a scoped object without a scope", () => {
+                class TestClass {}
+                container.register("test", { useClass: TestClass }, { lifetime: Lifetime.Scoped });
+                expect(()=>container.resolve<TestClass>("test")).toThrow(UndefinedScopeError);
             });
         });
         describe("Factory Provider", () => {
@@ -155,7 +159,7 @@ describe("dependency Injection container", () => {
             value.propertyA = "test2";
         });
         describe("Static Injector", () => {
-            describe("sync",()=>{
+            describe("sync", () => {
                 test("should register and resolve with static injector", () => {
                     class TestClass {
                         public propertyA = "test";
@@ -198,9 +202,9 @@ describe("dependency Injection container", () => {
                     expect(test3).toBeInstanceOf(TestClass);
                     expect(test3.propertyA).toBe("test2");
                     expect(test2.test).toBe(test3);
-                });    
+                });
             });
-            describe("async",()=>{
+            describe("async", () => {
                 test("should register and resolve with static injector async", async () => {
                     class TestClass {
                         public propertyA = "test";
@@ -243,7 +247,7 @@ describe("dependency Injection container", () => {
                     expect(test3).toBeInstanceOf(TestClass);
                     expect(test3.propertyA).toBe("test2");
                     expect(test2.test).toBe(test3);
-                });    
+                });
             });
         });
     });

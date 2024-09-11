@@ -1,4 +1,4 @@
-import { InjectionToken } from "../types";
+import { InjectionToken } from "../types/InjectionToken";
 
 export class UndefinedScopeError extends Error{
     constructor(token: InjectionToken) {

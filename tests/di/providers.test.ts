@@ -1,5 +1,9 @@
 import { describe, expect, test } from "@jest/globals";
-import { getProviderType, isClassProvider, isConstructorToken, isFactoryProvider, isProvider, isValueProvider, Provider, ProvidersType } from '../../src/di/types';
+import { isConstructorToken } from "../../src/di/types/InjectionToken";
+import { getProviderType, isProvider, Provider, ProvidersType } from "../../src/di/types/providers/Provider";
+import { isValueProvider } from "../../src/di/types/providers/ValueProvider";
+import { isClassProvider } from "../../src/di/types/providers/ClassProvider";
+import { isFactoryProvider } from "../../src/di/types/providers/FactoryProvider";
 
 
 describe("Provider", () => {

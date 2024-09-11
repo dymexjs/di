@@ -1,0 +1,3 @@
+
+export const STATIC_INJECT_KEY = Symbol("STATIC_INJECT_KEY");
+export const STATIC_INJECT_LIFETIME = Symbol("STATIC_INJECT_LIFETIME");

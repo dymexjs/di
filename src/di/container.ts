@@ -1,24 +1,15 @@
 import { TokenNotFoundError } from "./exceptions/TokenNotFoundError";
-import {
-    ClassProvider,
-    FactoryProvider,
-    getProviderType,
-    IContainer,
-    InjectionToken,
-    Lifetime,
-    Registration,
-    ValueProvider,
-    RegistrationOptions,
-    ProvidersType,
-    isProvider,
-    Provider,
-    ConstructorType,
-    isConstructorToken,
-    STATIC_INJECT_LIFETIME,
-    STATIC_INJECT_KEY,
-    isClassProvider,
-    ScopeContext,
-} from "./types";
+import { ScopeContext } from "./ScopeContext";
+import { ValueProvider } from "./types/providers/ValueProvider";
+import { ClassProvider, isClassProvider } from "./types/providers/ClassProvider";
+import { FactoryProvider } from "./types/providers/FactoryProvider";
+import { getProviderType, isProvider, Provider, ProvidersType } from "./types/providers/Provider";
+import { Lifetime, Registration, RegistrationOptions } from "./types/Registration";
+import { InjectionToken, isConstructorToken } from "./types/InjectionToken";
+import { ConstructorType } from "./types/ConstructorType";
+import { IContainer } from "./types/IContainer";
+import { STATIC_INJECT_KEY, STATIC_INJECT_LIFETIME } from "./constants";
+import { UndefinedScopeError } from "./exceptions/UndefinedScopeError";
 
 class Container implements IContainer {
     private readonly _services: Map<InjectionToken, Registration> = new Map();
@@ -60,13 +51,16 @@ class Container implements IContainer {
         return this;
     }
 
-    resolve<T>(token: InjectionToken, scope: ScopeContext = new ScopeContext()): T {
+    resolve<T>(token: InjectionToken, scope?: ScopeContext): T {
         if (!this.hasRegistration(token)) {
             if (isConstructorToken(token)) {
                 const lifetimeAux = (token as any)[STATIC_INJECT_LIFETIME];
                 const lifetime: Lifetime = typeof lifetimeAux !== "undefined" ? lifetimeAux : Lifetime.Transient;
                 const instance = this.createInstance(token);
                 if (lifetime === Lifetime.Scoped) {
+                    if(typeof scope === "undefined") {
+                        throw new UndefinedScopeError(token);
+                    }
                     scope.services.set(token, instance);
                 }
                 this.register(token, { useClass: token }, { lifetime: lifetime });
@@ -104,8 +98,11 @@ class Container implements IContainer {
     private resolveFactoryProvider<T>(registration: Registration): T {
         return (registration.provider as FactoryProvider<T>).useFactory(this);
     }
-    private resolveClassProvider<T>(registration: Registration, token: InjectionToken, scope: ScopeContext): T {
+    private resolveClassProvider<T>(registration: Registration, token: InjectionToken, scope?: ScopeContext): T {
         if (registration.options.lifetime === Lifetime.Scoped) {
+            if(typeof scope === "undefined") {
+                throw new UndefinedScopeError(token);
+            }
             if (!scope.services.has(token)) {
                 scope.services.set(token, this.createInstance((registration.provider as ClassProvider<T>).useClass));
             }
