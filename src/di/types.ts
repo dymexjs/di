@@ -26,7 +26,7 @@ export const STATIC_INJECT_LIFETIME = Symbol("STATIC_INJECT_LIFETIME");
 export interface Registration<T = any> {
     providerType: ProvidersType;
     provider: any;
-    intance?: T;
+    instance?: T;
     options: RegistrationOptions;
 }
 
@@ -44,6 +44,7 @@ export enum ProvidersType {
     ValueProvider,
     ClassProvider,
     FactoryProvider,
+    ConstructorProvider
 }
 
 export type Provider<T = any> = ClassProvider<T> | ValueProvider<T> | FactoryProvider<T>;
@@ -83,10 +84,16 @@ export function getProviderType(provider: Provider): ProvidersType {
     if (isFactoryProvider(provider)) {
         return ProvidersType.FactoryProvider;
     }
+    if(isConstructorToken(provider)) {
+        return ProvidersType.ConstructorProvider;
+    }
     throw new Error(`Invalid provider type: ${provider}`);
 }
 
 
 export class ScopeContext {
-    public services: Map<InjectionToken,any> = new Map();
+    private readonly _services: Map<InjectionToken,any> = new Map();
+    get services(): Map<InjectionToken,any> {
+        return this._services;
+    }
 }

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "@jest/globals";
-import { getProviderType, isClassProvider, isFactoryProvider, isProvider, isValueProvider, Provider, ProvidersType } from "../../src/di/types";
+import { getProviderType, isClassProvider, isConstructorToken, isFactoryProvider, isProvider, isValueProvider, Provider, ProvidersType } from '../../src/di/types';
 
 
 describe("Provider", () => {
@@ -53,5 +53,13 @@ describe("Provider", () => {
         test("isFactoryProvider false",()=>{
             expect(isFactoryProvider({} as Provider<unknown>)).toBe(false);
         })
+    });
+    describe("constructor provider", () => {
+        test("isConstructorToken",()=>{
+            expect(isConstructorToken((()=>true) as any)).toBe(true);
+        });
+        test("getProviderType",()=>{
+            expect(getProviderType((()=>true) as any)).toBe(ProvidersType.ConstructorProvider);
+        });
     });
 });
