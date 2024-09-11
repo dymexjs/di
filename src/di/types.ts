@@ -8,6 +8,7 @@ export interface IContainer {
         options?: RegistrationOptions,
     ): IContainer;
     resolve<T>(token: InjectionToken): T;
+    resolveAsync<T>(token: InjectionToken): Promise<T>;
     reset(): void;
     staticInject<T>(ctor: ConstructorType<T>): T;
 }
