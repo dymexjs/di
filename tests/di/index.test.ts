@@ -1,16 +1,166 @@
-import { beforeEach, describe, expect, test } from "@jest/globals";
-import { container } from "../../src/di/container";
+import { describe, test, expect, beforeEach } from "@jest/globals";
+import { container } from '../../src/di/container';
+import { Lifetime, STATIC_INJECT_KEY } from "../../src/di/types";
+import { TokenNotFoundError } from "../../src/di/exceptions/TokenNotFoundError";
 
-describe("Averix - DI", () => {
-    beforeEach(() => {
-        container.clear();
+
+describe("dependency Injection container",()=>{
+    beforeEach(()=>{
+        container.reset();
     });
-    describe("static inject", () => {
-        describe("register and resolve", () => {
-            test("should register and resolve a value", () => {
-                const value = "test";
-                container.register("value", value);
-                expect(container.resolve("value")).toBe(value);
+    describe("register and resolve",()=>{
+        test("should throw an error when token not registered",()=>{
+            expect(()=>container.resolve("test")).toThrow(TokenNotFoundError);
+        });
+        describe("hasRegistration",()=>{
+            test("should return false when token not registered",()=>{
+                expect(container.hasRegistration("test")).toBe(false);
+            });
+            test("should return true when token registered",()=>{
+                container.register("test", {useValue:"test"});
+                expect(container.hasRegistration("test")).toBe(true);
+            });
+        });
+        describe("getRegistration",()=>{
+            test("should throw an error when token not registered",()=>{
+                expect(container.getRegistration("test")).toBe(undefined);
+            });
+            test("should return registration when token registered",()=>{
+                container.register("test", {useValue:"test"});
+                expect(container.getRegistration("test")).toBeDefined();
+            });
+        });
+        describe("Class Provider",()=>{
+            test("should register and resolve class with string token",()=>{
+                class TestClass {
+                    public propertyA= "test"
+                }
+                container.register("test", {useClass:TestClass});
+                const value = container.resolve<TestClass>("test");
+                expect(value).toBeInstanceOf(TestClass);
+                expect(value.propertyA).toBe("test");
+            });                
+            test("should register and resolve class with class token",()=>{
+                class TestClass {
+                    public propertyA= "test"
+                }
+                container.register(TestClass, {useClass:TestClass});
+                const value = container.resolve<TestClass>(TestClass);
+                expect(value).toBeInstanceOf(TestClass);
+                expect(value.propertyA).toBe("test");
+            });                
+            test("should register and resolve class with class token and provider",()=>{
+                class TestClass {
+                    public propertyA= "test"
+                }
+                container.register(TestClass, TestClass);
+                const value = container.resolve<TestClass>(TestClass);
+                expect(value).toBeInstanceOf(TestClass);
+                expect(value.propertyA).toBe("test");
+            });
+            test("should register and resolve singleton",()=>{
+                class TestClass {
+                    public propertyA= "test";
+                    constructor(){}
+                }
+                container.register(TestClass, TestClass,{ lifetime: Lifetime.Singleton});
+                const value = container.resolve<TestClass>(TestClass);
+                expect(value).toBeInstanceOf(TestClass);
+                expect(value.propertyA).toBe("test");
+                value.propertyA = "test2";
+                const value2 = container.resolve<TestClass>(TestClass);
+                expect(value2).toBeInstanceOf(TestClass);
+                expect(value2.propertyA).toBe("test2");
+            });
+            test("should register and resolve transient",()=>{
+                class TestClass {
+                    public propertyA= "test";
+                    constructor(){}
+                }
+                container.register(TestClass, TestClass,{ lifetime: Lifetime.Transient});
+                const value = container.resolve<TestClass>(TestClass);
+                expect(value).toBeInstanceOf(TestClass);
+                expect(value.propertyA).toBe("test");
+                value.propertyA = "test2";
+                const value2 = container.resolve<TestClass>(TestClass);
+                expect(value2).toBeInstanceOf(TestClass);
+                expect(value2.propertyA).toBe("test");
+            });
+            test("should register and resolve scoped correctly",()=>{
+                class TestClass {
+                    public propertyA= "test";
+                    constructor(){}
+                }
+                const scope = container.createScope();
+                container.register(TestClass, TestClass,{ lifetime: Lifetime.Scoped});
+                const value = container.resolve<TestClass>(TestClass, scope);
+                expect(value).toBeInstanceOf(TestClass);
+                expect(value.propertyA).toBe("test");
+                value.propertyA = "test2";
+                const value2 = container.resolve<TestClass>(TestClass, scope);
+                expect(value2).toBeInstanceOf(TestClass);
+                expect(value2.propertyA).toBe("test2");
+            });
+            test("should register and resolve scoped wrongly because scope is diferent",()=>{
+                class TestClass {
+                    public propertyA= "test";
+                    constructor(){}
+                }
+                const scope = container.createScope();
+                container.register(TestClass, TestClass,{ lifetime: Lifetime.Scoped});
+                const value = container.resolve<TestClass>(TestClass, scope);
+                expect(value).toBeInstanceOf(TestClass);
+                expect(value.propertyA).toBe("test");
+                value.propertyA = "test2";
+                const scope2 = container.createScope();
+                const value2 = container.resolve<TestClass>(TestClass, scope2);
+                expect(value2).toBeInstanceOf(TestClass);
+                expect(value2.propertyA).toBe("test");
+            });
+        });
+        describe("Factory Provider",()=>{
+            test("should register and resolve a factory",()=>{
+                class TestClass {
+                    public propertyFactory;
+                    constructor(){
+                        this.propertyFactory = "test";
+                    }
+                }
+                container.register("test", {useFactory:()=>new TestClass()});
+                const value = container.resolve<TestClass>("test");
+                expect(value).toBeInstanceOf(TestClass);
+                expect(value.propertyFactory).toBe("test");
+            });
+            test("register and resolve a factory value",()=>{
+                container.register("test", {useFactory:()=>"test"});
+                const value = container.resolve("test");
+                expect(value).toBe("test");
+            });
+        });
+        describe("Value Provider",()=>{
+            test("should register and resolve value",()=>{
+                const testValue = "test";
+                container.register("test", {useValue:testValue});
+                const value = container.resolve("test");
+                expect(value).toBe(testValue);
+            });
+        });
+        describe("Static Injector",()=>{
+            test("should register and resolve with static injector",()=>{
+                class TestClass {
+                    public propertyA= "test"
+                }
+                class TestClass2 {
+                    constructor(public test:TestClass){}
+                    public static [STATIC_INJECT_KEY] = ["test"];
+                }
+                container.register("test", {useClass:TestClass}, {lifetime: Lifetime.Singleton});
+                const test2 = container.staticInject(TestClass2);
+                const test = container.resolve("test");
+                expect(test2).toBeInstanceOf(TestClass2);
+                expect(test2.test).toBeInstanceOf(TestClass);
+                expect(test2.test.propertyA).toBe("test");
+                expect(test2.test).toBe(test);
             });
         });
     });
