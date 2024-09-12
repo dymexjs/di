@@ -1,3 +1,4 @@
+import { InjectionToken } from "./InjectionToken";
 import { ProvidersType } from "./providers/Provider";
 
 export interface Registration<T = any> {
@@ -5,6 +6,7 @@ export interface Registration<T = any> {
     provider: any;
     instance?: T;
     options: RegistrationOptions;
+    injections: Array<InjectionToken>;
 }
 
 export enum Lifetime {

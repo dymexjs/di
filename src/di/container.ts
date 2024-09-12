@@ -16,11 +16,7 @@ class Container implements IContainer {
     private readonly _scopes: Set<ScopeContext> = new Set();
     private readonly _resolutionStack = new Set<InjectionToken>();
 
-    createInstance<T>(implementation: ConstructorType<T>): T {
-        let args: Array<any> = [];
-        if (typeof (implementation as any)[STATIC_INJECT_KEY] !== "undefined") {
-            args = (implementation as any)[STATIC_INJECT_KEY].map((token: InjectionToken) => this.resolve(token));
-        }
+    createInstance<T>(implementation: ConstructorType<T>, args: Array<any> = []): T {
         return Reflect.construct(implementation, args);
     }
 
@@ -83,14 +79,26 @@ class Container implements IContainer {
         let opt: RegistrationOptions = options ? options : { lifetime: Lifetime.Transient };
 
         let service: Provider<T> = isProvider(provider) ? provider : { useClass: provider };
+        let injections = [];
 
-        if (isClassProvider(provider as Provider<T>) && typeof options === "undefined") {
-            if (typeof ((provider as ClassProvider<T>).useClass as any)[STATIC_INJECT_LIFETIME] !== "undefined") {
+        if (isClassProvider(provider as Provider<T>)) {
+            if (
+                typeof options === "undefined" &&
+                typeof ((provider as ClassProvider<T>).useClass as any)[STATIC_INJECT_LIFETIME] !== "undefined"
+            ) {
                 opt.lifetime = ((provider as ClassProvider<T>).useClass as any)[STATIC_INJECT_LIFETIME];
+            }
+            if (typeof ((provider as ClassProvider<T>).useClass as any)[STATIC_INJECT_KEY] !== "undefined") {
+                injections = ((provider as ClassProvider<T>).useClass as any)[STATIC_INJECT_KEY];
             }
         }
 
-        this._services.set(token, { provider: service, providerType: getProviderType(service), options: opt });
+        this._services.set(token, {
+            provider: service,
+            providerType: getProviderType(service),
+            options: opt,
+            injections,
+        });
         return this;
     }
 
@@ -106,7 +114,12 @@ class Container implements IContainer {
                 if (isConstructorToken(token)) {
                     const lifetimeAux = (token as any)[STATIC_INJECT_LIFETIME];
                     const lifetime: Lifetime = typeof lifetimeAux !== "undefined" ? lifetimeAux : Lifetime.Transient;
-                    const instance = this.createInstance(token);
+                    let injections = [];
+                    if (typeof (token as any)[STATIC_INJECT_KEY] !== "undefined") {
+                        injections = (token as any)[STATIC_INJECT_KEY];
+                    }
+                    const args = this.createArgs({ injections } as Registration<any>, scope);
+                    const instance = this.createInstance(token, args);
                     if (lifetime === Lifetime.Scoped) {
                         if (typeof scope === "undefined") {
                             throw new UndefinedScopeError(token);
@@ -157,17 +170,33 @@ class Container implements IContainer {
                 throw new UndefinedScopeError(token);
             }
             if (!scope.services.has(token)) {
-                scope.services.set(token, this.createInstance((registration.provider as ClassProvider<T>).useClass));
+                scope.services.set(
+                    token,
+                    this.createInstance(
+                        (registration.provider as ClassProvider<T>).useClass,
+                        this.createArgs(registration, scope),
+                    ),
+                );
             }
             return scope.services.get(token)!;
         }
         if (registration.options.lifetime === Lifetime.Singleton) {
             if (typeof registration.instance === "undefined") {
-                registration.instance = this.createInstance((registration.provider as ClassProvider<T>).useClass);
+                registration.instance = this.createInstance(
+                    (registration.provider as ClassProvider<T>).useClass,
+                    this.createArgs(registration, scope),
+                );
             }
             return registration.instance;
         }
-        return this.createInstance((registration.provider as ClassProvider<T>).useClass);
+        return this.createInstance(
+            (registration.provider as ClassProvider<T>).useClass,
+            this.createArgs(registration, scope),
+        );
+    }
+
+    private createArgs(registration: Registration, scope?: ScopeContext): Array<unknown> {
+        return registration.injections.map((token) => this.resolve(token, scope));
     }
 
     hasRegistration(token: InjectionToken): boolean {
@@ -181,6 +210,5 @@ class Container implements IContainer {
         this._scopes.clear();
     }
 }
-
 
 export const container = new Container();

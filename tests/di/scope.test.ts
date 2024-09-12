@@ -1,12 +1,12 @@
-import { describe, expect, test } from "@jest/globals";
+import { beforeEach, describe, expect, test } from "@jest/globals";
 import { container } from "../../src/di/container";
 import { ScopeContext } from "../../src/di/ScopeContext";
 import { Lifetime } from "../../src/di/types/Registration";
 
-
-describe("Averix_DI",()=>{
+describe("Averix_DI", () => {
+    beforeEach(()=>container.reset());
     describe("scope", () => {
-        describe("create and dispose scope",()=>{
+        describe("create and dispose scope", () => {
             test("create scope", () => {
                 expect(container.createScope()).toBeInstanceOf(ScopeContext);
                 expect(container.scopes.size).toBe(1);
@@ -17,9 +17,9 @@ describe("Averix_DI",()=>{
                 expect(scope).toBeInstanceOf(ScopeContext);
                 container.disposeScope(scope);
                 expect(container.scopes.size).toBe(0);
-            });    
+            });
         });
-        describe("Class provider",()=>{
+        describe("Class provider", () => {
             test("should register and resolve scoped correctly", () => {
                 class TestClass {
                     public propertyA = "test";

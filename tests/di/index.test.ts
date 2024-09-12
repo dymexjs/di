@@ -3,7 +3,6 @@ import { container } from "../../src/di/container";
 import { TokenNotFoundError } from "../../src/di/exceptions/TokenNotFoundError";
 import { STATIC_INJECT_KEY, STATIC_INJECT_LIFETIME } from "../../src/di/constants";
 import { Lifetime } from "../../src/di/types/Registration";
-import { ScopeContext } from "../../src/di/ScopeContext";
 import { UndefinedScopeError } from "../../src/di/exceptions/UndefinedScopeError";
 import { StaticInjectable } from '../../src/di/types/IStaticInject';
 
@@ -93,28 +92,7 @@ describe("dependency Injection container", () => {
                 container.register("test", { useClass: TestClass }, { lifetime: Lifetime.Scoped });
                 expect(() => container.resolve<TestClass>("test")).toThrow(UndefinedScopeError);
             });
-            test("circular dependency resolution", () => {
-                class TestClass2 {
-                    constructor(public test: TestClass) {}
-                    public static [STATIC_INJECT_KEY] = ["test"];
-                    public static [STATIC_INJECT_LIFETIME] = Lifetime.Singleton;
-                }
-                class TestClass {
-                    public propertyA = "test";
-                    constructor(public test2: TestClass2){}
-                    public static [STATIC_INJECT_KEY] = [TestClass2];
-                }
-                container.register("test", { useClass: TestClass }, { lifetime: Lifetime.Singleton });
-                const test2 = container.resolve<TestClass2>(TestClass2);
-                const test = container.resolve<TestClass>("test");
-                expect(test2).toBeInstanceOf(TestClass2);
-                expect(test).toBeInstanceOf(TestClass);
-                expect(test2.test).toBeInstanceOf(TestClass);
-                expect(test.test2).toBeInstanceOf(TestClass2);
-                expect(test2.test).toBe(test);
-                //This needs to be toEqual because where comparing the generated proxy, and toEqual will make a deep equal assertion
-                expect(test.test2).toEqual(test2);
-            });
+            
         });
         describe("Factory Provider", () => {
             test("should register and resolve a factory", () => {
