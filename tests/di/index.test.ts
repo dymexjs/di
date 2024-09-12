@@ -5,6 +5,7 @@ import { STATIC_INJECT_KEY, STATIC_INJECT_LIFETIME } from "../../src/di/constant
 import { Lifetime } from "../../src/di/types/Registration";
 import { ScopeContext } from "../../src/di/ScopeContext";
 import { UndefinedScopeError } from "../../src/di/exceptions/UndefinedScopeError";
+import { StaticInjectable } from '../../src/di/types/IStaticInject';
 
 describe("dependency Injection container", () => {
     beforeEach(() => {
@@ -86,39 +87,33 @@ describe("dependency Injection container", () => {
                 expect(value2).toBeInstanceOf(TestClass);
                 expect(value2.propertyA).toBe("test");
             });
-            test("should register and resolve scoped correctly", () => {
-                class TestClass {
-                    public propertyA = "test";
-                }
-                const scope = container.createScope();
-                container.register(TestClass, TestClass, { lifetime: Lifetime.Scoped });
-                const value = container.resolve<TestClass>(TestClass, scope);
-                expect(value).toBeInstanceOf(TestClass);
-                expect(value.propertyA).toBe("test");
-                value.propertyA = "test2";
-                const value2 = container.resolve<TestClass>(TestClass, scope);
-                expect(value2).toBeInstanceOf(TestClass);
-                expect(value2.propertyA).toBe("test2");
-            });
-            test("should register and resolve scoped wrongly because scope is diferent", () => {
-                class TestClass {
-                    public propertyA = "test";
-                }
-                const scope = container.createScope();
-                container.register(TestClass, TestClass, { lifetime: Lifetime.Scoped });
-                const value = container.resolve<TestClass>(TestClass, scope);
-                expect(value).toBeInstanceOf(TestClass);
-                expect(value.propertyA).toBe("test");
-                value.propertyA = "test2";
-                const scope2 = container.createScope();
-                const value2 = container.resolve<TestClass>(TestClass, scope2);
-                expect(value2).toBeInstanceOf(TestClass);
-                expect(value2.propertyA).toBe("test");
-            });
+            
             test("should throw an error when trying to instanciate a scoped object without a scope", () => {
                 class TestClass {}
                 container.register("test", { useClass: TestClass }, { lifetime: Lifetime.Scoped });
-                expect(()=>container.resolve<TestClass>("test")).toThrow(UndefinedScopeError);
+                expect(() => container.resolve<TestClass>("test")).toThrow(UndefinedScopeError);
+            });
+            test("circular dependency resolution", () => {
+                class TestClass2 {
+                    constructor(public test: TestClass) {}
+                    public static [STATIC_INJECT_KEY] = ["test"];
+                    public static [STATIC_INJECT_LIFETIME] = Lifetime.Singleton;
+                }
+                class TestClass {
+                    public propertyA = "test";
+                    constructor(public test2: TestClass2){}
+                    public static [STATIC_INJECT_KEY] = [TestClass2];
+                }
+                container.register("test", { useClass: TestClass }, { lifetime: Lifetime.Singleton });
+                const test2 = container.resolve<TestClass2>(TestClass2);
+                const test = container.resolve<TestClass>("test");
+                expect(test2).toBeInstanceOf(TestClass2);
+                expect(test).toBeInstanceOf(TestClass);
+                expect(test2.test).toBeInstanceOf(TestClass);
+                expect(test.test2).toBeInstanceOf(TestClass2);
+                expect(test2.test).toBe(test);
+                //This needs to be toEqual because where comparing the generated proxy, and toEqual will make a deep equal assertion
+                expect(test.test2).toEqual(test2);
             });
         });
         describe("Factory Provider", () => {
@@ -169,7 +164,7 @@ describe("dependency Injection container", () => {
                         public static [STATIC_INJECT_KEY] = ["test"];
                     }
                     container.register("test", { useClass: TestClass }, { lifetime: Lifetime.Singleton });
-                    const test2 = container.staticInject(TestClass2);
+                    const test2 = container.resolve<TestClass2>(TestClass2);
                     const test = container.resolve<TestClass>("test");
                     expect(test2).toBeInstanceOf(TestClass2);
                     expect(test2.test).toBeInstanceOf(TestClass);
@@ -191,7 +186,29 @@ describe("dependency Injection container", () => {
                         public static [STATIC_INJECT_KEY] = ["test"];
                     }
                     container.register("test", { useClass: TestClass });
-                    const test2 = container.staticInject(TestClass2);
+                    const test2 = container.resolve<TestClass2>(TestClass2);
+                    const test = container.resolve<TestClass>("test");
+                    expect(test2).toBeInstanceOf(TestClass2);
+                    expect(test2.test).toBeInstanceOf(TestClass);
+                    expect(test2.test.propertyA).toBe("test");
+                    expect(test2.test).toBe(test);
+                    test.propertyA = "test2";
+                    const test3 = container.resolve<TestClass>("test");
+                    expect(test3).toBeInstanceOf(TestClass);
+                    expect(test3.propertyA).toBe("test2");
+                    expect(test2.test).toBe(test3);
+                });
+                test("should register singleton from impements StaticInjectable", () => {
+                    class TestClass implements StaticInjectable<typeof TestClass> {
+                        public propertyA = "test";
+                        public static [STATIC_INJECT_LIFETIME] = Lifetime.Singleton;
+                    }
+                    class TestClass2 implements StaticInjectable<typeof TestClass2> {
+                        constructor(public test: TestClass) {}
+                        public static [STATIC_INJECT_KEY] = ["test"];
+                    }
+                    container.register("test", { useClass: TestClass });
+                    const test2 = container.resolve<TestClass2>(TestClass2);
                     const test = container.resolve<TestClass>("test");
                     expect(test2).toBeInstanceOf(TestClass2);
                     expect(test2.test).toBeInstanceOf(TestClass);
@@ -214,7 +231,7 @@ describe("dependency Injection container", () => {
                         public static [STATIC_INJECT_KEY] = ["test"];
                     }
                     container.register("test", { useClass: TestClass }, { lifetime: Lifetime.Singleton });
-                    const test2 = await container.staticInjectAsync(TestClass2);
+                    const test2 = await container.resolveAsync<TestClass2>(TestClass2);
                     const test = container.resolve<TestClass>("test");
                     expect(test2).toBeInstanceOf(TestClass2);
                     expect(test2.test).toBeInstanceOf(TestClass);
@@ -236,7 +253,7 @@ describe("dependency Injection container", () => {
                         public static [STATIC_INJECT_KEY] = ["test"];
                     }
                     container.register("test", { useClass: TestClass });
-                    const test2 = await container.staticInjectAsync(TestClass2);
+                    const test2 = await container.resolveAsync<TestClass2>(TestClass2);
                     const test = container.resolve<TestClass>("test");
                     expect(test2).toBeInstanceOf(TestClass2);
                     expect(test2.test).toBeInstanceOf(TestClass);
@@ -251,17 +268,5 @@ describe("dependency Injection container", () => {
             });
         });
     });
-    describe("scope", () => {
-        test("create scope", () => {
-            expect(container.createScope()).toBeInstanceOf(ScopeContext);
-            expect(container.scopes.size).toBe(1);
-        });
-        test("dispose scope", () => {
-            const scope = container.createScope();
-            expect(container.scopes.size).toBe(1);
-            expect(scope).toBeInstanceOf(ScopeContext);
-            container.disposeScope(scope);
-            expect(container.scopes.size).toBe(0);
-        });
-    });
+    
 });

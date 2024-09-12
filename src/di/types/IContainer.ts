@@ -7,6 +7,7 @@ import { ConstructorType } from "./ConstructorType";
 
 export interface IContainer {
     createInstance<T>(implementation: ConstructorType<T>): T;
+    createInstanceAsync<T>(implementation: ConstructorType<T>): Promise<T>;
     getRegistration(token: InjectionToken): Registration | undefined;
     hasRegistration(token: InjectionToken): boolean;
     register<T>(
@@ -17,6 +18,4 @@ export interface IContainer {
     resolve<T>(token: InjectionToken): T;
     resolveAsync<T>(token: InjectionToken): Promise<T>;
     reset(): void;
-    staticInject<T>(ctor: ConstructorType<T>): T;
-    staticInjectAsync<T>(ctor: ConstructorType<T>): Promise<T>;
 }
