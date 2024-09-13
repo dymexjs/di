@@ -1,22 +1,24 @@
 import { isValueProvider, ValueProvider } from "./ValueProvider";
 import { ClassProvider, isClassProvider } from "./ClassProvider";
 import { FactoryProvider, isFactoryProvider } from "./FactoryProvider";
-import { isConstructorToken } from "../InjectionToken";
+import { isTokenProvider, TokenProvider } from "./TokenProvider";
+import { isConstructorType } from "../ConstructorType";
 
 
-export type Provider<T = any> = ClassProvider<T> | ValueProvider<T> | FactoryProvider<T>;
+export type Provider<T = any> = ClassProvider<T> | ValueProvider<T> | FactoryProvider<T> | TokenProvider<T>;
 
 
 export enum ProvidersType {
     ValueProvider,
     ClassProvider,
     FactoryProvider,
-    ConstructorProvider
+    ConstructorProvider,
+    TokenProvider
 }
 
 
 export function isProvider<T>(provider: any): provider is Provider {
-    return isClassProvider(provider) || isValueProvider(provider) || isFactoryProvider(provider);
+    return isClassProvider(provider) || isValueProvider(provider) || isFactoryProvider(provider) || isTokenProvider(provider);
 }
 
 export function getProviderType(provider: Provider): ProvidersType {
@@ -29,8 +31,11 @@ export function getProviderType(provider: Provider): ProvidersType {
     if (isFactoryProvider(provider)) {
         return ProvidersType.FactoryProvider;
     }
-    if(isConstructorToken(provider)) {
+    if(isConstructorType(provider)) {
         return ProvidersType.ConstructorProvider;
+    }
+    if(isTokenProvider(provider)) {
+        return ProvidersType.TokenProvider;
     }
     throw new Error(`Invalid provider type: ${provider}`);
 }

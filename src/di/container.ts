@@ -5,8 +5,8 @@ import { ClassProvider, isClassProvider } from "./types/providers/ClassProvider"
 import { FactoryProvider } from "./types/providers/FactoryProvider";
 import { getProviderType, isProvider, Provider, ProvidersType } from "./types/providers/Provider";
 import { Lifetime, Registration, RegistrationOptions } from "./types/Registration";
-import { InjectionToken, isConstructorToken } from "./types/InjectionToken";
-import { ConstructorType } from "./types/ConstructorType";
+import { InjectionToken } from "./types/InjectionToken";
+import { ConstructorType, isConstructorType } from "./types/ConstructorType";
 import { IContainer } from "./types/IContainer";
 import { STATIC_INJECT_KEY, STATIC_INJECT_LIFETIME } from "./constants";
 import { UndefinedScopeError } from "./exceptions/UndefinedScopeError";
@@ -108,7 +108,7 @@ class Container implements IContainer {
 
     register<T>(
         token: InjectionToken,
-        provider: ClassProvider<T> | ValueProvider<T> | FactoryProvider<T> | ConstructorType<T>,
+        provider: Provider<T> | ConstructorType<T>,
         options?: RegistrationOptions,
     ): IContainer {
         let opt: RegistrationOptions = options ? options : { lifetime: Lifetime.Transient };
@@ -128,18 +128,35 @@ class Container implements IContainer {
             }
         }
 
-        this._services.set(token, {
+        return this.registerRegistration(token, {
             provider: service,
             providerType: getProviderType(service),
             options: opt,
             injections,
         });
-        return this;
     }
 
     registerRegistration(token: InjectionToken, registration: Registration<any>): IContainer {
         this._services.set(token, registration);
         return this;
+    }
+
+    registerInstance<T>(token: InjectionToken, instance: T): IContainer {
+        this._services.set(token, { 
+            provider: { useValue: instance }, 
+            providerType: ProvidersType.ValueProvider, 
+            options: { lifetime: Lifetime.Singleton },
+            injections: [],
+         });
+         return this;
+    }
+
+    registerType<T>(from: InjectionToken, to: InjectionToken<T>): IContainer {
+        if(isConstructorType(to)) {
+            return this.register(from, { useClass: to });
+        }
+
+        return this.register(from, {useToken: to});
     }
 
 
@@ -158,7 +175,7 @@ class Container implements IContainer {
 
         try {
             if (!this.hasRegistration(token)) {
-                if (isConstructorToken(token)) {
+                if (isConstructorType(token)) {
                     const lifetimeAux = (token as any)[STATIC_INJECT_LIFETIME];
                     const lifetime: Lifetime = typeof lifetimeAux !== "undefined" ? lifetimeAux : Lifetime.Transient;
                     let injections = [];
@@ -216,7 +233,7 @@ class Container implements IContainer {
 
         try {
             if (!this.hasRegistration(token)) {
-                if (isConstructorToken(token)) {
+                if (isConstructorType(token)) {
                     const lifetimeAux = (token as any)[STATIC_INJECT_LIFETIME];
                     const lifetime: Lifetime = typeof lifetimeAux !== "undefined" ? lifetimeAux : Lifetime.Transient;
                     let injections = [];

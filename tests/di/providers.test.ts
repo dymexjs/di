@@ -1,9 +1,10 @@
 import { describe, expect, test } from "@jest/globals";
-import { isConstructorToken } from "../../src/di/types/InjectionToken";
 import { getProviderType, isProvider, Provider, ProvidersType } from "../../src/di/types/providers/Provider";
 import { isValueProvider } from "../../src/di/types/providers/ValueProvider";
 import { isClassProvider } from "../../src/di/types/providers/ClassProvider";
 import { isFactoryProvider } from "../../src/di/types/providers/FactoryProvider";
+import { isConstructorType } from "../../src/di/types/ConstructorType";
+import { isTokenProvider } from "../../src/di/types/providers/TokenProvider";
 
 
 describe("Provider", () => {
@@ -60,10 +61,24 @@ describe("Provider", () => {
     });
     describe("constructor provider", () => {
         test("isConstructorToken",()=>{
-            expect(isConstructorToken((()=>true) as any)).toBe(true);
+            expect(isConstructorType((()=>true) as any)).toBe(true);
         });
         test("getProviderType",()=>{
             expect(getProviderType((()=>true) as any)).toBe(ProvidersType.ConstructorProvider);
         });
+    });
+    describe("Token provider", () => {
+        test("isProvider", () => {
+            expect(isProvider({ useToken: "test" })).toBe(true);
+        });
+        test("getProviderType", () => {
+            expect(getProviderType({ useToken: "test" })).toBe(ProvidersType.TokenProvider);
+        });
+        test("isTokenProvider true",()=>{
+            expect(isTokenProvider({ useToken: "test" })).toBe(true);
+        });
+        test("isTokenProvider false",()=>{
+            expect(isTokenProvider({} as Provider<unknown>)).toBe(false);
+        })
     });
 });

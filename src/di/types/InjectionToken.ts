@@ -4,6 +4,7 @@ import { ConstructorType } from "./ConstructorType";
 
 export type InjectionToken<T = any> = string | symbol | ConstructorType<T>;
 
-export function isConstructorToken(token?: InjectionToken<any>): token is ConstructorType<any> {
-    return typeof token === "function";
+
+export function isNormalToken(token?: InjectionToken): token is string | symbol {
+    return typeof token === "string" || typeof token === "symbol";
 }
