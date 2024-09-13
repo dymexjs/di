@@ -17,7 +17,10 @@ export const createInterfaceId = <T>(id: string): InterfaceId<T> => `${id}-${get
 export function Singleton<I, TDependencies extends Array<InjectionToken>>(dependencies?: [...TDependencies], token?: InjectionToken<I>){
     return function <T extends { new ( ...args: UnwrapInjectionTokens<TDependencies>): I }>(target: T, {kind}: ClassDecoratorContext){
         if(kind === "class") {
-            container.registerRegistration(token ?? target, createRegistration(target, Lifetime.Singleton, dependencies || []));
+            container.registerRegistration(target, createRegistration(target, Lifetime.Singleton, dependencies || []));
+            if(typeof token !== undefined) {
+                container.registerType<I>(token!, { useToken: target});
+            }
             return;
         }
         throw new Error('Singleton decorator can only be used on a class.');
@@ -27,12 +30,29 @@ export function Singleton<I, TDependencies extends Array<InjectionToken>>(depend
 export function Transient<I, TDependencies extends Array<InjectionToken>>(dependencies?: [...TDependencies], token?: InjectionToken<I>){
     return function <T extends { new ( ...args: UnwrapInjectionTokens<TDependencies>): I }>(target: T, {kind}: ClassDecoratorContext){
         if(kind === "class") {
-            container.registerRegistration(token ?? target, createRegistration(target, Lifetime.Transient, dependencies || []));
+            container.registerRegistration(target, createRegistration(target, Lifetime.Transient, dependencies || []));
+            if(typeof token !== undefined) {
+                container.registerType<I>(token!, { useToken: target});
+            }
             return;
         }
         throw new Error('Transient decorator can only be used on a class.');
     }
 }
+
+export function Scoped<I, TDependencies extends Array<InjectionToken>>(dependencies?: [...TDependencies], token?: InjectionToken<I>){
+    return function <T extends { new ( ...args: UnwrapInjectionTokens<TDependencies>): I }>(target: T, {kind}: ClassDecoratorContext){
+        if(kind === "class") {
+            container.registerRegistration(target, createRegistration(target, Lifetime.Scoped, dependencies || []));
+            if(typeof token !== undefined) {
+                container.registerType<I>(token!, { useToken: target});
+            }
+            return;
+        }
+        throw new Error('Scoped decorator can only be used on a class.');
+    }
+}
+
 
 
 
@@ -46,11 +66,11 @@ export function SingletonInterface<I, TDependencies extends Array<InterfaceId<un
     ) {
         if (kind === "class") {
             const reg = createRegistration(target, Lifetime.Singleton, dependencies);
-            container.registerInterfaceId(id, target);
             container.registerRegistration(target, reg);
+            container.registerType(id, {useToken: target});
             return;
         }
-        throw new Error("Injectable decorator can only be used on a class.");
+        throw new Error("SingletonInterface decorator can only be used on a class.");
     };
 }
 export function TransientInterface<I, TDependencies extends Array<InterfaceId<unknown> | InjectionToken<unknown>>>(
@@ -63,11 +83,29 @@ export function TransientInterface<I, TDependencies extends Array<InterfaceId<un
     ) {
         if (kind === "class") {
             const reg = createRegistration(target, Lifetime.Transient, dependencies);
-            container.registerInterfaceId(id, target);
             container.registerRegistration(target, reg);
+            container.registerType(id, {useToken: target});
             return;
         }
-        throw new Error("Injectable decorator can only be used on a class.");
+        throw new Error("TransientInterface decorator can only be used on a class.");
+    };
+}
+
+export function ScopedInterface<I, TDependencies extends Array<InterfaceId<unknown> | InjectionToken<unknown>>>(
+    id: InterfaceId<I>,
+    dependencies: [...TDependencies] | [] = [],
+) {
+    return function <T extends { new (...args: UnwrapInterfaceIds<TDependencies>): I }>(
+        target: T,
+        { kind }: ClassDecoratorContext,
+    ) {
+        if (kind === "class") {
+            const reg = createRegistration(target, Lifetime.Scoped, dependencies);
+            container.registerRegistration(target, reg);
+            container.registerType(id, {useToken: target});
+            return;
+        }
+        throw new Error("ScopedInterface decorator can only be used on a class.");
     };
 }
 

@@ -5,6 +5,8 @@ import { isClassProvider } from "../../src/di/types/providers/ClassProvider";
 import { isFactoryProvider } from "../../src/di/types/providers/FactoryProvider";
 import { isConstructorType } from "../../src/di/types/ConstructorType";
 import { isTokenProvider } from "../../src/di/types/providers/TokenProvider";
+import { container } from "../../src/di/container";
+import { TokenRegistrationCycleError } from "../../src/di/exceptions/TokenRegistrationCycleError";
 
 
 describe("Provider", () => {
@@ -79,6 +81,10 @@ describe("Provider", () => {
         });
         test("isTokenProvider false",()=>{
             expect(isTokenProvider({} as Provider<unknown>)).toBe(false);
-        })
+        });
+        test("should throw circular token registration",()=>{
+            container.register("test", {useToken: "test2"});
+            expect(()=>container.register("test2", {useToken: "test"})).toThrow(TokenRegistrationCycleError)
+        });
     });
 });

@@ -11,17 +11,13 @@ import { IContainer } from "./types/IContainer";
 import { STATIC_INJECT_KEY, STATIC_INJECT_LIFETIME } from "./constants";
 import { UndefinedScopeError } from "./exceptions/UndefinedScopeError";
 import { InterfaceId } from "./types/decorators";
+import { isTokenProvider, TokenProvider } from "./types/providers/TokenProvider";
+import { TokenRegistrationCycleError } from "./exceptions/TokenRegistrationCycleError";
 
 class Container implements IContainer {
     private readonly _services: Map<InjectionToken, Registration> = new Map();
     private readonly _scopes: Set<ScopeContext> = new Set();
     private readonly _resolutionStack = new Map<InjectionToken, any>();
-    private readonly _interfaceIds = new Map<InterfaceId, InjectionToken>();
-
-    registerInterfaceId<T>(id: InterfaceId<T>, token: InjectionToken<T>) {
-        this._interfaceIds.set(id, token);
-    }
-
 
     createInstance<T>(implementation: ConstructorType<T>, args: Array<any> = []): T {
         return Reflect.construct(implementation, args);
@@ -106,6 +102,24 @@ class Container implements IContainer {
         return this._scopes;
     }
 
+    private inspectCircularTokenProvider<T>(token: InjectionToken<T>, provider: TokenProvider<T>): void {
+        const path = [token];
+        let tokenProvider: TokenProvider<T> | null = provider;
+        while (tokenProvider !== null) {
+            const current = tokenProvider.useToken;
+            if (path.includes(current)) {
+                throw new TokenRegistrationCycleError([...path, current]);
+            }
+            path.push(current);
+            const registation = this.getRegistration(current);
+            if (registation && isTokenProvider<T>(registation.provider)) {
+                tokenProvider = registation.provider;
+            } else {
+                tokenProvider = null;
+            }
+        }
+    }
+
     register<T>(
         token: InjectionToken,
         provider: Provider<T> | ConstructorType<T>,
@@ -114,17 +128,22 @@ class Container implements IContainer {
         let opt: RegistrationOptions = options ? options : { lifetime: Lifetime.Transient };
 
         let service: Provider<T> = isProvider(provider) ? provider : { useClass: provider };
+
+        if (isTokenProvider(service)) {
+            this.inspectCircularTokenProvider(token,service);
+        }
+
         let injections = [];
 
-        if (isClassProvider(provider as Provider<T>)) {
+        if (isClassProvider(service as Provider<T>)) {
             if (
                 typeof options === "undefined" &&
-                typeof ((provider as ClassProvider<T>).useClass as any)[STATIC_INJECT_LIFETIME] !== "undefined"
+                typeof ((service as ClassProvider<T>).useClass as any)[STATIC_INJECT_LIFETIME] !== "undefined"
             ) {
-                opt.lifetime = ((provider as ClassProvider<T>).useClass as any)[STATIC_INJECT_LIFETIME];
+                opt.lifetime = ((service as ClassProvider<T>).useClass as any)[STATIC_INJECT_LIFETIME];
             }
-            if (typeof ((provider as ClassProvider<T>).useClass as any)[STATIC_INJECT_KEY] !== "undefined") {
-                injections = ((provider as ClassProvider<T>).useClass as any)[STATIC_INJECT_KEY];
+            if (typeof ((service as ClassProvider<T>).useClass as any)[STATIC_INJECT_KEY] !== "undefined") {
+                injections = ((service as ClassProvider<T>).useClass as any)[STATIC_INJECT_KEY];
             }
         }
 
@@ -142,28 +161,27 @@ class Container implements IContainer {
     }
 
     registerInstance<T>(token: InjectionToken, instance: T): IContainer {
-        this._services.set(token, { 
-            provider: { useValue: instance }, 
-            providerType: ProvidersType.ValueProvider, 
+        this._services.set(token, {
+            provider: { useValue: instance },
+            providerType: ProvidersType.ValueProvider,
             options: { lifetime: Lifetime.Singleton },
             injections: [],
-         });
-         return this;
+        });
+        return this;
     }
 
-    registerType<T>(from: InjectionToken, to: InjectionToken<T>): IContainer {
-        if(isConstructorType(to)) {
+    registerType<T>(from: InjectionToken, to: InjectionToken<T> | TokenProvider<T>): IContainer {
+        if(isTokenProvider(to as Provider<T>)) {
+            return this.register(from, to as TokenProvider<T>);
+        }
+        if (isConstructorType(to)) {
             return this.register(from, { useClass: to });
         }
 
-        return this.register(from, {useToken: to});
+        return this.register(from, { useToken: to as InjectionToken<T> });
     }
 
-
     resolve<T>(token: InjectionToken, scope?: ScopeContext): T {
-        if(typeof token === "string" && this._interfaceIds.has(token as InterfaceId<unknown>)) {
-            token = this._interfaceIds.get(token as InterfaceId<unknown>) as InjectionToken;
-        }
         if (this._resolutionStack.has(token)) {
             //Circular dependency detected, return a proxy
             if (this._resolutionStack.get(token) === null) {
@@ -209,6 +227,8 @@ class Container implements IContainer {
                     return this.resolveFactoryProvider(registration);
                 case ProvidersType.ValueProvider:
                     return this.resolveValueProvider(registration);
+                case ProvidersType.TokenProvider:
+                    return this.resolve(registration.provider.useToken, scope);
                 default:
                     throw new Error(`Invalid registration type: "${registration.providerType}"`);
             }
@@ -218,10 +238,6 @@ class Container implements IContainer {
     }
 
     async resolveAsync<T>(token: InjectionToken, scope?: ScopeContext): Promise<T> {
-        if(typeof token === "string" && this._interfaceIds.has(token as InterfaceId<unknown>)) {
-            token = this._interfaceIds.get(token as InterfaceId<unknown>) as InjectionToken;
-        }
-        
         if (this._resolutionStack.has(token)) {
             //Circular dependency detected, return a proxy
             if (this._resolutionStack.get(token) === null) {
@@ -266,7 +282,9 @@ class Container implements IContainer {
                 case ProvidersType.FactoryProvider:
                     return await this.resolveFactoryProviderAsync(registration);
                 case ProvidersType.ValueProvider:
-                    return this.resolveValueProvider(registration);
+                    return await this.resolveValueProvider(registration);
+                case ProvidersType.TokenProvider:
+                    return await this.resolveAsync(registration.provider.useToken, scope);
                 default:
                     throw new Error(`Invalid registration type: "${registration.providerType}"`);
             }
@@ -292,18 +310,27 @@ class Container implements IContainer {
             if (!scope.services.has(token)) {
                 scope.services.set(
                     token,
-                    this.createInstance((registration.provider as ClassProvider<T>).useClass, this.createArgs(registration, scope)),
+                    this.createInstance(
+                        (registration.provider as ClassProvider<T>).useClass,
+                        this.createArgs(registration, scope),
+                    ),
                 );
             }
             return scope.services.get(token)!;
         }
         if (registration.options.lifetime === Lifetime.Singleton) {
             if (typeof registration.instance === "undefined") {
-                registration.instance = this.createInstance((registration.provider as ClassProvider<T>).useClass, this.createArgs(registration, scope));
+                registration.instance = this.createInstance(
+                    (registration.provider as ClassProvider<T>).useClass,
+                    this.createArgs(registration, scope),
+                );
             }
             return registration.instance;
         }
-        return this.createInstance((registration.provider as ClassProvider<T>).useClass, this.createArgs(registration, scope));
+        return this.createInstance(
+            (registration.provider as ClassProvider<T>).useClass,
+            this.createArgs(registration, scope),
+        );
     }
 
     private async resolveClassProviderAsync<T>(
@@ -318,7 +345,10 @@ class Container implements IContainer {
             if (!scope.services.has(token)) {
                 scope.services.set(
                     token,
-                    this.createInstance((registration.provider as ClassProvider<T>).useClass, await this.createArgsAsync(registration, scope)),
+                    this.createInstance(
+                        (registration.provider as ClassProvider<T>).useClass,
+                        await this.createArgsAsync(registration, scope),
+                    ),
                 );
             }
             return scope.services.get(token)!;
@@ -332,7 +362,10 @@ class Container implements IContainer {
             }
             return registration.instance;
         }
-        return this.createInstance((registration.provider as ClassProvider<T>).useClass, await this.createArgsAsync(registration, scope));
+        return this.createInstance(
+            (registration.provider as ClassProvider<T>).useClass,
+            await this.createArgsAsync(registration, scope),
+        );
     }
 
     private createArgs(registration: Registration, scope?: ScopeContext): Array<unknown> {
