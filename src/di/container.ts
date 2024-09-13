@@ -14,18 +14,17 @@ import { UndefinedScopeError } from "./exceptions/UndefinedScopeError";
 class Container implements IContainer {
     private readonly _services: Map<InjectionToken, Registration> = new Map();
     private readonly _scopes: Set<ScopeContext> = new Set();
-    private readonly _resolutionStack = new Set<InjectionToken>();
-    private readonly _resolutionStackAsync = new Set<InjectionToken>();
+    private readonly _resolutionStack = new Map<InjectionToken, any>();
 
     createInstance<T>(implementation: ConstructorType<T>, args: Array<any> = []): T {
         return Reflect.construct(implementation, args);
     }
 
-    /*async createInstanceAsync<T>(implementation: ConstructorType<T>, args: Array<any> = []): Promise<T> {
+    async createInstanceAsync<T>(implementation: ConstructorType<T>, args: Array<any> = []): Promise<T> {
         return Reflect.construct(implementation, args);
-    }*/
+    }
 
-    public createProxy<T>(token: InjectionToken): T {
+    private createProxy<T>(token: InjectionToken): T {
         let init = false;
         let value: T;
         const resolvedObject: () => T = () => {
@@ -50,6 +49,43 @@ class Container implements IContainer {
             handler[method] = action(method);
         });
         const proxy = new Proxy<any>({}, handler) as T;
+        return proxy;
+    }
+
+    /*
+        This method uses a normal proxy creation and the normal resolve sync method, 
+        because if all goes well all thr instances of the classes should be loaded
+        when we try to access the proxy
+    */
+    private createProxyAsync<T>(token: InjectionToken): T {
+        let init = false;
+        let value: T;
+        const resolvedObject: () => T = () => {
+            if (!init) {
+                value = container.resolve<T>(token);
+                init = true;
+            }
+            return value;
+        };
+        const handler: ProxyHandler<any> = {};
+        const proxy = new Proxy<any>({}, handler) as T;
+        const action = (method: keyof ProxyHandler<any>) => {
+            return (...args: Array<any>) => {
+                //Trick to avoid infinite recursion
+                if (method === "get" && args[1] === "then" && typeof args[0].then === "undefined") {
+                    return proxy;
+                }
+                args[0] = resolvedObject();
+                const val = (Reflect[method] as any)(...args);
+                return typeof val === "function" ? val.bind(resolvedObject()) : val;
+            };
+        };
+        (Object.getOwnPropertyNames(Reflect) as Array<keyof ProxyHandler<any>>).forEach((method) => {
+            handler[method] = action(method);
+        });
+        (Object.getOwnPropertySymbols(Reflect) as unknown as Array<keyof ProxyHandler<any>>).forEach((method) => {
+            handler[method] = action(method);
+        });
         return proxy;
     }
 
@@ -101,9 +137,13 @@ class Container implements IContainer {
     resolve<T>(token: InjectionToken, scope?: ScopeContext): T {
         if (this._resolutionStack.has(token)) {
             //Circular dependency detected, return a proxy
-            return this.createProxy<T>(token);
+            if (this._resolutionStack.get(token) === null) {
+                this._resolutionStack.set(token, this.createProxy<T>(token));
+            }
+            return this._resolutionStack.get(token);
+            //return this.createProxy<T>(token);
         }
-        this._resolutionStack.add(token);
+        this._resolutionStack.set(token, null);
 
         try {
             if (!this.hasRegistration(token)) {
@@ -134,14 +174,13 @@ class Container implements IContainer {
             const registration = this.getRegistration(token)!;
 
             switch (registration.providerType) {
+                case ProvidersType.ConstructorProvider:
                 case ProvidersType.ClassProvider:
                     return this.resolveClassProvider(registration, token, scope);
                 case ProvidersType.FactoryProvider:
                     return this.resolveFactoryProvider(registration);
                 case ProvidersType.ValueProvider:
                     return this.resolveValueProvider(registration);
-                case ProvidersType.ConstructorProvider:
-                    return this.resolveClassProvider(registration, token, scope);
                 default:
                     throw new Error(`Invalid registration type: "${registration.providerType}"`);
             }
@@ -150,12 +189,15 @@ class Container implements IContainer {
         }
     }
 
-    async resolveAsync<T>(token: InjectionToken, scope: ScopeContext = new ScopeContext()): Promise<T> {
-        if (this._resolutionStackAsync.has(token)) {
+    async resolveAsync<T>(token: InjectionToken, scope?: ScopeContext): Promise<T> {
+        if (this._resolutionStack.has(token)) {
             //Circular dependency detected, return a proxy
-            return this.createProxy<T>(token) as Promise<T>;
+            if (this._resolutionStack.get(token) === null) {
+                this._resolutionStack.set(token, this.createProxyAsync<T>(token));
+            }
+            return await this._resolutionStack.get(token);
         }
-        this._resolutionStackAsync.add(token);
+        this._resolutionStack.set(token, null);
 
         try {
             if (!this.hasRegistration(token)) {
@@ -187,18 +229,17 @@ class Container implements IContainer {
 
             switch (registration.providerType) {
                 case ProvidersType.ClassProvider:
-                    return this.resolveClassProviderAsync(registration, token, scope);
+                case ProvidersType.ConstructorProvider:
+                    return await this.resolveClassProviderAsync(registration, token, scope);
                 case ProvidersType.FactoryProvider:
-                    return this.resolveFactoryProviderAsync(registration);
+                    return await this.resolveFactoryProviderAsync(registration);
                 case ProvidersType.ValueProvider:
                     return this.resolveValueProvider(registration);
-                case ProvidersType.ConstructorProvider:
-                    return this.resolveClassProviderAsync(registration, token, scope);
                 default:
                     throw new Error(`Invalid registration type: "${registration.providerType}"`);
             }
         } finally {
-            this._resolutionStackAsync.delete(token);
+            this._resolutionStack.delete(token);
         }
     }
 
@@ -212,6 +253,7 @@ class Container implements IContainer {
         return (registration.provider as FactoryProvider<T>).useFactory(this);
     }
     private resolveClassProvider<T>(registration: Registration, token: InjectionToken, scope?: ScopeContext): T {
+        const args = this.createArgs(registration, scope);
         if (registration.options.lifetime === Lifetime.Scoped) {
             if (typeof scope === "undefined") {
                 throw new UndefinedScopeError(token);
@@ -219,30 +261,26 @@ class Container implements IContainer {
             if (!scope.services.has(token)) {
                 scope.services.set(
                     token,
-                    this.createInstance(
-                        (registration.provider as ClassProvider<T>).useClass,
-                        this.createArgs(registration, scope),
-                    ),
+                    this.createInstance((registration.provider as ClassProvider<T>).useClass, args),
                 );
             }
             return scope.services.get(token)!;
         }
         if (registration.options.lifetime === Lifetime.Singleton) {
             if (typeof registration.instance === "undefined") {
-                registration.instance = this.createInstance(
-                    (registration.provider as ClassProvider<T>).useClass,
-                    this.createArgs(registration, scope),
-                );
+                registration.instance = this.createInstance((registration.provider as ClassProvider<T>).useClass, args);
             }
             return registration.instance;
         }
-        return this.createInstance(
-            (registration.provider as ClassProvider<T>).useClass,
-            this.createArgs(registration, scope),
-        );
+        return this.createInstance((registration.provider as ClassProvider<T>).useClass, args);
     }
 
-    private async resolveClassProviderAsync<T>(registration: Registration, token: InjectionToken, scope?: ScopeContext): Promise<T> {
+    private async resolveClassProviderAsync<T>(
+        registration: Registration,
+        token: InjectionToken,
+        scope?: ScopeContext,
+    ): Promise<T> {
+        const args = await this.createArgsAsync(registration, scope);
         if (registration.options.lifetime === Lifetime.Scoped) {
             if (typeof scope === "undefined") {
                 throw new UndefinedScopeError(token);
@@ -250,34 +288,32 @@ class Container implements IContainer {
             if (!scope.services.has(token)) {
                 scope.services.set(
                     token,
-                    this.createInstance(
-                        (registration.provider as ClassProvider<T>).useClass,
-                        await this.createArgsAsync(registration, scope),
-                    ),
+                    await this.createInstanceAsync((registration.provider as ClassProvider<T>).useClass, args),
                 );
             }
             return scope.services.get(token)!;
         }
         if (registration.options.lifetime === Lifetime.Singleton) {
             if (typeof registration.instance === "undefined") {
-                registration.instance = this.createInstance(
+                registration.instance = await this.createInstanceAsync(
                     (registration.provider as ClassProvider<T>).useClass,
-                    await this.createArgsAsync(registration, scope),
+                    args,
                 );
             }
             return registration.instance;
         }
-        return this.createInstance(
-            (registration.provider as ClassProvider<T>).useClass,
-            await this.createArgsAsync(registration, scope),
-        );
+        return await this.createInstanceAsync((registration.provider as ClassProvider<T>).useClass, args);
     }
 
     private createArgs(registration: Registration, scope?: ScopeContext): Array<unknown> {
         return registration.injections.map((token) => this.resolve(token, scope));
     }
     private async createArgsAsync(registration: Registration, scope?: ScopeContext): Promise<Array<unknown>> {
-        return Promise.all(registration.injections.map((token)=> this.resolveAsync(token, scope)));
+        const args = [];
+        for (const token of registration.injections) {
+            args.push(await this.resolveAsync(token, scope));
+        }
+        return args;
     }
 
     hasRegistration(token: InjectionToken): boolean {
