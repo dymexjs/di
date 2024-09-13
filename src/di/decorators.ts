@@ -1,4 +1,5 @@
 import { container } from "./container";
+import { InvalidDecoratorError } from "./exceptions/InvalidDecoratorError";
 import { InterfaceId, UnwrapInjectionTokens, UnwrapInterfaceIds } from "./types/decorators";
 import { InjectionToken } from "./types/InjectionToken";
 import { ProvidersType } from "./types/providers/Provider";
@@ -23,7 +24,7 @@ export function Singleton<I, TDependencies extends Array<InjectionToken>>(depend
             }
             return;
         }
-        throw new Error('Singleton decorator can only be used on a class.');
+        throw new InvalidDecoratorError("Singleton",target);
     }
 }
 
@@ -36,7 +37,7 @@ export function Transient<I, TDependencies extends Array<InjectionToken>>(depend
             }
             return;
         }
-        throw new Error('Transient decorator can only be used on a class.');
+        throw new InvalidDecoratorError("Transient",target);
     }
 }
 
@@ -49,7 +50,7 @@ export function Scoped<I, TDependencies extends Array<InjectionToken>>(dependenc
             }
             return;
         }
-        throw new Error('Scoped decorator can only be used on a class.');
+        throw new InvalidDecoratorError("Scoped",target);
     }
 }
 
@@ -70,7 +71,7 @@ export function SingletonInterface<I, TDependencies extends Array<InterfaceId<un
             container.registerType(id, {useToken: target});
             return;
         }
-        throw new Error("SingletonInterface decorator can only be used on a class.");
+        throw new InvalidDecoratorError("SingletonInterface",target);
     };
 }
 export function TransientInterface<I, TDependencies extends Array<InterfaceId<unknown> | InjectionToken<unknown>>>(
@@ -87,7 +88,7 @@ export function TransientInterface<I, TDependencies extends Array<InterfaceId<un
             container.registerType(id, {useToken: target});
             return;
         }
-        throw new Error("TransientInterface decorator can only be used on a class.");
+        throw new InvalidDecoratorError("TransientInterface",target);
     };
 }
 
@@ -105,7 +106,7 @@ export function ScopedInterface<I, TDependencies extends Array<InterfaceId<unkno
             container.registerType(id, {useToken: target});
             return;
         }
-        throw new Error("ScopedInterface decorator can only be used on a class.");
+        throw new InvalidDecoratorError("ScopedInterface",target);
     };
 }
 

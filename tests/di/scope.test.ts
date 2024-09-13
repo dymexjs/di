@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, test } from "@jest/globals";
 import { container } from "../../src/di/container";
 import { ScopeContext } from "../../src/di/ScopeContext";
 import { Lifetime } from "../../src/di/types/Registration";
+import { STATIC_INJECT_LIFETIME } from "../../src/di/constants";
+import { UndefinedScopeError } from "../../src/di/exceptions/UndefinedScopeError";
 
 describe("Averix_DI", () => {
     beforeEach(()=>container.reset());
@@ -48,6 +50,43 @@ describe("Averix_DI", () => {
                 const value2 = container.resolve<TestClass>(TestClass, scope2);
                 expect(value2).toBeInstanceOf(TestClass);
                 expect(value2.propertyA).toBe("test");
+            });
+        });
+        describe("other",()=>{
+            describe("sync",()=>{
+                test("register constructor in scope",()=>{
+                    class Test {
+                        static [STATIC_INJECT_LIFETIME] = Lifetime.Scoped;
+                    }
+                    const scope = container.createScope();
+                    const test = container.resolve(Test,scope);
+                    expect(container.hasRegistration(Test)).toBe(true);
+                    expect(test).toBeInstanceOf(Test);
+                });
+                test("throw register constructor without scope",()=>{
+                    class Test {
+                        static [STATIC_INJECT_LIFETIME] = Lifetime.Scoped;
+                    }
+                    expect(()=>container.resolve(Test)).toThrow(UndefinedScopeError);
+                });    
+            });
+            describe("async",()=>{
+                test("register constructor in scope",async ()=>{
+                    class Test {
+                        static [STATIC_INJECT_LIFETIME] = Lifetime.Scoped;
+                    }
+                    const scope = container.createScope();
+                    const test = await container.resolveAsync(Test,scope);
+                    expect(container.hasRegistration(Test)).toBe(true);
+                    expect(test).toBeInstanceOf(Test);
+                });
+                test("throw register constructor without scope",()=>{
+                    class Test {
+                        static [STATIC_INJECT_LIFETIME] = Lifetime.Scoped;
+                    }
+                    expect(container.resolveAsync(Test)).rejects.toThrow(UndefinedScopeError);
+                });
+    
             });
         });
     });
