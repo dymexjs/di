@@ -7,7 +7,6 @@ import { ConstructorType } from "./ConstructorType";
 
 export interface IContainer {
     createInstance<T>(implementation: ConstructorType<T>): T;
-    //createInstanceAsync<T>(implementation: ConstructorType<T>): Promise<T>;
     getRegistration(token: InjectionToken): Registration | undefined;
     hasRegistration(token: InjectionToken): boolean;
     register<T>(

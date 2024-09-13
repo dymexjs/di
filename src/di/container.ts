@@ -20,10 +20,6 @@ class Container implements IContainer {
         return Reflect.construct(implementation, args);
     }
 
-    async createInstanceAsync<T>(implementation: ConstructorType<T>, args: Array<any> = []): Promise<T> {
-        return Reflect.construct(implementation, args);
-    }
-
     private createProxy<T>(token: InjectionToken): T {
         let init = false;
         let value: T;
@@ -71,7 +67,7 @@ class Container implements IContainer {
         const proxy = new Proxy<any>({}, handler) as T;
         const action = (method: keyof ProxyHandler<any>) => {
             return (...args: Array<any>) => {
-                //Trick to avoid infinite recursion
+                //Trick because of promises - await will fire Promise.then() in the proxy
                 if (method === "get" && args[1] === "then" && typeof args[0].then === "undefined") {
                     return proxy;
                 }
@@ -141,7 +137,6 @@ class Container implements IContainer {
                 this._resolutionStack.set(token, this.createProxy<T>(token));
             }
             return this._resolutionStack.get(token);
-            //return this.createProxy<T>(token);
         }
         this._resolutionStack.set(token, null);
 
@@ -288,21 +283,21 @@ class Container implements IContainer {
             if (!scope.services.has(token)) {
                 scope.services.set(
                     token,
-                    await this.createInstanceAsync((registration.provider as ClassProvider<T>).useClass, args),
+                    this.createInstance((registration.provider as ClassProvider<T>).useClass, args),
                 );
             }
             return scope.services.get(token)!;
         }
         if (registration.options.lifetime === Lifetime.Singleton) {
             if (typeof registration.instance === "undefined") {
-                registration.instance = await this.createInstanceAsync(
+                registration.instance = this.createInstance(
                     (registration.provider as ClassProvider<T>).useClass,
                     args,
                 );
             }
             return registration.instance;
         }
-        return await this.createInstanceAsync((registration.provider as ClassProvider<T>).useClass, args);
+        return this.createInstance((registration.provider as ClassProvider<T>).useClass, args);
     }
 
     private createArgs(registration: Registration, scope?: ScopeContext): Array<unknown> {
