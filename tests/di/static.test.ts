@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, test } from "@jest/globals";
 import { container } from "../../src/di/container";
 import { STATIC_INJECT_KEY, STATIC_INJECT_LIFETIME } from "../../src/di/constants";
 import { Lifetime } from "../../src/di/types/Registration";
-import { StaticInjectable } from "../../src/di/types/IStaticInject";
+import { StaticInjectable } from "../../src/di/types/StaticInject";
 import { IContainer } from "../../src/di/types/IContainer";
 
 describe("Averix_DI", () => {

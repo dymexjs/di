@@ -2,134 +2,130 @@ import { beforeEach, describe, expect, test } from "@jest/globals";
 import { STATIC_INJECT_KEY, STATIC_INJECT_LIFETIME } from '../../src/di/constants';
 import { Lifetime } from "../../src/di/types/Registration";
 import { container } from "../../src/di/container";
-import { StaticInjectable } from "../../src/di/types/IStaticInject";
+import { StaticInjectable } from "../../src/di/types/StaticInject";
 import { IContainer } from "../../src/di/types/IContainer";
+import { createInterfaceId, SingletonInterface } from "../../src/di/types/decorators/InterfaceId";
+import { Singleton } from '../../src/di/types/decorators/decorators';
 
 
 describe("Averix_DI ",()=>{
     beforeEach(()=>container.reset());
     describe("Static inject",()=>{
         class ServiceA implements StaticInjectable<typeof ServiceA>{
-            constructor(public serviceB: ServiceB, public serviceC: ServiceC){
-                console.log("Criou: A");
-            }
+            constructor(public serviceB: ServiceB, public serviceC: ServiceC){}
             public static [STATIC_INJECT_KEY] = ["serviceB", "serviceC"];
             public static [STATIC_INJECT_LIFETIME] = Lifetime.Singleton;
         }
         class ServiceB implements StaticInjectable<typeof ServiceB>{
-            constructor(public serviceA: ServiceA, public serviceD: ServiceD){
-                console.log("Criou: B");
-            }
+            constructor(public serviceA: ServiceA, public serviceD: ServiceD){}
             public static [STATIC_INJECT_KEY] = ["serviceA", "serviceD"];
             public static [STATIC_INJECT_LIFETIME] = Lifetime.Singleton;
         }
         class ServiceC implements StaticInjectable<typeof ServiceC>{
-            constructor(public serviceB: ServiceB, public serviceD: ServiceD){
-                console.log("Criou: C");
-            }
+            constructor(public serviceB: ServiceB, public serviceD: ServiceD){}
             public static [STATIC_INJECT_KEY] = ["serviceB", "serviceD"];
             public static [STATIC_INJECT_LIFETIME] = Lifetime.Singleton;
         }
         class ServiceD implements StaticInjectable<typeof ServiceD>{
-            constructor(public serviceA: ServiceA, public serviceC: ServiceC){
-                console.log("Criou: D");
-            }
+            constructor(public serviceA: ServiceA, public serviceC: ServiceC){}
             public static [STATIC_INJECT_KEY] = ["serviceA", "serviceC"];
             public static [STATIC_INJECT_LIFETIME] = Lifetime.Singleton;
         }
-        test("circular dependency resolution simple case", () => {
-            class TestClass2 implements StaticInjectable<typeof TestClass2> {
-                constructor(public test: TestClass) {}
-                public static [STATIC_INJECT_KEY] = ["test"];
-                public static [STATIC_INJECT_LIFETIME] = Lifetime.Singleton;
-            }
-            class TestClass implements StaticInjectable<typeof TestClass> {
-                public propertyA = "test";
-                constructor(public test2: TestClass2){}
-                public static [STATIC_INJECT_KEY] = [TestClass2];
-            }
-            container.register("test", { useClass: TestClass }, { lifetime: Lifetime.Singleton });
-            const test2 = container.resolve<TestClass2>(TestClass2);
-            const test = container.resolve<TestClass>("test");
-            expect(test2).toBeInstanceOf(TestClass2);
-            expect(test).toBeInstanceOf(TestClass);
-            expect(test2.test).toBeInstanceOf(TestClass);
-            expect(test.test2).toBeInstanceOf(TestClass2);
-            expect(test2.test).toBe(test);
-            //This needs to be toEqual because where comparing the generated proxy, and toEqual will make a deep equal assertion
-            expect(test.test2).toEqual(test2);
-        });
-        test("circular dependency resolution complex case", () => {
-            container.register("serviceA",{useClass: ServiceA});
-            container.register("serviceB",{useClass: ServiceB});
-            container.register("serviceC",{useClass: ServiceC});
-            container.register("serviceD",{useClass: ServiceD});
-
-            /*
-                When resolving for ServiceA the path is:
-                ServiceA(A) -> ServiceB(A) -> ServiceA(B)P -> ServiceD(B) -> ServiceA(D)P -> ServiceC(D) -> ServiceB(C)P -> ServiceD(C)P -> ServiceC(A)
-                //Creation result
-                ServiceA(A) -> ServiceB(A) -> proxy(ServiceA(B)) -> ServiceD(B) -> proxy(ServiceA(D)) -> ServiceC(D) -> proxy(ServiceB(C)) -> proxy(ServiceD(C)) -> ServiceC(A)
-            */
-
-            const serviceA = container.resolve<ServiceA>("serviceA");
-            const serviceB = container.resolve<ServiceB>("serviceB");
-            const serviceC = container.resolve<ServiceC>("serviceC");
-            const serviceD = container.resolve<ServiceD>("serviceD");
-
-            expect(serviceA).toBeInstanceOf(ServiceA);
-            expect(serviceA.serviceB).toBeInstanceOf(ServiceB);
-            expect(serviceA.serviceB.serviceA).toBeInstanceOf(ServiceA);
-            expect(serviceA.serviceB.serviceD).toBeInstanceOf(ServiceD);
-            expect(serviceA.serviceC).toBeInstanceOf(ServiceC);
-            expect(serviceA.serviceC.serviceB).toBeInstanceOf(ServiceB);
-            expect(serviceA.serviceC.serviceD).toBeInstanceOf(ServiceD);
-            expect(serviceB).toBeInstanceOf(ServiceB);
-            expect(serviceB.serviceA).toBeInstanceOf(ServiceA);
-            expect(serviceB.serviceA.serviceB).toBeInstanceOf(ServiceB);
-            expect(serviceB.serviceA.serviceC).toBeInstanceOf(ServiceC);
-            expect(serviceB.serviceD).toBeInstanceOf(ServiceD);
-            expect(serviceB.serviceD.serviceA).toBeInstanceOf(ServiceA);
-            expect(serviceB.serviceD.serviceC).toBeInstanceOf(ServiceC);
-            expect(serviceC).toBeInstanceOf(ServiceC);
-            expect(serviceC.serviceB).toBeInstanceOf(ServiceB);
-            expect(serviceC.serviceB.serviceA).toBeInstanceOf(ServiceA);
-            expect(serviceC.serviceB.serviceD).toBeInstanceOf(ServiceD);
-            expect(serviceC.serviceD).toBeInstanceOf(ServiceD);
-            expect(serviceC.serviceD.serviceA).toBeInstanceOf(ServiceA);
-            expect(serviceC.serviceD.serviceC).toBeInstanceOf(ServiceC);
-            expect(serviceD).toBeInstanceOf(ServiceD);
-            expect(serviceD.serviceA).toBeInstanceOf(ServiceA);
-            expect(serviceD.serviceA.serviceB).toBeInstanceOf(ServiceB);
-            expect(serviceD.serviceA.serviceC).toBeInstanceOf(ServiceC);
-            expect(serviceD.serviceC).toBeInstanceOf(ServiceC);
-            expect(serviceD.serviceC.serviceB).toBeInstanceOf(ServiceB);
-            expect(serviceD.serviceC.serviceD).toBeInstanceOf(ServiceD);
-
-            expect(serviceA.serviceB).toBe(serviceB);               //Instance
-            expect(serviceA.serviceB.serviceA).toEqual(serviceA);   //Proxy
-            expect(serviceA.serviceB.serviceD).toBe(serviceD);      //Instance
-            expect(serviceA.serviceC).toBe(serviceC);               //Instance
-            expect(serviceA.serviceC.serviceB).toEqual(serviceB);   //Proxy
-            expect(serviceA.serviceC.serviceD).toEqual(serviceD);   //Proxy
-            expect(serviceB.serviceA).toEqual(serviceA);            //Proxy
-            expect(serviceB.serviceA.serviceB).toBe(serviceB);      //Instance
-            expect(serviceB.serviceA.serviceC).toBe(serviceC);      //Instance
-            expect(serviceB.serviceD).toBe(serviceD);               //Instance
-            expect(serviceB.serviceD.serviceA).toEqual(serviceA);   //Proxy
-            expect(serviceB.serviceD.serviceC).toBe(serviceC);      //Instance
-            expect(serviceC.serviceB).toEqual(serviceB);            //Proxy
-            expect(serviceC.serviceB.serviceA).toEqual(serviceA);   //Proxy
-            expect(serviceC.serviceB.serviceD).toBe(serviceD);      //Instance
-            expect(serviceC.serviceD).toEqual(serviceD);            //Proxy
-            expect(serviceC.serviceD.serviceA).toEqual(serviceA);   //Proxy
-            expect(serviceC.serviceD.serviceC).toBe(serviceC);      //Instance
-            expect(serviceD.serviceA).toEqual(serviceA);            //Proxy
-            expect(serviceD.serviceA.serviceB).toBe(serviceB);      //Proxy
-            expect(serviceD.serviceA.serviceC).toBe(serviceC);      //Proxy
-            expect(serviceD.serviceC).toBe(serviceC);               //Instance
-            expect(serviceD.serviceC.serviceB).toEqual(serviceB);   //Proxy
-            expect(serviceD.serviceC.serviceD).toEqual(serviceD);   //Proxy
+        describe("sync",()=>{
+            test("circular dependency resolution simple case", () => {
+                class TestClass2 implements StaticInjectable<typeof TestClass2> {
+                    constructor(public test: TestClass) {}
+                    public static [STATIC_INJECT_KEY] = ["test"];
+                    public static [STATIC_INJECT_LIFETIME] = Lifetime.Singleton;
+                }
+                class TestClass implements StaticInjectable<typeof TestClass> {
+                    public propertyA = "test";
+                    constructor(public test2: TestClass2){}
+                    public static [STATIC_INJECT_KEY] = [TestClass2];
+                }
+                container.register("test", { useClass: TestClass }, { lifetime: Lifetime.Singleton });
+                const test2 = container.resolve<TestClass2>(TestClass2);
+                const test = container.resolve<TestClass>("test");
+                expect(test2).toBeInstanceOf(TestClass2);
+                expect(test).toBeInstanceOf(TestClass);
+                expect(test2.test).toBeInstanceOf(TestClass);
+                expect(test.test2).toBeInstanceOf(TestClass2);
+                expect(test2.test).toBe(test);
+                //This needs to be toEqual because where comparing the generated proxy, and toEqual will make a deep equal assertion
+                expect(test.test2).toEqual(test2);
+            });
+            test("circular dependency resolution complex case", () => {
+                container.register("serviceA",{useClass: ServiceA});
+                container.register("serviceB",{useClass: ServiceB});
+                container.register("serviceC",{useClass: ServiceC});
+                container.register("serviceD",{useClass: ServiceD});
+    
+                /*
+                    When resolving for ServiceA the path is:
+                    ServiceA(A) -> ServiceB(A) -> ServiceA(B)P -> ServiceD(B) -> ServiceA(D)P -> ServiceC(D) -> ServiceB(C)P -> ServiceD(C)P -> ServiceC(A)
+                    //Creation result
+                    ServiceA(A) -> ServiceB(A) -> proxy(ServiceA(B)) -> ServiceD(B) -> proxy(ServiceA(D)) -> ServiceC(D) -> proxy(ServiceB(C)) -> proxy(ServiceD(C)) -> ServiceC(A)
+                */
+    
+                const serviceA = container.resolve<ServiceA>("serviceA");
+                const serviceB = container.resolve<ServiceB>("serviceB");
+                const serviceC = container.resolve<ServiceC>("serviceC");
+                const serviceD = container.resolve<ServiceD>("serviceD");
+    
+                expect(serviceA).toBeInstanceOf(ServiceA);
+                expect(serviceA.serviceB).toBeInstanceOf(ServiceB);
+                expect(serviceA.serviceB.serviceA).toBeInstanceOf(ServiceA);
+                expect(serviceA.serviceB.serviceD).toBeInstanceOf(ServiceD);
+                expect(serviceA.serviceC).toBeInstanceOf(ServiceC);
+                expect(serviceA.serviceC.serviceB).toBeInstanceOf(ServiceB);
+                expect(serviceA.serviceC.serviceD).toBeInstanceOf(ServiceD);
+                expect(serviceB).toBeInstanceOf(ServiceB);
+                expect(serviceB.serviceA).toBeInstanceOf(ServiceA);
+                expect(serviceB.serviceA.serviceB).toBeInstanceOf(ServiceB);
+                expect(serviceB.serviceA.serviceC).toBeInstanceOf(ServiceC);
+                expect(serviceB.serviceD).toBeInstanceOf(ServiceD);
+                expect(serviceB.serviceD.serviceA).toBeInstanceOf(ServiceA);
+                expect(serviceB.serviceD.serviceC).toBeInstanceOf(ServiceC);
+                expect(serviceC).toBeInstanceOf(ServiceC);
+                expect(serviceC.serviceB).toBeInstanceOf(ServiceB);
+                expect(serviceC.serviceB.serviceA).toBeInstanceOf(ServiceA);
+                expect(serviceC.serviceB.serviceD).toBeInstanceOf(ServiceD);
+                expect(serviceC.serviceD).toBeInstanceOf(ServiceD);
+                expect(serviceC.serviceD.serviceA).toBeInstanceOf(ServiceA);
+                expect(serviceC.serviceD.serviceC).toBeInstanceOf(ServiceC);
+                expect(serviceD).toBeInstanceOf(ServiceD);
+                expect(serviceD.serviceA).toBeInstanceOf(ServiceA);
+                expect(serviceD.serviceA.serviceB).toBeInstanceOf(ServiceB);
+                expect(serviceD.serviceA.serviceC).toBeInstanceOf(ServiceC);
+                expect(serviceD.serviceC).toBeInstanceOf(ServiceC);
+                expect(serviceD.serviceC.serviceB).toBeInstanceOf(ServiceB);
+                expect(serviceD.serviceC.serviceD).toBeInstanceOf(ServiceD);
+    
+                expect(serviceA.serviceB).toBe(serviceB);               //Instance
+                expect(serviceA.serviceB.serviceA).toEqual(serviceA);   //Proxy
+                expect(serviceA.serviceB.serviceD).toBe(serviceD);      //Instance
+                expect(serviceA.serviceC).toBe(serviceC);               //Instance
+                expect(serviceA.serviceC.serviceB).toEqual(serviceB);   //Proxy
+                expect(serviceA.serviceC.serviceD).toEqual(serviceD);   //Proxy
+                expect(serviceB.serviceA).toEqual(serviceA);            //Proxy
+                expect(serviceB.serviceA.serviceB).toBe(serviceB);      //Instance
+                expect(serviceB.serviceA.serviceC).toBe(serviceC);      //Instance
+                expect(serviceB.serviceD).toBe(serviceD);               //Instance
+                expect(serviceB.serviceD.serviceA).toEqual(serviceA);   //Proxy
+                expect(serviceB.serviceD.serviceC).toBe(serviceC);      //Instance
+                expect(serviceC.serviceB).toEqual(serviceB);            //Proxy
+                expect(serviceC.serviceB.serviceA).toEqual(serviceA);   //Proxy
+                expect(serviceC.serviceB.serviceD).toBe(serviceD);      //Instance
+                expect(serviceC.serviceD).toEqual(serviceD);            //Proxy
+                expect(serviceC.serviceD.serviceA).toEqual(serviceA);   //Proxy
+                expect(serviceC.serviceD.serviceC).toBe(serviceC);      //Instance
+                expect(serviceD.serviceA).toEqual(serviceA);            //Proxy
+                expect(serviceD.serviceA.serviceB).toBe(serviceB);      //Proxy
+                expect(serviceD.serviceA.serviceC).toBe(serviceC);      //Proxy
+                expect(serviceD.serviceC).toBe(serviceC);               //Instance
+                expect(serviceD.serviceC.serviceB).toEqual(serviceB);   //Proxy
+                expect(serviceD.serviceC.serviceD).toEqual(serviceD);   //Proxy
+            });
         });
         describe("async", ()=>{
             test("circular dependency resolution simple case", async () => {
@@ -237,6 +233,249 @@ describe("Averix_DI ",()=>{
                 expect(serviceD.serviceC).toBe(serviceC);               //Instance
                 expect(serviceD.serviceC.serviceB).toEqual(serviceB);   //Proxy
                 expect(serviceD.serviceC.serviceD).toEqual(serviceD);   //Proxy
+            });
+        });
+    });
+    describe("Decorators",()=>{
+        describe("Class",()=>{
+            test("circular dependency resolution simple case", () => {
+                @Singleton(["test2"], "test")
+                class TestClass {
+                    public propertyA = "test";
+                    constructor(public test2: TestClass2){}
+                }
+                @Singleton(["test"], "test2")
+                class TestClass2 {
+                    constructor(public test: TestClass) {}
+                }
+
+                const test = container.resolve<TestClass>("test");
+                const test2 = container.resolve<TestClass2>("test2");
+                expect(test).toBeInstanceOf(TestClass);
+                expect(test2).toBeInstanceOf(TestClass2);
+                expect(test.test2).toBeInstanceOf(TestClass2);
+                expect(test2.test).toBeInstanceOf(TestClass);
+                expect(test.test2).toBe(test2);
+                //This needs to be toEqual because where comparing the generated proxy, and toEqual will make a deep equal assertion
+                expect(test2.test).toEqual(test);
+            });
+            test("circular dependency complex case",()=>{
+                @Singleton(["serviceB", "serviceC"], "serviceA")
+                class ServiceA {
+                    constructor(public serviceB: ServiceB, public serviceC: ServiceC){}
+                }
+                @Singleton(["serviceA", "serviceD"], "serviceB")
+                class ServiceB {
+                    constructor(public serviceA: ServiceA, public serviceD: ServiceD){}
+                }
+                @Singleton(["serviceB", "serviceD"], "serviceC")
+                class ServiceC {
+                    constructor(public serviceB: ServiceB, public serviceD: ServiceD){}
+                }
+                @Singleton(["serviceA", "serviceC"], "serviceD")
+                class ServiceD {
+                    constructor(public serviceA: ServiceA, public serviceC: ServiceC){}
+                }
+                                /*
+                    When resolving for ServiceA the path is:
+                    ServiceA(A) -> ServiceB(A) -> ServiceA(B)P -> ServiceD(B) -> ServiceA(D)P -> ServiceC(D) -> ServiceB(C)P -> ServiceD(C)P -> ServiceC(A)
+                    //Creation result
+                    ServiceA(A) -> ServiceB(A) -> proxy(ServiceA(B)) -> ServiceD(B) -> proxy(ServiceA(D)) -> ServiceC(D) -> proxy(ServiceB(C)) -> proxy(ServiceD(C)) -> ServiceC(A)
+                */
+    
+                    const serviceA = container.resolve<ServiceA>("serviceA");
+                    const serviceB = container.resolve<ServiceB>("serviceB");
+                    const serviceC = container.resolve<ServiceC>("serviceC");
+                    const serviceD = container.resolve<ServiceD>("serviceD");
+        
+                    expect(serviceA).toBeInstanceOf(ServiceA);
+                    expect(serviceA.serviceB).toBeInstanceOf(ServiceB);
+                    expect(serviceA.serviceB.serviceA).toBeInstanceOf(ServiceA);
+                    expect(serviceA.serviceB.serviceD).toBeInstanceOf(ServiceD);
+                    expect(serviceA.serviceC).toBeInstanceOf(ServiceC);
+                    expect(serviceA.serviceC.serviceB).toBeInstanceOf(ServiceB);
+                    expect(serviceA.serviceC.serviceD).toBeInstanceOf(ServiceD);
+                    expect(serviceB).toBeInstanceOf(ServiceB);
+                    expect(serviceB.serviceA).toBeInstanceOf(ServiceA);
+                    expect(serviceB.serviceA.serviceB).toBeInstanceOf(ServiceB);
+                    expect(serviceB.serviceA.serviceC).toBeInstanceOf(ServiceC);
+                    expect(serviceB.serviceD).toBeInstanceOf(ServiceD);
+                    expect(serviceB.serviceD.serviceA).toBeInstanceOf(ServiceA);
+                    expect(serviceB.serviceD.serviceC).toBeInstanceOf(ServiceC);
+                    expect(serviceC).toBeInstanceOf(ServiceC);
+                    expect(serviceC.serviceB).toBeInstanceOf(ServiceB);
+                    expect(serviceC.serviceB.serviceA).toBeInstanceOf(ServiceA);
+                    expect(serviceC.serviceB.serviceD).toBeInstanceOf(ServiceD);
+                    expect(serviceC.serviceD).toBeInstanceOf(ServiceD);
+                    expect(serviceC.serviceD.serviceA).toBeInstanceOf(ServiceA);
+                    expect(serviceC.serviceD.serviceC).toBeInstanceOf(ServiceC);
+                    expect(serviceD).toBeInstanceOf(ServiceD);
+                    expect(serviceD.serviceA).toBeInstanceOf(ServiceA);
+                    expect(serviceD.serviceA.serviceB).toBeInstanceOf(ServiceB);
+                    expect(serviceD.serviceA.serviceC).toBeInstanceOf(ServiceC);
+                    expect(serviceD.serviceC).toBeInstanceOf(ServiceC);
+                    expect(serviceD.serviceC.serviceB).toBeInstanceOf(ServiceB);
+                    expect(serviceD.serviceC.serviceD).toBeInstanceOf(ServiceD);
+        
+                    expect(serviceA.serviceB).toBe(serviceB);               //Instance
+                    expect(serviceA.serviceB.serviceA).toEqual(serviceA);   //Proxy
+                    expect(serviceA.serviceB.serviceD).toBe(serviceD);      //Instance
+                    expect(serviceA.serviceC).toBe(serviceC);               //Instance
+                    expect(serviceA.serviceC.serviceB).toEqual(serviceB);   //Proxy
+                    expect(serviceA.serviceC.serviceD).toEqual(serviceD);   //Proxy
+                    expect(serviceB.serviceA).toEqual(serviceA);            //Proxy
+                    expect(serviceB.serviceA.serviceB).toBe(serviceB);      //Instance
+                    expect(serviceB.serviceA.serviceC).toBe(serviceC);      //Instance
+                    expect(serviceB.serviceD).toBe(serviceD);               //Instance
+                    expect(serviceB.serviceD.serviceA).toEqual(serviceA);   //Proxy
+                    expect(serviceB.serviceD.serviceC).toBe(serviceC);      //Instance
+                    expect(serviceC.serviceB).toEqual(serviceB);            //Proxy
+                    expect(serviceC.serviceB.serviceA).toEqual(serviceA);   //Proxy
+                    expect(serviceC.serviceB.serviceD).toBe(serviceD);      //Instance
+                    expect(serviceC.serviceD).toEqual(serviceD);            //Proxy
+                    expect(serviceC.serviceD.serviceA).toEqual(serviceA);   //Proxy
+                    expect(serviceC.serviceD.serviceC).toBe(serviceC);      //Instance
+                    expect(serviceD.serviceA).toEqual(serviceA);            //Proxy
+                    expect(serviceD.serviceA.serviceB).toBe(serviceB);      //Proxy
+                    expect(serviceD.serviceA.serviceC).toBe(serviceC);      //Proxy
+                    expect(serviceD.serviceC).toBe(serviceC);               //Instance
+                    expect(serviceD.serviceC.serviceB).toEqual(serviceB);   //Proxy
+                    expect(serviceD.serviceC.serviceD).toEqual(serviceD);   //Proxy
+            });
+        });
+        describe("Interface",()=>{
+            test("simple case",()=>{
+                interface TC {
+                    readonly propertyA: string;
+                    readonly test2: TC2;
+                }
+                const TC = createInterfaceId<TC>("TC");
+                interface TC2 {
+                    readonly test: TC;
+                }
+                const TC2 = createInterfaceId<TC2>("TC2");
+
+                @SingletonInterface(TC,[TC2])
+                class TestClass implements TC {
+                    public propertyA = "test";
+                    constructor(public test2: TestClass2){}
+                }
+                @SingletonInterface(TC2,[TC])
+                class TestClass2 implements TC2 {
+                    constructor(public test: TestClass) {}
+                }
+                const test2 = container.resolve<TC2>(TC2);
+                const test = container.resolve<TestClass>(TC);
+                expect(test2).toBeInstanceOf(TestClass2);
+                expect(test).toBeInstanceOf(TestClass);
+                expect(test2.test).toBeInstanceOf(TestClass);
+                expect(test.test2).toBeInstanceOf(TestClass2);
+                expect(test2.test).toBe(test);
+                //This needs to be toEqual because where comparing the generated proxy, and toEqual will make a deep equal assertion
+                expect(test.test2).toEqual(test2);
+            });
+            test("circular dependency complex case",()=>{
+                interface SA {
+                    readonly serviceB: SB;
+                    readonly serviceC: SC;
+                }
+                const SA = createInterfaceId<SA>("SA");
+                interface SB {
+                    readonly serviceA: SA;
+                    readonly serviceD: SD;
+                }
+                const SB = createInterfaceId<SB>("SB");
+                interface SC {
+                    readonly serviceB: SB;
+                    readonly serviceD: SD;
+                }
+                const SC = createInterfaceId<SC>("SC");
+                interface SD {
+                    readonly serviceA: SA;
+                    readonly serviceC: SC;
+                }
+                const SD = createInterfaceId<SD>("SD");
+                @SingletonInterface(SA,[SB, SC])
+                class ServiceA {
+                    constructor(public serviceB: ServiceB, public serviceC: ServiceC){}
+                }
+                @SingletonInterface(SB,[SA, SD])
+                class ServiceB {
+                    constructor(public serviceA: ServiceA, public serviceD: ServiceD){}
+                }
+                @SingletonInterface(SC,[SB, SD])
+                class ServiceC {
+                    constructor(public serviceB: ServiceB, public serviceD: ServiceD){}
+                }
+                @SingletonInterface(SD,[SA, SC])
+                class ServiceD {
+                    constructor(public serviceA: ServiceA, public serviceC: ServiceC){}
+                }
+                                /*
+                    When resolving for ServiceA the path is:
+                    ServiceA(A) -> ServiceB(A) -> ServiceA(B)P -> ServiceD(B) -> ServiceA(D)P -> ServiceC(D) -> ServiceB(C)P -> ServiceD(C)P -> ServiceC(A)
+                    //Creation result
+                    ServiceA(A) -> ServiceB(A) -> proxy(ServiceA(B)) -> ServiceD(B) -> proxy(ServiceA(D)) -> ServiceC(D) -> proxy(ServiceB(C)) -> proxy(ServiceD(C)) -> ServiceC(A)
+                */
+    
+                    const serviceA = container.resolve<ServiceA>(SA);
+                    const serviceB = container.resolve<ServiceB>(SB);
+                    const serviceC = container.resolve<ServiceC>(ServiceC);
+                    const serviceD = container.resolve<ServiceD>(ServiceD);
+        
+                    expect(serviceA).toBeInstanceOf(ServiceA);
+                    expect(serviceA.serviceB).toBeInstanceOf(ServiceB);
+                    expect(serviceA.serviceB.serviceA).toBeInstanceOf(ServiceA);
+                    expect(serviceA.serviceB.serviceD).toBeInstanceOf(ServiceD);
+                    expect(serviceA.serviceC).toBeInstanceOf(ServiceC);
+                    expect(serviceA.serviceC.serviceB).toBeInstanceOf(ServiceB);
+                    expect(serviceA.serviceC.serviceD).toBeInstanceOf(ServiceD);
+                    expect(serviceB).toBeInstanceOf(ServiceB);
+                    expect(serviceB.serviceA).toBeInstanceOf(ServiceA);
+                    expect(serviceB.serviceA.serviceB).toBeInstanceOf(ServiceB);
+                    expect(serviceB.serviceA.serviceC).toBeInstanceOf(ServiceC);
+                    expect(serviceB.serviceD).toBeInstanceOf(ServiceD);
+                    expect(serviceB.serviceD.serviceA).toBeInstanceOf(ServiceA);
+                    expect(serviceB.serviceD.serviceC).toBeInstanceOf(ServiceC);
+                    expect(serviceC).toBeInstanceOf(ServiceC);
+                    expect(serviceC.serviceB).toBeInstanceOf(ServiceB);
+                    expect(serviceC.serviceB.serviceA).toBeInstanceOf(ServiceA);
+                    expect(serviceC.serviceB.serviceD).toBeInstanceOf(ServiceD);
+                    expect(serviceC.serviceD).toBeInstanceOf(ServiceD);
+                    expect(serviceC.serviceD.serviceA).toBeInstanceOf(ServiceA);
+                    expect(serviceC.serviceD.serviceC).toBeInstanceOf(ServiceC);
+                    expect(serviceD).toBeInstanceOf(ServiceD);
+                    expect(serviceD.serviceA).toBeInstanceOf(ServiceA);
+                    expect(serviceD.serviceA.serviceB).toBeInstanceOf(ServiceB);
+                    expect(serviceD.serviceA.serviceC).toBeInstanceOf(ServiceC);
+                    expect(serviceD.serviceC).toBeInstanceOf(ServiceC);
+                    expect(serviceD.serviceC.serviceB).toBeInstanceOf(ServiceB);
+                    expect(serviceD.serviceC.serviceD).toBeInstanceOf(ServiceD);
+        
+                    expect(serviceA.serviceB).toBe(serviceB);               //Instance
+                    expect(serviceA.serviceB.serviceA).toEqual(serviceA);   //Proxy
+                    expect(serviceA.serviceB.serviceD).toBe(serviceD);      //Instance
+                    expect(serviceA.serviceC).toBe(serviceC);               //Instance
+                    expect(serviceA.serviceC.serviceB).toEqual(serviceB);   //Proxy
+                    expect(serviceA.serviceC.serviceD).toEqual(serviceD);   //Proxy
+                    expect(serviceB.serviceA).toEqual(serviceA);            //Proxy
+                    expect(serviceB.serviceA.serviceB).toBe(serviceB);      //Instance
+                    expect(serviceB.serviceA.serviceC).toBe(serviceC);      //Instance
+                    expect(serviceB.serviceD).toBe(serviceD);               //Instance
+                    expect(serviceB.serviceD.serviceA).toEqual(serviceA);   //Proxy
+                    expect(serviceB.serviceD.serviceC).toBe(serviceC);      //Instance
+                    expect(serviceC.serviceB).toEqual(serviceB);            //Proxy
+                    expect(serviceC.serviceB.serviceA).toEqual(serviceA);   //Proxy
+                    expect(serviceC.serviceB.serviceD).toBe(serviceD);      //Instance
+                    expect(serviceC.serviceD).toEqual(serviceD);            //Proxy
+                    expect(serviceC.serviceD.serviceA).toEqual(serviceA);   //Proxy
+                    expect(serviceC.serviceD.serviceC).toBe(serviceC);      //Instance
+                    expect(serviceD.serviceA).toEqual(serviceA);            //Proxy
+                    expect(serviceD.serviceA.serviceB).toBe(serviceB);      //Proxy
+                    expect(serviceD.serviceA.serviceC).toBe(serviceC);      //Proxy
+                    expect(serviceD.serviceC).toBe(serviceC);               //Instance
+                    expect(serviceD.serviceC.serviceB).toEqual(serviceB);   //Proxy
+                    expect(serviceD.serviceC.serviceD).toEqual(serviceD);   //Proxy
             });
         });
     });

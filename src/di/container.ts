@@ -10,11 +10,18 @@ import { ConstructorType } from "./types/ConstructorType";
 import { IContainer } from "./types/IContainer";
 import { STATIC_INJECT_KEY, STATIC_INJECT_LIFETIME } from "./constants";
 import { UndefinedScopeError } from "./exceptions/UndefinedScopeError";
+import { InterfaceId } from "./types/decorators/InterfaceId";
 
 class Container implements IContainer {
     private readonly _services: Map<InjectionToken, Registration> = new Map();
     private readonly _scopes: Set<ScopeContext> = new Set();
     private readonly _resolutionStack = new Map<InjectionToken, any>();
+    private readonly _interfaceIds = new Map<InterfaceId<unknown>, InjectionToken<unknown>>();
+
+    registerInterfaceId<T>(id: InterfaceId<T>, token: InjectionToken<T>) {
+        this._interfaceIds.set(id, token);
+    }
+
 
     createInstance<T>(implementation: ConstructorType<T>, args: Array<any> = []): T {
         return Reflect.construct(implementation, args);
@@ -130,7 +137,16 @@ class Container implements IContainer {
         return this;
     }
 
+    registerRegistration(token: InjectionToken, registration: Registration<any>): IContainer {
+        this._services.set(token, registration);
+        return this;
+    }
+
+
     resolve<T>(token: InjectionToken, scope?: ScopeContext): T {
+        if(typeof token === "string" && this._interfaceIds.has(token as InterfaceId<unknown>)) {
+            token = this._interfaceIds.get(token as InterfaceId<unknown>) as InjectionToken;
+        }
         if (this._resolutionStack.has(token)) {
             //Circular dependency detected, return a proxy
             if (this._resolutionStack.get(token) === null) {
@@ -185,6 +201,10 @@ class Container implements IContainer {
     }
 
     async resolveAsync<T>(token: InjectionToken, scope?: ScopeContext): Promise<T> {
+        if(typeof token === "string" && this._interfaceIds.has(token as InterfaceId<unknown>)) {
+            token = this._interfaceIds.get(token as InterfaceId<unknown>) as InjectionToken;
+        }
+        
         if (this._resolutionStack.has(token)) {
             //Circular dependency detected, return a proxy
             if (this._resolutionStack.get(token) === null) {
@@ -248,7 +268,6 @@ class Container implements IContainer {
         return (registration.provider as FactoryProvider<T>).useFactory(this);
     }
     private resolveClassProvider<T>(registration: Registration, token: InjectionToken, scope?: ScopeContext): T {
-        const args = this.createArgs(registration, scope);
         if (registration.options.lifetime === Lifetime.Scoped) {
             if (typeof scope === "undefined") {
                 throw new UndefinedScopeError(token);
@@ -256,18 +275,18 @@ class Container implements IContainer {
             if (!scope.services.has(token)) {
                 scope.services.set(
                     token,
-                    this.createInstance((registration.provider as ClassProvider<T>).useClass, args),
+                    this.createInstance((registration.provider as ClassProvider<T>).useClass, this.createArgs(registration, scope)),
                 );
             }
             return scope.services.get(token)!;
         }
         if (registration.options.lifetime === Lifetime.Singleton) {
             if (typeof registration.instance === "undefined") {
-                registration.instance = this.createInstance((registration.provider as ClassProvider<T>).useClass, args);
+                registration.instance = this.createInstance((registration.provider as ClassProvider<T>).useClass, this.createArgs(registration, scope));
             }
             return registration.instance;
         }
-        return this.createInstance((registration.provider as ClassProvider<T>).useClass, args);
+        return this.createInstance((registration.provider as ClassProvider<T>).useClass, this.createArgs(registration, scope));
     }
 
     private async resolveClassProviderAsync<T>(
@@ -275,7 +294,6 @@ class Container implements IContainer {
         token: InjectionToken,
         scope?: ScopeContext,
     ): Promise<T> {
-        const args = await this.createArgsAsync(registration, scope);
         if (registration.options.lifetime === Lifetime.Scoped) {
             if (typeof scope === "undefined") {
                 throw new UndefinedScopeError(token);
@@ -283,7 +301,7 @@ class Container implements IContainer {
             if (!scope.services.has(token)) {
                 scope.services.set(
                     token,
-                    this.createInstance((registration.provider as ClassProvider<T>).useClass, args),
+                    this.createInstance((registration.provider as ClassProvider<T>).useClass, await this.createArgsAsync(registration, scope)),
                 );
             }
             return scope.services.get(token)!;
@@ -292,12 +310,12 @@ class Container implements IContainer {
             if (typeof registration.instance === "undefined") {
                 registration.instance = this.createInstance(
                     (registration.provider as ClassProvider<T>).useClass,
-                    args,
+                    await this.createArgsAsync(registration, scope),
                 );
             }
             return registration.instance;
         }
-        return this.createInstance((registration.provider as ClassProvider<T>).useClass, args);
+        return this.createInstance((registration.provider as ClassProvider<T>).useClass, await this.createArgsAsync(registration, scope));
     }
 
     private createArgs(registration: Registration, scope?: ScopeContext): Array<unknown> {
