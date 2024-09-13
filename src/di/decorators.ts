@@ -1,9 +1,9 @@
 import { container } from "./container";
 import { InvalidDecoratorError } from "./exceptions/InvalidDecoratorError";
 import { InterfaceId, UnwrapInjectionTokens, UnwrapInterfaceIds } from "./types/decorators";
-import { InjectionToken } from "./types/InjectionToken";
-import { ProvidersType } from "./types/providers/Provider";
-import { Lifetime, Registration } from "./types/Registration";
+import { InjectionToken } from "./types/injectionToken";
+import { ProvidersType } from "./types/providers/provider";
+import { Lifetime, Registration } from "./types/registration";
 
 
 const getRandomString = () => Math.random().toString(36).substring(2, 15);

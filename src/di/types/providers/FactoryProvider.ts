@@ -1,5 +1,5 @@
 import { IContainer } from "../IContainer";
-import { Provider } from "./Provider";
+import { Provider } from "./provider";
 
 export interface FactoryProvider<T> {
     useFactory: (container: IContainer) => T;

@@ -1,5 +1,5 @@
-import { ConstructorType } from "../ConstructorType";
-import { Provider } from "./Provider";
+import { ConstructorType } from "../constructorType";
+import { Provider } from "./provider";
 
 export interface ClassProvider<T> {
     useClass: ConstructorType<T>;

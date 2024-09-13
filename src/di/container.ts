@@ -1,21 +1,21 @@
 import { TokenNotFoundError } from "./exceptions/TokenNotFoundError";
-import { ScopeContext } from "./ScopeContext";
-import { ValueProvider } from "./types/providers/ValueProvider";
-import { ClassProvider, isClassProvider } from "./types/providers/ClassProvider";
-import { FactoryProvider } from "./types/providers/FactoryProvider";
-import { getProviderType, isProvider, Provider, ProvidersType } from "./types/providers/Provider";
-import { Lifetime, Registration, RegistrationOptions } from "./types/Registration";
-import { InjectionToken } from "./types/InjectionToken";
-import { ConstructorType, isConstructorType } from "./types/ConstructorType";
+import { ScopeContext } from "./scopeContext";
+import { ValueProvider } from "./types/providers/valueProvider";
+import { ClassProvider, isClassProvider } from "./types/providers/classProvider";
+import { FactoryProvider } from "./types/providers/factoryProvider";
+import { getProviderType, isProvider, Provider, ProvidersType } from "./types/providers/provider";
+import { Lifetime, Registration, RegistrationOptions } from "./types/registration";
+import { InjectionToken } from "./types/injectionToken";
+import { ConstructorType, isConstructorType } from "./types/constructorType";
 import { IContainer } from "./types/IContainer";
 import { STATIC_INJECT_KEY, STATIC_INJECT_LIFETIME } from "./constants";
 import { UndefinedScopeError } from "./exceptions/UndefinedScopeError";
-import { InterfaceId } from "./types/decorators";
-import { isTokenProvider, TokenProvider } from "./types/providers/TokenProvider";
+import { isTokenProvider, TokenProvider } from "./types/providers/tokenProvider";
 import { TokenRegistrationCycleError } from "./exceptions/TokenRegistrationCycleError";
+import { ServiceMap } from "./serviceMap";
 
 class Container implements IContainer {
-    private readonly _services: Map<InjectionToken, Registration> = new Map();
+    private readonly _services: ServiceMap<InjectionToken, Registration> = new ServiceMap();
     private readonly _scopes: Set<ScopeContext> = new Set();
     private readonly _resolutionStack = new Map<InjectionToken, any>();
 

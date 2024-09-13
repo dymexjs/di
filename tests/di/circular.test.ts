@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, test } from "@jest/globals";
 import { STATIC_INJECT_KEY, STATIC_INJECT_LIFETIME } from '../../src/di/constants';
-import { Lifetime } from "../../src/di/types/Registration";
+import { Lifetime } from "../../src/di/types/registration";
 import { container } from "../../src/di/container";
-import { StaticInjectable } from "../../src/di/types/StaticInject";
+import { StaticInjectable } from "../../src/di/types/staticInject";
 import { IContainer } from "../../src/di/types/IContainer";
 import { createInterfaceId, Singleton, SingletonInterface } from "../../src/di/decorators";
 

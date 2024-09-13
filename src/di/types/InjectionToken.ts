@@ -1,4 +1,4 @@
-import { ConstructorType } from "./ConstructorType";
+import { ConstructorType } from "./constructorType";
 
 
 

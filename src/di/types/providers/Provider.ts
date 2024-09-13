@@ -1,8 +1,8 @@
-import { isValueProvider, ValueProvider } from "./ValueProvider";
-import { ClassProvider, isClassProvider } from "./ClassProvider";
-import { FactoryProvider, isFactoryProvider } from "./FactoryProvider";
-import { isTokenProvider, TokenProvider } from "./TokenProvider";
-import { isConstructorType } from "../ConstructorType";
+import { isValueProvider, ValueProvider } from "./valueProvider";
+import { ClassProvider, isClassProvider } from "./classProvider";
+import { FactoryProvider, isFactoryProvider } from "./factoryProvider";
+import { isTokenProvider, TokenProvider } from "./tokenProvider";
+import { isConstructorType } from "../constructorType";
 
 
 export type Provider<T = any> = ClassProvider<T> | ValueProvider<T> | FactoryProvider<T> | TokenProvider<T>;

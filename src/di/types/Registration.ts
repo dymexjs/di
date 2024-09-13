@@ -1,5 +1,5 @@
-import { InjectionToken } from "./InjectionToken";
-import { ProvidersType } from "./providers/Provider";
+import { ProvidersType } from "./providers/provider";
+import { InjectionToken } from './injectionToken';
 
 export interface Registration<T = any> {
     providerType: ProvidersType;

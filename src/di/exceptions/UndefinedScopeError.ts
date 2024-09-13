@@ -1,5 +1,5 @@
-import { isConstructorType } from "../types/ConstructorType";
-import { InjectionToken } from "../types/InjectionToken";
+import { isConstructorType } from "../types/constructorType";
+import { InjectionToken } from "../types/injectionToken";
 
 export class UndefinedScopeError extends Error{
     constructor(token: InjectionToken) {

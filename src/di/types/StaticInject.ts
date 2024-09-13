@@ -1,6 +1,6 @@
 import { STATIC_INJECT_KEY, STATIC_INJECT_LIFETIME } from "../constants";
-import { InjectionToken } from "./InjectionToken";
-import { Lifetime } from "./Registration";
+import { InjectionToken } from "./injectionToken";
+import { Lifetime } from "./registration";
 
 interface StaticInject {
     new (...args: Array<any>): any;

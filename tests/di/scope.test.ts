@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test } from "@jest/globals";
 import { container } from "../../src/di/container";
-import { ScopeContext } from "../../src/di/ScopeContext";
-import { Lifetime } from "../../src/di/types/Registration";
+import { ScopeContext } from "../../src/di/scopeContext";
+import { Lifetime } from "../../src/di/types/registration";
 import { STATIC_INJECT_LIFETIME } from "../../src/di/constants";
 import { UndefinedScopeError } from "../../src/di/exceptions/UndefinedScopeError";
 

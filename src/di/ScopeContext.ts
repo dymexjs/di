@@ -1,4 +1,4 @@
-import { InjectionToken } from "./types/InjectionToken";
+import { InjectionToken } from "./types/injectionToken";
 
 
 export class ScopeContext {

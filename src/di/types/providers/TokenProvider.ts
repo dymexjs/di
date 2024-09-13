@@ -1,5 +1,5 @@
-import { InjectionToken } from "../InjectionToken";
-import { Provider } from "./Provider";
+import { InjectionToken } from "../injectionToken";
+import { Provider } from "./provider";
 
 
 export interface TokenProvider<T> {

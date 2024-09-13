@@ -1,9 +1,9 @@
-import { ValueProvider } from "./providers/ValueProvider";
-import { ClassProvider } from "./providers/ClassProvider";
-import { FactoryProvider } from "./providers/FactoryProvider";
-import { Registration, RegistrationOptions } from "./Registration";
-import { InjectionToken } from "./InjectionToken";
-import { ConstructorType } from "./ConstructorType";
+import { ValueProvider } from "./providers/valueProvider";
+import { ClassProvider } from "./providers/classProvider";
+import { FactoryProvider } from "./providers/factoryProvider";
+import { Registration, RegistrationOptions } from "./registration";
+import { InjectionToken } from "./injectionToken";
+import { ConstructorType } from "./constructorType";
 
 export interface IContainer {
     createInstance<T>(implementation: ConstructorType<T>): T;

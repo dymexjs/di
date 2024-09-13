@@ -2,9 +2,9 @@ import { describe, test, expect, beforeEach } from "@jest/globals";
 import { container } from "../../src/di/container";
 import { TokenNotFoundError } from "../../src/di/exceptions/TokenNotFoundError";
 import { STATIC_INJECT_LIFETIME } from "../../src/di/constants";
-import { Lifetime } from "../../src/di/types/Registration";
+import { Lifetime } from "../../src/di/types/registration";
 import { UndefinedScopeError } from "../../src/di/exceptions/UndefinedScopeError";
-import { ProvidersType } from "../../src/di/types/providers/Provider";
+import { ProvidersType } from "../../src/di/types/providers/provider";
 
 describe("dependency Injection container", () => {
     beforeEach(() => {

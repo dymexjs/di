@@ -1,4 +1,4 @@
-import { InjectionToken } from "./InjectionToken";
+import { InjectionToken } from "./injectionToken";
 
 export type UnwrapInjectionTokens<T extends InjectionToken[]> = {
     [K in keyof T]: T[K] extends string ? any : T[K] extends InjectionToken<infer U> ? U : never
