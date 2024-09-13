@@ -1,10 +1,9 @@
 import { describe, test, expect, beforeEach } from "@jest/globals";
 import { container } from "../../src/di/container";
 import { TokenNotFoundError } from "../../src/di/exceptions/TokenNotFoundError";
-import { STATIC_INJECT_KEY, STATIC_INJECT_LIFETIME } from "../../src/di/constants";
+import {  STATIC_INJECT_LIFETIME } from "../../src/di/constants";
 import { Lifetime } from "../../src/di/types/Registration";
 import { UndefinedScopeError } from "../../src/di/exceptions/UndefinedScopeError";
-import { StaticInjectable } from '../../src/di/types/StaticInject';
 
 describe("dependency Injection container", () => {
     beforeEach(() => {

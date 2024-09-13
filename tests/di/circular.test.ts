@@ -4,8 +4,7 @@ import { Lifetime } from "../../src/di/types/Registration";
 import { container } from "../../src/di/container";
 import { StaticInjectable } from "../../src/di/types/StaticInject";
 import { IContainer } from "../../src/di/types/IContainer";
-import { createInterfaceId, SingletonInterface } from "../../src/di/types/decorators/InterfaceId";
-import { Singleton } from '../../src/di/types/decorators/decorators';
+import { createInterfaceId, Singleton, SingletonInterface } from "../../src/di/decorators";
 
 
 describe("Averix_DI ",()=>{

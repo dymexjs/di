@@ -10,13 +10,13 @@ import { ConstructorType } from "./types/ConstructorType";
 import { IContainer } from "./types/IContainer";
 import { STATIC_INJECT_KEY, STATIC_INJECT_LIFETIME } from "./constants";
 import { UndefinedScopeError } from "./exceptions/UndefinedScopeError";
-import { InterfaceId } from "./types/decorators/InterfaceId";
+import { InterfaceId } from "./types/decorators";
 
 class Container implements IContainer {
     private readonly _services: Map<InjectionToken, Registration> = new Map();
     private readonly _scopes: Set<ScopeContext> = new Set();
     private readonly _resolutionStack = new Map<InjectionToken, any>();
-    private readonly _interfaceIds = new Map<InterfaceId<unknown>, InjectionToken<unknown>>();
+    private readonly _interfaceIds = new Map<InterfaceId, InjectionToken>();
 
     registerInterfaceId<T>(id: InterfaceId<T>, token: InjectionToken<T>) {
         this._interfaceIds.set(id, token);

@@ -1,7 +1,6 @@
 import { describe, expect, test } from "@jest/globals";
-import { Singleton, Transient } from '../../src/di/types/decorators/decorators';
 import { container } from "../../src/di/container";
-import { createInterfaceId, SingletonInterface, TransientInterface } from '../../src/di/types/decorators/InterfaceId';
+import { createInterfaceId, Singleton, SingletonInterface, Transient, TransientInterface } from '../../src/di/decorators';
 
 
 
