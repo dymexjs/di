@@ -1,4 +1,4 @@
-import { InjectionToken } from "../injectionToken";
+import { InjectionToken } from "../injection-token";
 import { Provider } from "./provider";
 
 

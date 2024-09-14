@@ -1,4 +1,4 @@
-import { isConstructorType } from "../types/constructorType";
+import { isConstructorType } from "../types/constructor.type";
 
 export class InvalidDecoratorError extends Error {
     constructor(decorator: string, target: any) {

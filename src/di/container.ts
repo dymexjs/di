@@ -1,18 +1,18 @@
 import { TokenNotFoundError } from "./exceptions/TokenNotFoundError";
-import { ScopeContext } from "./scopeContext";
-import { ValueProvider } from "./types/providers/valueProvider";
-import { ClassProvider, isClassProvider } from "./types/providers/classProvider";
-import { FactoryProvider } from "./types/providers/factoryProvider";
+import { ScopeContext } from "./scope-context";
+import { ValueProvider } from "./types/providers/value-provider";
+import { ClassProvider, isClassProvider } from "./types/providers/class-provider";
+import { FactoryProvider } from "./types/providers/factory-provider";
 import { getProviderType, isProvider, Provider, ProvidersType } from './types/providers/provider';
 import { Lifetime, Registration, RegistrationOptions } from "./types/registration";
-import { InjectionToken } from "./types/injectionToken";
-import { ConstructorType, isConstructorType } from "./types/constructorType";
-import { IContainer } from "./types/IContainer";
+import { InjectionToken } from "./types/injection-token";
+import { ConstructorType, isConstructorType } from "./types/constructor.type";
+import { IContainer } from "./types/container.interface";
 import { STATIC_INJECT_KEY, STATIC_INJECT_LIFETIME } from "./constants";
 import { UndefinedScopeError } from "./exceptions/UndefinedScopeError";
-import { isTokenProvider, TokenProvider } from "./types/providers/tokenProvider";
+import { isTokenProvider, TokenProvider } from "./types/providers/token-provider";
 import { TokenRegistrationCycleError } from "./exceptions/TokenRegistrationCycleError";
-import { ServiceMap } from "./serviceMap";
+import { ServiceMap } from "./service-map";
 
 export class Container implements IContainer {
     private readonly _services: ServiceMap<InjectionToken, Registration> = new ServiceMap();
@@ -462,24 +462,6 @@ export class Container implements IContainer {
 
     createChildContainer(): IContainer {
         const childContainer = new Container(this);
-
-        //Need to copy scoped registration or they won't be resolved in child container
-        for (const [token, registrations] of this._services.entries()) {
-            const filteredRegs = registrations.filter((x) => x.options.lifetime === Lifetime.Scoped);
-            if (filteredRegs.length > 0) {
-                childContainer._services.setAll(
-                    token,
-                    filteredRegs.map((reg) => {
-                        return {
-                            injections: reg.injections,
-                            options: reg.options,
-                            provider: reg.provider,
-                            providerType: reg.providerType,
-                        };
-                    }),
-                );
-            }
-        }
         //Saves child container for disponse from main container
         this._childContainer = childContainer;
         return childContainer;

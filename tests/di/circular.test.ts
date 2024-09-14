@@ -3,7 +3,7 @@ import { STATIC_INJECT_KEY, STATIC_INJECT_LIFETIME } from '../../src/di/constant
 import { Lifetime } from "../../src/di/types/registration";
 import { container } from "../../src/di/container";
 import { StaticInjectable } from "../../src/di/types/staticInject";
-import { IContainer } from "../../src/di/types/IContainer";
+import { IContainer } from "../../src/di/types/container.interface";
 import { createInterfaceId, Singleton, SingletonInterface } from "../../src/di/decorators";
 
 

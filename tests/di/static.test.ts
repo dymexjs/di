@@ -3,7 +3,7 @@ import { container } from "../../src/di/container";
 import { STATIC_INJECT_KEY, STATIC_INJECT_LIFETIME } from "../../src/di/constants";
 import { Lifetime } from "../../src/di/types/registration";
 import { StaticInjectable } from "../../src/di/types/staticInject";
-import { IContainer } from "../../src/di/types/IContainer";
+import { IContainer } from "../../src/di/types/container.interface";
 
 describe("Averix_DI", () => {
     beforeEach(() => container.reset());

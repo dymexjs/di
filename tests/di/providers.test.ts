@@ -1,10 +1,10 @@
 import { describe, expect, test } from "@jest/globals";
 import { getProviderType, isProvider, Provider, ProvidersType } from "../../src/di/types/providers/provider";
-import { isValueProvider } from "../../src/di/types/providers/valueProvider";
-import { isClassProvider } from "../../src/di/types/providers/classProvider";
-import { isFactoryProvider } from "../../src/di/types/providers/factoryProvider";
-import { isConstructorType } from "../../src/di/types/constructorType";
-import { isTokenProvider } from "../../src/di/types/providers/tokenProvider";
+import { isValueProvider } from "../../src/di/types/providers/value-provider";
+import { isClassProvider } from "../../src/di/types/providers/class-provider";
+import { isFactoryProvider } from "../../src/di/types/providers/factory-provider";
+import { isConstructorType } from "../../src/di/types/constructor.type";
+import { isTokenProvider } from "../../src/di/types/providers/token-provider";
 import { container } from "../../src/di/container";
 import { TokenRegistrationCycleError } from "../../src/di/exceptions/TokenRegistrationCycleError";
 

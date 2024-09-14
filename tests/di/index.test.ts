@@ -5,7 +5,6 @@ import { STATIC_INJECT_LIFETIME } from "../../src/di/constants";
 import { Lifetime } from "../../src/di/types/registration";
 import { UndefinedScopeError } from "../../src/di/exceptions/UndefinedScopeError";
 import { ProvidersType } from "../../src/di/types/providers/provider";
-import { IContainer } from "../../src/di/types/IContainer";
 
 describe("dependency Injection container", () => {
     beforeEach(() => {

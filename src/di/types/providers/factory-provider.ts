@@ -1,4 +1,4 @@
-import { IContainer } from "../IContainer";
+import { IContainer } from "../container.interface";
 import { Provider } from "./provider";
 
 export interface FactoryProvider<T> {

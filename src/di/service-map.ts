@@ -1,4 +1,4 @@
-import { InjectionToken } from "./types/injectionToken";
+import { InjectionToken } from "./types/injection-token";
 import { Registration } from "./types/registration";
 
 export class ServiceMap<K extends InjectionToken, V extends Registration> {

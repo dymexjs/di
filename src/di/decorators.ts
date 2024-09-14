@@ -1,7 +1,7 @@
 import { container } from "./container";
 import { InvalidDecoratorError } from "./exceptions/InvalidDecoratorError";
 import { InterfaceId, UnwrapInjectionTokens, UnwrapInterfaceIds } from "./types/decorators";
-import { InjectionToken } from "./types/injectionToken";
+import { InjectionToken } from "./types/injection-token";
 import { ProvidersType } from "./types/providers/provider";
 import { Lifetime, Registration } from "./types/registration";
 

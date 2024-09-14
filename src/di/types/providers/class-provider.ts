@@ -1,4 +1,4 @@
-import { ConstructorType } from "../constructorType";
+import { ConstructorType } from "../constructor.type";
 import { Provider } from "./provider";
 
 export interface ClassProvider<T> {

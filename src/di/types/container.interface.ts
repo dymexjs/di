@@ -1,8 +1,8 @@
 import { Registration, RegistrationOptions } from "./registration";
-import { InjectionToken } from "./injectionToken";
-import { ConstructorType } from "./constructorType";
-import { ScopeContext } from "../scopeContext";
-import { TokenProvider } from "./providers/tokenProvider";
+import { InjectionToken } from "./injection-token";
+import { ConstructorType } from "./constructor.type";
+import { ScopeContext } from "../scope-context";
+import { TokenProvider } from "./providers/token-provider";
 import { Provider } from "./providers/provider";
 
 export interface IContainer {
