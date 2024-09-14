@@ -1,20 +1,31 @@
-import { ValueProvider } from "./providers/valueProvider";
-import { ClassProvider } from "./providers/classProvider";
-import { FactoryProvider } from "./providers/factoryProvider";
 import { Registration, RegistrationOptions } from "./registration";
 import { InjectionToken } from "./injectionToken";
 import { ConstructorType } from "./constructorType";
+import { ScopeContext } from "../scopeContext";
+import { TokenProvider } from "./providers/tokenProvider";
+import { Provider } from "./providers/provider";
 
 export interface IContainer {
+    readonly scopes: Set<ScopeContext>;
+    clearInstances(): void;
+    createChildContainer(): IContainer
+    createScope(): ScopeContext;
     createInstance<T>(implementation: ConstructorType<T>): T;
-    getRegistration(token: InjectionToken): Registration | undefined;
-    hasRegistration(token: InjectionToken): boolean;
+    disposeScope(scope: ScopeContext): void;
+    getAllRegistrations<T>(token: InjectionToken<T>): Array<Registration>;
+    getRegistration(token: InjectionToken, recursive?: boolean): Registration | undefined;
+    hasRegistration(token: InjectionToken, recursive?: boolean): boolean;
     register<T>(
         token: InjectionToken,
-        provider: ValueProvider<T> | ClassProvider<T> | FactoryProvider<T> | ConstructorType<T>,
-        options?: RegistrationOptions
+        provider: Provider<T> | ConstructorType<T>,
+        options?: RegistrationOptions,
     ): IContainer;
-    resolve<T>(token: InjectionToken): T;
-    resolveAsync<T>(token: InjectionToken): Promise<T>;
+    registerInstance<T>(token: InjectionToken, instance: T): IContainer;
+    registerRegistration(token: InjectionToken, registration: Registration<any>): IContainer;
+    registerType<T>(from: InjectionToken, to: InjectionToken<T> | TokenProvider<T>): IContainer
+    resolve<T>(token: InjectionToken, scope?: ScopeContext): T;
+    resolveAll<T>(token: InjectionToken, scope?: ScopeContext): Array<T>;
+    resolveAsync<T>(token: InjectionToken, scope?: ScopeContext): Promise<T>;
+    resolveAllAsync<T>(token: InjectionToken, scope?: ScopeContext): Promise<Array<T>>;
     reset(): void;
 }

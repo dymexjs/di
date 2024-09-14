@@ -3,7 +3,7 @@ import { ScopeContext } from "./scopeContext";
 import { ValueProvider } from "./types/providers/valueProvider";
 import { ClassProvider, isClassProvider } from "./types/providers/classProvider";
 import { FactoryProvider } from "./types/providers/factoryProvider";
-import { getProviderType, isProvider, Provider, ProvidersType } from "./types/providers/provider";
+import { getProviderType, isProvider, Provider, ProvidersType } from './types/providers/provider';
 import { Lifetime, Registration, RegistrationOptions } from "./types/registration";
 import { InjectionToken } from "./types/injectionToken";
 import { ConstructorType, isConstructorType } from "./types/constructorType";
@@ -14,10 +14,13 @@ import { isTokenProvider, TokenProvider } from "./types/providers/tokenProvider"
 import { TokenRegistrationCycleError } from "./exceptions/TokenRegistrationCycleError";
 import { ServiceMap } from "./serviceMap";
 
-class Container implements IContainer {
+export class Container implements IContainer {
     private readonly _services: ServiceMap<InjectionToken, Registration> = new ServiceMap();
     private readonly _scopes: Set<ScopeContext> = new Set();
     private readonly _resolutionStack = new Map<InjectionToken, any>();
+    private _childContainer?: IContainer;
+
+    constructor(private readonly _parent?: IContainer) {}
 
     createInstance<T>(implementation: ConstructorType<T>, args: Array<any> = []): T {
         return Reflect.construct(implementation, args);
@@ -130,7 +133,7 @@ class Container implements IContainer {
         let service: Provider<T> = isProvider(provider) ? provider : { useClass: provider };
 
         if (isTokenProvider(service)) {
-            this.inspectCircularTokenProvider(token,service);
+            this.inspectCircularTokenProvider(token, service);
         }
 
         let injections = [];
@@ -171,7 +174,7 @@ class Container implements IContainer {
     }
 
     registerType<T>(from: InjectionToken, to: InjectionToken<T> | TokenProvider<T>): IContainer {
-        if(isTokenProvider(to as Provider<T>)) {
+        if (isTokenProvider(to as Provider<T>)) {
             return this.register(from, to as TokenProvider<T>);
         }
         if (isConstructorType(to)) {
@@ -218,23 +221,37 @@ class Container implements IContainer {
             }
 
             const registration = this.getRegistration(token)!;
-
-            switch (registration.providerType) {
-                case ProvidersType.ConstructorProvider:
-                case ProvidersType.ClassProvider:
-                    return this.resolveClassProvider(registration, token, scope);
-                case ProvidersType.FactoryProvider:
-                    return this.resolveFactoryProvider(registration);
-                case ProvidersType.ValueProvider:
-                    return this.resolveValueProvider(registration);
-                case ProvidersType.TokenProvider:
-                    return this.resolve(registration.provider.useToken, scope);
-                default:
-                    throw new Error(`Invalid registration type: "${registration.providerType}"`);
-            }
+            return this.resolveRegistration(token, registration, scope);
         } finally {
             this._resolutionStack.delete(token);
         }
+    }
+
+    resolveRegistration<T>(token: InjectionToken, registration: Registration<T>, scope?: ScopeContext): T {
+        switch (registration.providerType) {
+            case ProvidersType.ConstructorProvider:
+            case ProvidersType.ClassProvider:
+                return this.resolveClassProvider(registration, token, scope);
+            case ProvidersType.FactoryProvider:
+                return this.resolveFactoryProvider(registration);
+            case ProvidersType.ValueProvider:
+                return this.resolveValueProvider(registration);
+            case ProvidersType.TokenProvider:
+                return this.resolve(registration.provider.useToken, scope);
+            default:
+                throw new Error(`Invalid registration type: "${registration.providerType}"`);
+        }
+    }
+
+    resolveAll<T>(token: InjectionToken, scope?: ScopeContext): Array<T> {
+        if (!this.hasRegistration(token)) {
+            if (isConstructorType(token)) {
+                return [this.resolve(token, scope)];
+            }
+            throw new TokenNotFoundError(token);
+        }
+        const registrations = this.getAllRegistrations(token);
+        return registrations.map((registration) => this.resolveRegistration(token, registration, scope));
     }
 
     async resolveAsync<T>(token: InjectionToken, scope?: ScopeContext): Promise<T> {
@@ -274,22 +291,43 @@ class Container implements IContainer {
             }
 
             const registration = this.getRegistration(token)!;
-
-            switch (registration.providerType) {
-                case ProvidersType.ClassProvider:
-                case ProvidersType.ConstructorProvider:
-                    return await this.resolveClassProviderAsync(registration, token, scope);
-                case ProvidersType.FactoryProvider:
-                    return await this.resolveFactoryProviderAsync(registration);
-                case ProvidersType.ValueProvider:
-                    return await this.resolveValueProvider(registration);
-                case ProvidersType.TokenProvider:
-                    return await this.resolveAsync(registration.provider.useToken, scope);
-                default:
-                    throw new Error(`Invalid registration type: "${registration.providerType}"`);
-            }
+            return await this.resolveRegistrationAsync(token, registration, scope);
         } finally {
             this._resolutionStack.delete(token);
+        }
+    }
+    async resolveAllAsync<T>(token: InjectionToken, scope?: ScopeContext): Promise<Array<T>> {
+        if (!this.hasRegistration(token)) {
+            if (isConstructorType(token)) {
+                return [await this.resolveAsync(token, scope)];
+            }
+            throw new TokenNotFoundError(token);
+        }
+        const registrations = this.getAllRegistrations(token);
+        const result = [];
+        for (const registration of registrations) {
+            result.push(await this.resolveRegistrationAsync<T>(token, registration, scope));
+        }
+        return result;
+    }
+
+    private async resolveRegistrationAsync<T>(
+        token: InjectionToken,
+        registration: Registration,
+        scope?: ScopeContext,
+    ): Promise<T> {
+        switch (registration.providerType) {
+            case ProvidersType.ClassProvider:
+            case ProvidersType.ConstructorProvider:
+                return await this.resolveClassProviderAsync(registration, token, scope);
+            case ProvidersType.FactoryProvider:
+                return await this.resolveFactoryProviderAsync(registration);
+            case ProvidersType.ValueProvider:
+                return await this.resolveValueProvider(registration);
+            case ProvidersType.TokenProvider:
+                return await this.resolveAsync(registration.provider.useToken, scope);
+            default:
+                throw new Error(`Invalid registration type: "${registration.providerType}"`);
         }
     }
 
@@ -380,15 +418,72 @@ class Container implements IContainer {
     }
 
     hasRegistration(token: InjectionToken): boolean {
-        return this._services.has(token);
+        if (this._services.has(token)) {
+            return true;
+        }
+        if (typeof this._parent !== "undefined") {
+            return this._parent.hasRegistration(token, true);
+        }
+        return false;
     }
     getRegistration(token: InjectionToken): Registration | undefined {
-        return this._services.get(token)!;
+        if (this._services.get(token)) {
+            return this._services.get(token);
+        }
+
+        if (typeof this._parent !== "undefined") {
+            return this._parent.getRegistration(token, true);
+        }
     }
     reset(): void {
         this._services.clear();
         this._scopes.clear();
     }
+
+    getAllRegistrations<T>(token: InjectionToken<T>): Array<Registration> {
+        if (this._services.getAll(token).length > 0) {
+            return this._services.getAll(token);
+        }
+        if (this._parent) {
+            return this._parent.getAllRegistrations(token);
+        }
+        return [];
+    }
+
+    clearInstances(): void {
+        for (const [token, registrations] of this._services.entries()) {
+            registrations
+                .filter((x) => x.providerType !== ProvidersType.ValueProvider)
+                .map((registration) => {
+                    registration.instance = undefined;
+                });
+        }
+    }
+
+    createChildContainer(): IContainer {
+        const childContainer = new Container(this);
+
+        //Need to copy scoped registration or they won't be resolved in child container
+        for (const [token, registrations] of this._services.entries()) {
+            const filteredRegs = registrations.filter((x) => x.options.lifetime === Lifetime.Scoped);
+            if (filteredRegs.length > 0) {
+                childContainer._services.setAll(
+                    token,
+                    filteredRegs.map((reg) => {
+                        return {
+                            injections: reg.injections,
+                            options: reg.options,
+                            provider: reg.provider,
+                            providerType: reg.providerType,
+                        };
+                    }),
+                );
+            }
+        }
+        //Saves child container for disponse from main container
+        this._childContainer = childContainer;
+        return childContainer;
+    }
 }
 
-export const container = new Container();
+export const container: IContainer = new Container();
