@@ -1,24 +1,25 @@
-import { describe, expect, test } from "@jest/globals";
+import { beforeEach, describe, expect, test } from "@jest/globals";
 import { container } from "../../src/di/container";
-import { createInterfaceId, Scoped, ScopedInterface, Singleton, SingletonInterface, Transient, TransientInterface } from '../../src/di/decorators';
+import { createInterfaceId, Scoped, Singleton, Transient } from '../../src/di/decorators';
 import { UndefinedScopeError } from "../../src/di/exceptions/UndefinedScopeError";
 
 
 
 describe("Averix_DI",()=>{
+    beforeEach(async ()=> await container.reset());
     describe("Class Decorators",()=>{
         describe("sync",()=>{
             test("should create an target and inject singleton",()=>{
-                @Singleton()
+                @Singleton("serviceA")
                 class ServiceA {}
-                @Singleton([ServiceA])
+                @Singleton(["serviceA"])
                 class ServiceB {
                     constructor(public serviceA: ServiceA){}
                 }
                 const b = container.resolve<ServiceB>(ServiceB);
                 expect(b).toBeInstanceOf(ServiceB);
                 expect(b.serviceA).toBeInstanceOf(ServiceA);
-                const a = container.resolve<ServiceA>(ServiceA);
+                const a = container.resolve<ServiceA>("serviceA");
                 expect(a).toBeInstanceOf(ServiceA);
                 expect(b.serviceA).toBe(a);
             });
@@ -148,9 +149,9 @@ describe("Averix_DI",()=>{
                 }
                 const SB = createInterfaceId<SB>("SB");
                 
-                @SingletonInterface(SA)
+                @Singleton(SA)
                 class ServiceA {}
-                @SingletonInterface(SB,[SA])
+                @Singleton(SB,[SA])
                 class ServiceB {
                     constructor(public serviceA: SA){}
                 }
@@ -169,9 +170,9 @@ describe("Averix_DI",()=>{
                 }
                 const SB = createInterfaceId<SB>("SB");
                 
-                @TransientInterface(SA)
+                @Transient(SA)
                 class ServiceA {}
-                @SingletonInterface(SB,[SA])
+                @Singleton(SB,[SA])
                 class ServiceB {
                     constructor(public serviceA: SA){}
                 }
@@ -190,9 +191,9 @@ describe("Averix_DI",()=>{
                     readonly serviceA: SA;
                 }
                 const SB = createInterfaceId<SB>("SB");
-                @TransientInterface(SA)
+                @Transient(SA)
                 class ServiceA {}
-                @TransientInterface(SB,[SA])
+                @Transient(SB,[SA])
                 class ServiceB {
                     constructor(public serviceA: SA){}
                 }
@@ -214,9 +215,9 @@ describe("Averix_DI",()=>{
                     readonly serviceA: SA;
                 }
                 const SB = createInterfaceId<SB>("SB");
-                @ScopedInterface(SA)
+                @Scoped(SA)
                 class ServiceA {}
-                @ScopedInterface(SB,[SA])
+                @Scoped(SB,[SA])
                 class ServiceB {
                     constructor(public serviceA: SA){}
                 }
@@ -240,9 +241,9 @@ describe("Averix_DI",()=>{
                 }
                 const SB = createInterfaceId<SB>("SB");
                 
-                @SingletonInterface(SA)
+                @Singleton(SA)
                 class ServiceA {}
-                @SingletonInterface(SB,[SA])
+                @Singleton(SB,[SA])
                 class ServiceB {
                     constructor(public serviceA: SA){}
                 }
@@ -261,9 +262,9 @@ describe("Averix_DI",()=>{
                 }
                 const SB = createInterfaceId<SB>("SB");
                 
-                @TransientInterface(SA)
+                @Transient(SA)
                 class ServiceA {}
-                @SingletonInterface(SB,[SA])
+                @Singleton(SB,[SA])
                 class ServiceB {
                     constructor(public serviceA: SA){}
                 }
@@ -282,9 +283,9 @@ describe("Averix_DI",()=>{
                     readonly serviceA: SA;
                 }
                 const SB = createInterfaceId<SB>("SB");
-                @TransientInterface(SA)
+                @Transient(SA)
                 class ServiceA {}
-                @TransientInterface(SB,[SA])
+                @Transient(SB,[SA])
                 class ServiceB {
                     constructor(public serviceA: SA){}
                 }
@@ -306,9 +307,9 @@ describe("Averix_DI",()=>{
                     readonly serviceA: SA;
                 }
                 const SB = createInterfaceId<SB>("SB");
-                @ScopedInterface(SA)
+                @Scoped(SA)
                 class ServiceA {}
-                @ScopedInterface(SB,[SA])
+                @Scoped(SB,[SA])
                 class ServiceB {
                     constructor(public serviceA: SA){}
                 }

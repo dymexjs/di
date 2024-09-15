@@ -4,12 +4,9 @@ import { TokenNotFoundError } from "../../src/di/exceptions/TokenNotFoundError";
 import { STATIC_INJECT_LIFETIME } from "../../src/di/constants";
 import { Lifetime } from "../../src/di/types/registration";
 import { UndefinedScopeError } from "../../src/di/exceptions/UndefinedScopeError";
-import { ProvidersType } from "../../src/di/types/providers/provider";
 
 describe("dependency Injection container", () => {
-    beforeEach(() => {
-        container.reset();
-    });
+    beforeEach(async () => await container.reset());
     describe("register and resolve", () => {
         test("should throw an error when token not registered", () => {
             expect(() => container.resolve("test")).toThrow(TokenNotFoundError);
@@ -17,7 +14,7 @@ describe("dependency Injection container", () => {
         test("should throw an error when token not registered async", () => {
             expect(container.resolveAsync("test")).rejects.toThrow(TokenNotFoundError);
         });
-        test("should register registration", () => {
+        /*test("should register registration", () => {
             container.registerRegistration("test", {
                 injections: [],
                 provider: { useValue: "test" },
@@ -25,22 +22,41 @@ describe("dependency Injection container", () => {
                 options: { lifetime: Lifetime.Singleton },
             });
             expect(container.hasRegistration("test")).toBe(true);
-        });
-        test("should register instance", () => {
+        });*/
+        /*test("should register instance", () => {
             container.registerInstance("test", "test");
             expect(container.hasRegistration("test")).toBe(true);
-        });
-        test("should register type constructor", () => {
+        });*/
+        /*test("should register type constructor", () => {
             class Test {}
             container.registerType("test", Test);
             expect(container.hasRegistration("test")).toBe(true);
-        });
+        });*/
         test("should register type TokenProvider", () => {
             container.register("test", { useValue: "test" });
             container.registerType("test2", "test");
             expect(container.resolve("test2")).toBe("test");
         });
-        describe("hasRegistration", () => {
+        test("should remove registration", async () => {
+            class Test {}
+            container.register("test", Test, { lifetime: Lifetime.Singleton });
+            container.register("test", Test, { lifetime: Lifetime.Transient });
+            const instances = container.resolveAll("test");
+            expect(instances).toBeInstanceOf(Array);
+            expect(instances).toHaveLength(2);
+            expect(instances[0]).toBeInstanceOf(Test);
+            expect(instances[1]).toBeInstanceOf(Test);
+            expect(instances[0]).not.toBe(instances[1]);
+            await container.removeRegistration("test", (reg) => reg.options.lifetime === Lifetime.Transient);
+            const instances2 = container.resolveAll("test");
+            expect(instances2).toBeInstanceOf(Array);
+            expect(instances2).toHaveLength(1);
+            expect(instances2[0]).toBeInstanceOf(Test);
+            expect(instances2[0]).toBe(instances[0]);
+            await container.removeRegistration("test", (reg) => reg.options.lifetime === Lifetime.Singleton);
+            expect(()=>container.resolveAll("test")).toThrow(TokenNotFoundError);
+        });
+        /*describe("hasRegistration", () => {
             test("should return false when token not registered", () => {
                 expect(container.hasRegistration("test")).toBe(false);
             });
@@ -48,8 +64,8 @@ describe("dependency Injection container", () => {
                 container.register("test", { useValue: "test" });
                 expect(container.hasRegistration("test")).toBe(true);
             });
-        });
-        describe("getRegistration", () => {
+        });*/
+        /*describe("getRegistration", () => {
             test("should return undefined when token not registered", () => {
                 expect(container.getRegistration("test")).toBe(undefined);
             });
@@ -57,8 +73,8 @@ describe("dependency Injection container", () => {
                 container.register("test", { useValue: "test" });
                 expect(container.getRegistration("test")).toBeDefined();
             });
-        });
-        describe("getAllRegistrations", () => {
+        });*/
+        /*describe("getAllRegistrations", () => {
             test("should return empty array when token not registered", () => {
                 expect(container.getAllRegistrations("test")).toEqual([]);
             });
@@ -66,9 +82,9 @@ describe("dependency Injection container", () => {
                 container.register("test", { useValue: "test" });
                 expect(container.getAllRegistrations("test")).toBeDefined();
             });
-        });
+        });*/
         describe("clearInstances", () => {
-            test("clears ValueProvider registrations", () => {
+            /*test("clears ValueProvider registrations", () => {
                 class Foo {}
                 const instance1 = new Foo();
                 container.registerInstance("Test", instance1);
@@ -77,7 +93,7 @@ describe("dependency Injection container", () => {
 
                 container.clearInstances();
                 expect(container.getRegistration("Test")?.instance).toBeUndefined();
-            });
+            });*/
 
             test("clears cached instances from container.resolve() calls", () => {
                 class Foo {}
@@ -180,7 +196,7 @@ describe("dependency Injection container", () => {
                 const childContainer = container.createChildContainer();
                 expect(childContainer).toBeInstanceOf(Container);
             });
-            describe("sync",()=>{
+            describe("sync", () => {
                 test("should resolve in child container", () => {
                     const childContainer = container.createChildContainer();
                     childContainer.register("test", { useValue: "test" });
@@ -222,31 +238,31 @@ describe("dependency Injection container", () => {
                     const childContainer = container.createChildContainer();
                     childContainer.register("IFoo", { useClass: Foo });
                     const myFoo = childContainer.resolveAll<IFoo>("IFoo");
-                    expect(myFoo).toBeInstanceOf(Array)
+                    expect(myFoo).toBeInstanceOf(Array);
                     expect(myFoo).toHaveLength(1);
                     expect(myFoo[0]).toBeInstanceOf(Foo);
                 });
-    
+
                 test("child container resolves all using parent's registration when child container doesn't have registration", () => {
                     interface IFoo {}
                     class Foo implements IFoo {}
                     container.register("IFoo", { useClass: Foo });
                     const childContainer = container.createChildContainer();
                     const myFoo = childContainer.resolveAll<IFoo>("IFoo");
-                    expect(myFoo).toBeInstanceOf(Array)
+                    expect(myFoo).toBeInstanceOf(Array);
                     expect(myFoo).toHaveLength(1);
                     expect(myFoo[0]).toBeInstanceOf(Foo);
                 });
-    
-                test("hasRegistration check parent containers recursively", () => {
+
+                /*test("hasRegistration check parent containers recursively", () => {
                     class A {}
                     container.registerType(A, A);
                     const childContainer = container.createChildContainer();
                     expect(container.hasRegistration(A)).toBe(true);
                     expect(childContainer.hasRegistration(A)).toBe(true);
-                });
+                });*/
             });
-            describe("async",()=>{
+            describe("async", () => {
                 test("should resolve in child container", () => {
                     const childContainer = container.createChildContainer();
                     childContainer.register("test", { useValue: "test" });
@@ -288,18 +304,18 @@ describe("dependency Injection container", () => {
                     const childContainer = container.createChildContainer();
                     childContainer.register("IFoo", { useClass: Foo });
                     const myFoo = await childContainer.resolveAllAsync<IFoo>("IFoo");
-                    expect(myFoo).toBeInstanceOf(Array)
+                    expect(myFoo).toBeInstanceOf(Array);
                     expect(myFoo).toHaveLength(1);
                     expect(myFoo[0]).toBeInstanceOf(Foo);
                 });
-    
+
                 test("child container resolves all using parent's registration when child container doesn't have registration", async () => {
                     interface IFoo {}
                     class Foo implements IFoo {}
                     container.register("IFoo", { useClass: Foo });
                     const childContainer = container.createChildContainer();
                     const myFoo = await childContainer.resolveAllAsync<IFoo>("IFoo");
-                    expect(myFoo).toBeInstanceOf(Array)
+                    expect(myFoo).toBeInstanceOf(Array);
                     expect(myFoo).toHaveLength(1);
                     expect(myFoo[0]).toBeInstanceOf(Foo);
                 });

@@ -6,7 +6,7 @@ import { StaticInjectable } from "../../src/di/types/staticInject";
 import { IContainer } from "../../src/di/types/container.interface";
 
 describe("Averix_DI", () => {
-    beforeEach(() => container.reset());
+    beforeEach(async ()=> await container.reset());
     describe("Static Injector", () => {
         describe("sync", () => {
             test("should register and resolve with static injector", () => {

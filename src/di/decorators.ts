@@ -1,10 +1,9 @@
 import { container } from "./container";
 import { InvalidDecoratorError } from "./exceptions/InvalidDecoratorError";
-import { InterfaceId, UnwrapInjectionTokens, UnwrapInterfaceIds } from "./types/decorators";
+import { InterfaceId, UnwrapDecoratorArgs } from "./types/decorators";
 import { InjectionToken } from "./types/injection-token";
 import { ProvidersType } from "./types/providers/provider";
 import { Lifetime, Registration } from "./types/registration";
-
 
 const getRandomString = () => Math.random().toString(36).substring(2, 15);
 
@@ -15,100 +14,87 @@ const getRandomString = () => Math.random().toString(36).substring(2, 15);
  */
 export const createInterfaceId = <T>(id: string): InterfaceId<T> => `${id}-${getRandomString()}` as InterfaceId<T>;
 
-export function Singleton<I, TDependencies extends Array<InjectionToken>>(dependencies?: [...TDependencies], token?: InjectionToken<I>){
-    return function <T extends { new ( ...args: UnwrapInjectionTokens<TDependencies>): I }>(target: T, {kind}: ClassDecoratorContext){
-        if(kind === "class") {
+export function Singleton<TDependencies extends Array<InjectionToken | InterfaceId>, I = any>(
+    id?: [...TDependencies] | InjectionToken | InterfaceId<I>,
+    dependencies?: [...TDependencies],
+) {
+    return function <T extends { new (...args: UnwrapDecoratorArgs<TDependencies>): I }>(
+        target: T,
+        { kind }: ClassDecoratorContext,
+    ) {
+        if (kind === "class") {
+            let token: InjectionToken<I> = target;
+            if (Array.isArray(id)) {
+                dependencies = id;
+            } else {
+                if (typeof id !== "undefined") {
+                    token = id as unknown as InjectionToken<I>;
+                }
+            }
             container.registerRegistration(target, createRegistration(target, Lifetime.Singleton, dependencies || []));
-            if(typeof token !== undefined) {
-                container.registerType<I>(token!, { useToken: target});
+            if (token !== target) {
+                container.registerType(token, { useToken: target });
             }
             return;
         }
-        throw new InvalidDecoratorError("Singleton",target);
-    }
+        throw new InvalidDecoratorError("Singleton", target);
+    };
 }
 
-export function Transient<I, TDependencies extends Array<InjectionToken>>(dependencies?: [...TDependencies], token?: InjectionToken<I>){
-    return function <T extends { new ( ...args: UnwrapInjectionTokens<TDependencies>): I }>(target: T, {kind}: ClassDecoratorContext){
-        if(kind === "class") {
+export function Transient<I, TDependencies extends Array<InjectionToken | InterfaceId>>(
+    id?: [...TDependencies] | InjectionToken | InterfaceId<I>,
+    dependencies?: [...TDependencies],
+) {
+    return function <T extends { new (...args: UnwrapDecoratorArgs<TDependencies>): I }>(
+        target: T,
+        { kind }: ClassDecoratorContext,
+    ) {
+        if (kind === "class") {
+            let token: InjectionToken<I> = target;
+            if (Array.isArray(id)) {
+                dependencies = id;
+            } else {
+                if (typeof id !== "undefined") {
+                    token = id as unknown as InjectionToken<I>;
+                }
+            }
             container.registerRegistration(target, createRegistration(target, Lifetime.Transient, dependencies || []));
-            if(typeof token !== undefined) {
-                container.registerType<I>(token!, { useToken: target});
+            if (token !== target) {
+                container.registerType(token, { useToken: target });
             }
             return;
         }
-        throw new InvalidDecoratorError("Transient",target);
-    }
+        throw new InvalidDecoratorError("Transient", target);
+    };
 }
 
-export function Scoped<I, TDependencies extends Array<InjectionToken>>(dependencies?: [...TDependencies], token?: InjectionToken<I>){
-    return function <T extends { new ( ...args: UnwrapInjectionTokens<TDependencies>): I }>(target: T, {kind}: ClassDecoratorContext){
-        if(kind === "class") {
+export function Scoped<I, TDependencies extends Array<InjectionToken | InterfaceId>>(
+    id?: [...TDependencies] | InjectionToken | InterfaceId<I>,
+    dependencies?: [...TDependencies],
+) {
+    return function <T extends { new (...args: UnwrapDecoratorArgs<TDependencies>): I }>(
+        target: T,
+        { kind }: ClassDecoratorContext,
+    ) {
+        if (kind === "class") {
+            let token: InjectionToken<I> = target;
+            if (Array.isArray(id)) {
+                dependencies = id;
+            } else {
+                if (typeof id !== "undefined") {
+                    token = id as unknown as InjectionToken<I>;
+                }
+            }
             container.registerRegistration(target, createRegistration(target, Lifetime.Scoped, dependencies || []));
-            if(typeof token !== undefined) {
-                container.registerType<I>(token!, { useToken: target});
+            if (token !== target) {
+                container.registerType(token, { useToken: target });
             }
             return;
         }
-        throw new InvalidDecoratorError("Scoped",target);
-    }
-}
-
-
-
-
-export function SingletonInterface<I, TDependencies extends Array<InterfaceId<unknown> | InjectionToken<unknown>>>(
-    id: InterfaceId<I>,
-    dependencies: [...TDependencies] | [] = [],
-) {
-    return function <T extends { new (...args: UnwrapInterfaceIds<TDependencies>): I }>(
-        target: T,
-        { kind }: ClassDecoratorContext,
-    ) {
-        if (kind === "class") {
-            const reg = createRegistration(target, Lifetime.Singleton, dependencies);
-            container.registerRegistration(target, reg);
-            container.registerType(id, {useToken: target});
-            return;
-        }
-        throw new InvalidDecoratorError("SingletonInterface",target);
-    };
-}
-export function TransientInterface<I, TDependencies extends Array<InterfaceId<unknown> | InjectionToken<unknown>>>(
-    id: InterfaceId<I>,
-    dependencies: [...TDependencies] | [] = [],
-) {
-    return function <T extends { new (...args: UnwrapInterfaceIds<TDependencies>): I }>(
-        target: T,
-        { kind }: ClassDecoratorContext,
-    ) {
-        if (kind === "class") {
-            const reg = createRegistration(target, Lifetime.Transient, dependencies);
-            container.registerRegistration(target, reg);
-            container.registerType(id, {useToken: target});
-            return;
-        }
-        throw new InvalidDecoratorError("TransientInterface",target);
+        throw new InvalidDecoratorError("Scoped", target);
     };
 }
 
-export function ScopedInterface<I, TDependencies extends Array<InterfaceId<unknown> | InjectionToken<unknown>>>(
-    id: InterfaceId<I>,
-    dependencies: [...TDependencies] | [] = [],
-) {
-    return function <T extends { new (...args: UnwrapInterfaceIds<TDependencies>): I }>(
-        target: T,
-        { kind }: ClassDecoratorContext,
-    ) {
-        if (kind === "class") {
-            const reg = createRegistration(target, Lifetime.Scoped, dependencies);
-            container.registerRegistration(target, reg);
-            container.registerType(id, {useToken: target});
-            return;
-        }
-        throw new InvalidDecoratorError("ScopedInterface",target);
-    };
-}
 
 function createRegistration<T>(
     target: T,

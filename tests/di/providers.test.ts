@@ -82,7 +82,8 @@ describe("Provider", () => {
         test("isTokenProvider false",()=>{
             expect(isTokenProvider({} as Provider<unknown>)).toBe(false);
         });
-        test("should throw circular token registration",()=>{
+        test("should throw circular token registration",async ()=>{
+            await container.reset();
             container.register("test", {useToken: "test2"});
             expect(()=>container.register("test2", {useToken: "test"})).toThrow(TokenRegistrationCycleError)
         });

@@ -4,11 +4,11 @@ import { Lifetime } from "../../src/di/types/registration";
 import { container } from "../../src/di/container";
 import { StaticInjectable } from "../../src/di/types/staticInject";
 import { IContainer } from "../../src/di/types/container.interface";
-import { createInterfaceId, Singleton, SingletonInterface } from "../../src/di/decorators";
+import { createInterfaceId, Singleton } from "../../src/di/decorators";
 
 
 describe("Averix_DI ",()=>{
-    beforeEach(()=>container.reset());
+    beforeEach(async ()=> await container.reset());
     describe("Static inject",()=>{
         class ServiceA implements StaticInjectable<typeof ServiceA>{
             constructor(public serviceB: ServiceB, public serviceC: ServiceC){}
@@ -238,12 +238,12 @@ describe("Averix_DI ",()=>{
     describe("Decorators",()=>{
         describe("Class",()=>{
             test("circular dependency resolution simple case", () => {
-                @Singleton(["test2"], "test")
+                @Singleton("test", ["test2"])
                 class TestClass {
                     public propertyA = "test";
                     constructor(public test2: TestClass2){}
                 }
-                @Singleton(["test"], "test2")
+                @Singleton("test2", ["test"])
                 class TestClass2 {
                     constructor(public test: TestClass) {}
                 }
@@ -259,19 +259,19 @@ describe("Averix_DI ",()=>{
                 expect(test2.test).toEqual(test);
             });
             test("circular dependency complex case",()=>{
-                @Singleton(["serviceB", "serviceC"], "serviceA")
+                @Singleton("serviceA", ["serviceB", "serviceC"])
                 class ServiceA {
                     constructor(public serviceB: ServiceB, public serviceC: ServiceC){}
                 }
-                @Singleton(["serviceA", "serviceD"], "serviceB")
+                @Singleton("serviceB", ["serviceA", "serviceD"])
                 class ServiceB {
                     constructor(public serviceA: ServiceA, public serviceD: ServiceD){}
                 }
-                @Singleton(["serviceB", "serviceD"], "serviceC")
+                @Singleton("serviceC", ["serviceB", "serviceD"])
                 class ServiceC {
                     constructor(public serviceB: ServiceB, public serviceD: ServiceD){}
                 }
-                @Singleton(["serviceA", "serviceC"], "serviceD")
+                @Singleton("serviceD", ["serviceA", "serviceC"])
                 class ServiceD {
                     constructor(public serviceA: ServiceA, public serviceC: ServiceC){}
                 }
@@ -354,12 +354,12 @@ describe("Averix_DI ",()=>{
                 }
                 const TC2 = createInterfaceId<TC2>("TC2");
 
-                @SingletonInterface(TC,[TC2])
+                @Singleton(TC,[TC2])
                 class TestClass implements TC {
                     public propertyA = "test";
                     constructor(public test2: TestClass2){}
                 }
-                @SingletonInterface(TC2,[TC])
+                @Singleton(TC2,[TC])
                 class TestClass2 implements TC2 {
                     constructor(public test: TestClass) {}
                 }
@@ -394,19 +394,19 @@ describe("Averix_DI ",()=>{
                     readonly serviceC: SC;
                 }
                 const SD = createInterfaceId<SD>("SD");
-                @SingletonInterface(SA,[SB, SC])
+                @Singleton(SA,[SB, SC])
                 class ServiceA {
                     constructor(public serviceB: ServiceB, public serviceC: ServiceC){}
                 }
-                @SingletonInterface(SB,[SA, SD])
+                @Singleton(SB,[SA, SD])
                 class ServiceB {
                     constructor(public serviceA: ServiceA, public serviceD: ServiceD){}
                 }
-                @SingletonInterface(SC,[SB, SD])
+                @Singleton(SC,[SB, SD])
                 class ServiceC {
                     constructor(public serviceB: ServiceB, public serviceD: ServiceD){}
                 }
-                @SingletonInterface(SD,[SA, SC])
+                @Singleton(SD,[SA, SC])
                 class ServiceD {
                     constructor(public serviceA: ServiceA, public serviceC: ServiceC){}
                 }

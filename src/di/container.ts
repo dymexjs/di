@@ -3,7 +3,7 @@ import { ScopeContext } from "./scope-context";
 import { ValueProvider } from "./types/providers/value-provider";
 import { ClassProvider, isClassProvider } from "./types/providers/class-provider";
 import { FactoryProvider } from "./types/providers/factory-provider";
-import { getProviderType, isProvider, Provider, ProvidersType } from './types/providers/provider';
+import { getProviderType, isProvider, Provider, ProvidersType } from "./types/providers/provider";
 import { Lifetime, Registration, RegistrationOptions } from "./types/registration";
 import { InjectionToken } from "./types/injection-token";
 import { ConstructorType, isConstructorType } from "./types/constructor.type";
@@ -13,6 +13,12 @@ import { UndefinedScopeError } from "./exceptions/UndefinedScopeError";
 import { isTokenProvider, TokenProvider } from "./types/providers/token-provider";
 import { TokenRegistrationCycleError } from "./exceptions/TokenRegistrationCycleError";
 import { ServiceMap } from "./service-map";
+import { isAsyncDisposable, isDisposable } from "./helpers";
+
+/**
+ * TODO
+ * Unregister(token: InjectionToken, predicate?: (Registration) => boolean): IContainer
+ */
 
 export class Container implements IContainer {
     private readonly _services: ServiceMap<InjectionToken, Registration> = new ServiceMap();
@@ -20,10 +26,278 @@ export class Container implements IContainer {
     private readonly _resolutionStack = new Map<InjectionToken, any>();
     private _childContainer?: IContainer;
 
-    constructor(private readonly _parent?: IContainer) {}
+    constructor(private readonly _parent?: Container) {}
 
-    createInstance<T>(implementation: ConstructorType<T>, args: Array<any> = []): T {
-        return Reflect.construct(implementation, args);
+    get scopes(): Set<ScopeContext> {
+        return this._scopes;
+    }
+
+    async [Symbol.asyncDispose]() {
+        if (typeof this._childContainer !== "undefined") {
+            await this._childContainer[Symbol.asyncDispose]();
+        }
+        //Dispose scopes
+        await Promise.all(Array.from(this._scopes).map((s) => this.disposeScope(s)));
+
+        //Dispose registrations
+        await this._services[Symbol.asyncDispose]();
+
+        this._resolutionStack.clear();
+    }
+
+    async clearInstances(): Promise<void> {
+        for (const [token, registrations] of this._services.entries()) {
+            registrations
+                .filter((x) => x.providerType !== ProvidersType.ValueProvider)
+                .map(async (registration) => {
+                    if (isAsyncDisposable(registration)) {
+                        await registration[Symbol.asyncDispose]();
+                    }
+                    if (isDisposable(registration)) {
+                        registration[Symbol.dispose]();
+                    }
+                    registration.instance = undefined;
+                });
+        }
+    }
+
+    createChildContainer(): IContainer {
+        const childContainer = new Container(this);
+        //Saves child container for dispose from main container
+        this._childContainer = childContainer;
+        return childContainer;
+    }
+
+    createScope(): ScopeContext {
+        const scope = new ScopeContext();
+        this._scopes.add(scope);
+        return scope;
+    }
+
+    async disposeScope(scope: ScopeContext): Promise<void> {
+        //Dispose instances
+        await scope[Symbol.asyncDispose]();
+        this._scopes.delete(scope);
+    }
+
+    register<T>(
+        token: InjectionToken,
+        provider: Provider<T> | ConstructorType<T>,
+        options?: RegistrationOptions,
+    ): IContainer {
+        let opt: RegistrationOptions = options ? options : { lifetime: Lifetime.Transient };
+
+        let service: Provider<T> = isProvider(provider) ? provider : { useClass: provider };
+
+        if (isTokenProvider(service)) {
+            this.inspectCircularTokenProvider(token, service);
+        }
+
+        let injections = [];
+
+        if (isClassProvider(service as Provider<T>)) {
+            if (
+                typeof options === "undefined" &&
+                typeof ((service as ClassProvider<T>).useClass as any)[STATIC_INJECT_LIFETIME] !== "undefined"
+            ) {
+                opt.lifetime = ((service as ClassProvider<T>).useClass as any)[STATIC_INJECT_LIFETIME];
+            }
+            if (typeof ((service as ClassProvider<T>).useClass as any)[STATIC_INJECT_KEY] !== "undefined") {
+                injections = ((service as ClassProvider<T>).useClass as any)[STATIC_INJECT_KEY];
+            }
+        }
+
+        return this.registerRegistration(token, {
+            provider: service,
+            providerType: getProviderType(service),
+            options: opt,
+            injections,
+        });
+    }
+
+    registerInstance<T>(token: InjectionToken, instance: T): IContainer {
+        this._services.set(token, {
+            provider: { useValue: instance },
+            providerType: ProvidersType.ValueProvider,
+            options: { lifetime: Lifetime.Singleton },
+            injections: [],
+        });
+        return this;
+    }
+
+    registerRegistration(token: InjectionToken, registration: Registration<any>): IContainer {
+        this._services.set(token, registration);
+        return this;
+    }
+
+    registerType<T>(from: InjectionToken, to: InjectionToken<T> | TokenProvider<T>): IContainer {
+        const toProvider = isTokenProvider(to as Provider<T>)
+            ? (to as TokenProvider<T>).useToken
+            : (to as InjectionToken);
+        if (!this.hasRegistration(toProvider)) {
+            throw new TokenNotFoundError(to as InjectionToken);
+        }
+        if (isTokenProvider(to as Provider<T>)) {
+            return this.register(from, to as TokenProvider<T>);
+        }
+        if (isConstructorType(to)) {
+            return this.register(from, { useClass: to });
+        }
+
+        return this.register(from, { useToken: to as InjectionToken<T> });
+    }
+
+    async removeRegistration<T>(token: InjectionToken, predicate?: (registration: Registration<T>) => boolean): Promise<IContainer> {
+        if (!this.hasRegistration(token)) {
+            throw new TokenNotFoundError(token);
+        }
+
+        if (typeof predicate === "undefined") {
+            predicate = () => true;
+        }
+
+        for(const registration of this._services.getAll(token).filter((x)=> predicate(x))) {
+            await this._services.delete(token, registration);
+        }
+
+        return this;
+    }
+
+    async reset(): Promise<void> {
+        //Dispose scopes
+        await Promise.all(Array.from(this._scopes).map((s) => this.disposeScope(s)));
+
+        //Dispose registrations
+        await this._services[Symbol.asyncDispose]();
+    }
+
+    resolve<T>(token: InjectionToken, scope?: ScopeContext): T {
+        if (this._resolutionStack.has(token)) {
+            //Circular dependency detected, return a proxy
+            if (this._resolutionStack.get(token) === null) {
+                this._resolutionStack.set(token, this.createProxy<T>(token));
+            }
+            return this._resolutionStack.get(token);
+        }
+        this._resolutionStack.set(token, null);
+
+        try {
+            if (!this.hasRegistration(token)) {
+                if (isConstructorType(token)) {
+                    const lifetimeAux = (token as any)[STATIC_INJECT_LIFETIME];
+                    const lifetime: Lifetime = typeof lifetimeAux !== "undefined" ? lifetimeAux : Lifetime.Transient;
+                    let injections = [];
+                    if (typeof (token as any)[STATIC_INJECT_KEY] !== "undefined") {
+                        injections = (token as any)[STATIC_INJECT_KEY];
+                    }
+                    const args = this.createArgs({ injections } as Registration<any>, scope);
+                    const instance = this.createInstance(token, args);
+                    if (lifetime === Lifetime.Scoped) {
+                        if (typeof scope === "undefined") {
+                            throw new UndefinedScopeError(token);
+                        }
+                        scope.services.set(token, instance);
+                    }
+                    this.register(token, { useClass: token }, { lifetime: lifetime });
+                    if (lifetime == Lifetime.Singleton) {
+                        this.getRegistration(token)!.instance = instance;
+                    }
+                    return instance;
+                }
+                throw new TokenNotFoundError(token);
+            }
+
+            const registration = this.getRegistration(token)!;
+            return this.resolveRegistration(token, registration, scope);
+        } finally {
+            this._resolutionStack.delete(token);
+        }
+    }
+
+    resolveAll<T>(token: InjectionToken, scope?: ScopeContext): Array<T> {
+        if (!this.hasRegistration(token)) {
+            if (isConstructorType(token)) {
+                return [this.resolve(token, scope)];
+            }
+            throw new TokenNotFoundError(token);
+        }
+        const registrations = this.getAllRegistrations(token);
+        return registrations.map((registration) => this.resolveRegistration(token, registration, scope));
+    }
+
+    async resolveAllAsync<T>(token: InjectionToken, scope?: ScopeContext): Promise<Array<T>> {
+        if (!this.hasRegistration(token)) {
+            if (isConstructorType(token)) {
+                return [await this.resolveAsync(token, scope)];
+            }
+            throw new TokenNotFoundError(token);
+        }
+        const registrations = this.getAllRegistrations(token);
+        const result = [];
+        for (const registration of registrations) {
+            result.push(await this.resolveRegistrationAsync<T>(token, registration, scope));
+        }
+        return result;
+    }
+
+    async resolveAsync<T>(token: InjectionToken, scope?: ScopeContext): Promise<T> {
+        if (this._resolutionStack.has(token)) {
+            //Circular dependency detected, return a proxy
+            if (this._resolutionStack.get(token) === null) {
+                this._resolutionStack.set(token, this.createProxyAsync<T>(token));
+            }
+            return await this._resolutionStack.get(token);
+        }
+        this._resolutionStack.set(token, null);
+
+        try {
+            if (!this.hasRegistration(token)) {
+                if (isConstructorType(token)) {
+                    const lifetimeAux = (token as any)[STATIC_INJECT_LIFETIME];
+                    const lifetime: Lifetime = typeof lifetimeAux !== "undefined" ? lifetimeAux : Lifetime.Transient;
+                    let injections = [];
+                    if (typeof (token as any)[STATIC_INJECT_KEY] !== "undefined") {
+                        injections = (token as any)[STATIC_INJECT_KEY];
+                    }
+                    const args = await this.createArgsAsync({ injections } as Registration<any>, scope);
+                    const instance = this.createInstance(token, args);
+                    if (lifetime === Lifetime.Scoped) {
+                        if (typeof scope === "undefined") {
+                            throw new UndefinedScopeError(token);
+                        }
+                        scope.services.set(token, instance);
+                    }
+                    this.register(token, { useClass: token }, { lifetime: lifetime });
+                    if (lifetime == Lifetime.Singleton) {
+                        this.getRegistration(token)!.instance = instance;
+                    }
+                    return instance;
+                }
+                throw new TokenNotFoundError(token);
+            }
+
+            const registration = this.getRegistration(token)!;
+            return await this.resolveRegistrationAsync(token, registration, scope);
+        } finally {
+            this._resolutionStack.delete(token);
+        }
+    }
+
+    private createArgs(registration: Registration, scope?: ScopeContext): Array<unknown> {
+        return registration.injections.map((token) => this.resolve(token, scope));
+    }
+
+    private async createArgsAsync(registration: Registration, scope?: ScopeContext): Promise<Array<unknown>> {
+        const args = [];
+        for (const token of registration.injections) {
+            args.push(await this.resolveAsync(token, scope));
+        }
+        return args;
+    }
+
+    private createInstance<T>(implementation: ConstructorType<T>, args: Array<any> = []): T {
+        const instance: T = Reflect.construct(implementation, args);
+        return instance;
     }
 
     private createProxy<T>(token: InjectionToken): T {
@@ -91,18 +365,34 @@ export class Container implements IContainer {
         return proxy;
     }
 
-    createScope(): ScopeContext {
-        const scope = new ScopeContext();
-        this._scopes.add(scope);
-        return scope;
+    private getAllRegistrations<T>(token: InjectionToken<T>): Array<Registration> {
+        if (this._services.getAll(token).length > 0) {
+            return this._services.getAll(token);
+        }
+        if (this._parent) {
+            return this._parent.getAllRegistrations(token);
+        }
+        return [];
     }
 
-    disposeScope(scope: ScopeContext): void {
-        this._scopes.delete(scope);
+    private getRegistration(token: InjectionToken): Registration | undefined {
+        if (this._services.get(token)) {
+            return this._services.get(token);
+        }
+
+        if (typeof this._parent !== "undefined") {
+            return this._parent.getRegistration(token);
+        }
     }
 
-    get scopes(): Set<ScopeContext> {
-        return this._scopes;
+    private hasRegistration(token: InjectionToken): boolean {
+        if (this._services.has(token)) {
+            return true;
+        }
+        if (typeof this._parent !== "undefined") {
+            return this._parent.hasRegistration(token);
+        }
+        return false;
     }
 
     private inspectCircularTokenProvider<T>(token: InjectionToken<T>, provider: TokenProvider<T>): void {
@@ -123,223 +413,6 @@ export class Container implements IContainer {
         }
     }
 
-    register<T>(
-        token: InjectionToken,
-        provider: Provider<T> | ConstructorType<T>,
-        options?: RegistrationOptions,
-    ): IContainer {
-        let opt: RegistrationOptions = options ? options : { lifetime: Lifetime.Transient };
-
-        let service: Provider<T> = isProvider(provider) ? provider : { useClass: provider };
-
-        if (isTokenProvider(service)) {
-            this.inspectCircularTokenProvider(token, service);
-        }
-
-        let injections = [];
-
-        if (isClassProvider(service as Provider<T>)) {
-            if (
-                typeof options === "undefined" &&
-                typeof ((service as ClassProvider<T>).useClass as any)[STATIC_INJECT_LIFETIME] !== "undefined"
-            ) {
-                opt.lifetime = ((service as ClassProvider<T>).useClass as any)[STATIC_INJECT_LIFETIME];
-            }
-            if (typeof ((service as ClassProvider<T>).useClass as any)[STATIC_INJECT_KEY] !== "undefined") {
-                injections = ((service as ClassProvider<T>).useClass as any)[STATIC_INJECT_KEY];
-            }
-        }
-
-        return this.registerRegistration(token, {
-            provider: service,
-            providerType: getProviderType(service),
-            options: opt,
-            injections,
-        });
-    }
-
-    registerRegistration(token: InjectionToken, registration: Registration<any>): IContainer {
-        this._services.set(token, registration);
-        return this;
-    }
-
-    registerInstance<T>(token: InjectionToken, instance: T): IContainer {
-        this._services.set(token, {
-            provider: { useValue: instance },
-            providerType: ProvidersType.ValueProvider,
-            options: { lifetime: Lifetime.Singleton },
-            injections: [],
-        });
-        return this;
-    }
-
-    registerType<T>(from: InjectionToken, to: InjectionToken<T> | TokenProvider<T>): IContainer {
-        if (isTokenProvider(to as Provider<T>)) {
-            return this.register(from, to as TokenProvider<T>);
-        }
-        if (isConstructorType(to)) {
-            return this.register(from, { useClass: to });
-        }
-
-        return this.register(from, { useToken: to as InjectionToken<T> });
-    }
-
-    resolve<T>(token: InjectionToken, scope?: ScopeContext): T {
-        if (this._resolutionStack.has(token)) {
-            //Circular dependency detected, return a proxy
-            if (this._resolutionStack.get(token) === null) {
-                this._resolutionStack.set(token, this.createProxy<T>(token));
-            }
-            return this._resolutionStack.get(token);
-        }
-        this._resolutionStack.set(token, null);
-
-        try {
-            if (!this.hasRegistration(token)) {
-                if (isConstructorType(token)) {
-                    const lifetimeAux = (token as any)[STATIC_INJECT_LIFETIME];
-                    const lifetime: Lifetime = typeof lifetimeAux !== "undefined" ? lifetimeAux : Lifetime.Transient;
-                    let injections = [];
-                    if (typeof (token as any)[STATIC_INJECT_KEY] !== "undefined") {
-                        injections = (token as any)[STATIC_INJECT_KEY];
-                    }
-                    const args = this.createArgs({ injections } as Registration<any>, scope);
-                    const instance = this.createInstance(token, args);
-                    if (lifetime === Lifetime.Scoped) {
-                        if (typeof scope === "undefined") {
-                            throw new UndefinedScopeError(token);
-                        }
-                        scope.services.set(token, instance);
-                    }
-                    this.register(token, { useClass: token }, { lifetime: lifetime });
-                    if (lifetime == Lifetime.Singleton) {
-                        this.getRegistration(token)!.instance = instance;
-                    }
-                    return instance;
-                }
-                throw new TokenNotFoundError(token);
-            }
-
-            const registration = this.getRegistration(token)!;
-            return this.resolveRegistration(token, registration, scope);
-        } finally {
-            this._resolutionStack.delete(token);
-        }
-    }
-
-    resolveRegistration<T>(token: InjectionToken, registration: Registration<T>, scope?: ScopeContext): T {
-        switch (registration.providerType) {
-            case ProvidersType.ConstructorProvider:
-            case ProvidersType.ClassProvider:
-                return this.resolveClassProvider(registration, token, scope);
-            case ProvidersType.FactoryProvider:
-                return this.resolveFactoryProvider(registration);
-            case ProvidersType.ValueProvider:
-                return this.resolveValueProvider(registration);
-            case ProvidersType.TokenProvider:
-                return this.resolve(registration.provider.useToken, scope);
-            default:
-                throw new Error(`Invalid registration type: "${registration.providerType}"`);
-        }
-    }
-
-    resolveAll<T>(token: InjectionToken, scope?: ScopeContext): Array<T> {
-        if (!this.hasRegistration(token)) {
-            if (isConstructorType(token)) {
-                return [this.resolve(token, scope)];
-            }
-            throw new TokenNotFoundError(token);
-        }
-        const registrations = this.getAllRegistrations(token);
-        return registrations.map((registration) => this.resolveRegistration(token, registration, scope));
-    }
-
-    async resolveAsync<T>(token: InjectionToken, scope?: ScopeContext): Promise<T> {
-        if (this._resolutionStack.has(token)) {
-            //Circular dependency detected, return a proxy
-            if (this._resolutionStack.get(token) === null) {
-                this._resolutionStack.set(token, this.createProxyAsync<T>(token));
-            }
-            return await this._resolutionStack.get(token);
-        }
-        this._resolutionStack.set(token, null);
-
-        try {
-            if (!this.hasRegistration(token)) {
-                if (isConstructorType(token)) {
-                    const lifetimeAux = (token as any)[STATIC_INJECT_LIFETIME];
-                    const lifetime: Lifetime = typeof lifetimeAux !== "undefined" ? lifetimeAux : Lifetime.Transient;
-                    let injections = [];
-                    if (typeof (token as any)[STATIC_INJECT_KEY] !== "undefined") {
-                        injections = (token as any)[STATIC_INJECT_KEY];
-                    }
-                    const args = await this.createArgsAsync({ injections } as Registration<any>, scope);
-                    const instance = this.createInstance(token, args);
-                    if (lifetime === Lifetime.Scoped) {
-                        if (typeof scope === "undefined") {
-                            throw new UndefinedScopeError(token);
-                        }
-                        scope.services.set(token, instance);
-                    }
-                    this.register(token, { useClass: token }, { lifetime: lifetime });
-                    if (lifetime == Lifetime.Singleton) {
-                        this.getRegistration(token)!.instance = instance;
-                    }
-                    return instance;
-                }
-                throw new TokenNotFoundError(token);
-            }
-
-            const registration = this.getRegistration(token)!;
-            return await this.resolveRegistrationAsync(token, registration, scope);
-        } finally {
-            this._resolutionStack.delete(token);
-        }
-    }
-    async resolveAllAsync<T>(token: InjectionToken, scope?: ScopeContext): Promise<Array<T>> {
-        if (!this.hasRegistration(token)) {
-            if (isConstructorType(token)) {
-                return [await this.resolveAsync(token, scope)];
-            }
-            throw new TokenNotFoundError(token);
-        }
-        const registrations = this.getAllRegistrations(token);
-        const result = [];
-        for (const registration of registrations) {
-            result.push(await this.resolveRegistrationAsync<T>(token, registration, scope));
-        }
-        return result;
-    }
-
-    private async resolveRegistrationAsync<T>(
-        token: InjectionToken,
-        registration: Registration,
-        scope?: ScopeContext,
-    ): Promise<T> {
-        switch (registration.providerType) {
-            case ProvidersType.ClassProvider:
-            case ProvidersType.ConstructorProvider:
-                return await this.resolveClassProviderAsync(registration, token, scope);
-            case ProvidersType.FactoryProvider:
-                return await this.resolveFactoryProviderAsync(registration);
-            case ProvidersType.ValueProvider:
-                return await this.resolveValueProvider(registration);
-            case ProvidersType.TokenProvider:
-                return await this.resolveAsync(registration.provider.useToken, scope);
-            default:
-                throw new Error(`Invalid registration type: "${registration.providerType}"`);
-        }
-    }
-
-    private resolveValueProvider<T>(registration: Registration): T {
-        return (registration.provider as ValueProvider<T>).useValue;
-    }
-    private resolveFactoryProvider<T>(registration: Registration): T {
-        return (registration.provider as FactoryProvider<T>).useFactory(this);
-    }
-    private async resolveFactoryProviderAsync<T>(registration: Registration): Promise<T> {
-        return (registration.provider as FactoryProvider<T>).useFactory(this);
-    }
     private resolveClassProvider<T>(registration: Registration, token: InjectionToken, scope?: ScopeContext): T {
         if (registration.options.lifetime === Lifetime.Scoped) {
             if (typeof scope === "undefined") {
@@ -406,65 +479,52 @@ export class Container implements IContainer {
         );
     }
 
-    private createArgs(registration: Registration, scope?: ScopeContext): Array<unknown> {
-        return registration.injections.map((token) => this.resolve(token, scope));
-    }
-    private async createArgsAsync(registration: Registration, scope?: ScopeContext): Promise<Array<unknown>> {
-        const args = [];
-        for (const token of registration.injections) {
-            args.push(await this.resolveAsync(token, scope));
-        }
-        return args;
+    private resolveFactoryProvider<T>(registration: Registration): T {
+        return (registration.provider as FactoryProvider<T>).useFactory(this);
     }
 
-    hasRegistration(token: InjectionToken): boolean {
-        if (this._services.has(token)) {
-            return true;
-        }
-        if (typeof this._parent !== "undefined") {
-            return this._parent.hasRegistration(token, true);
-        }
-        return false;
-    }
-    getRegistration(token: InjectionToken): Registration | undefined {
-        if (this._services.get(token)) {
-            return this._services.get(token);
-        }
-
-        if (typeof this._parent !== "undefined") {
-            return this._parent.getRegistration(token, true);
-        }
-    }
-    reset(): void {
-        this._services.clear();
-        this._scopes.clear();
+    private async resolveFactoryProviderAsync<T>(registration: Registration): Promise<T> {
+        return (registration.provider as FactoryProvider<T>).useFactory(this);
     }
 
-    getAllRegistrations<T>(token: InjectionToken<T>): Array<Registration> {
-        if (this._services.getAll(token).length > 0) {
-            return this._services.getAll(token);
-        }
-        if (this._parent) {
-            return this._parent.getAllRegistrations(token);
-        }
-        return [];
-    }
-
-    clearInstances(): void {
-        for (const [token, registrations] of this._services.entries()) {
-            registrations
-                .filter((x) => x.providerType !== ProvidersType.ValueProvider)
-                .map((registration) => {
-                    registration.instance = undefined;
-                });
+    private resolveRegistration<T>(token: InjectionToken, registration: Registration<T>, scope?: ScopeContext): T {
+        switch (registration.providerType) {
+            case ProvidersType.ConstructorProvider:
+            case ProvidersType.ClassProvider:
+                return this.resolveClassProvider(registration, token, scope);
+            case ProvidersType.FactoryProvider:
+                return this.resolveFactoryProvider(registration);
+            case ProvidersType.ValueProvider:
+                return this.resolveValueProvider(registration);
+            case ProvidersType.TokenProvider:
+                return this.resolve(registration.provider.useToken, scope);
+            default:
+                throw new Error(`Invalid registration type: "${registration.providerType}"`);
         }
     }
 
-    createChildContainer(): IContainer {
-        const childContainer = new Container(this);
-        //Saves child container for disponse from main container
-        this._childContainer = childContainer;
-        return childContainer;
+    private async resolveRegistrationAsync<T>(
+        token: InjectionToken,
+        registration: Registration,
+        scope?: ScopeContext,
+    ): Promise<T> {
+        switch (registration.providerType) {
+            case ProvidersType.ClassProvider:
+            case ProvidersType.ConstructorProvider:
+                return await this.resolveClassProviderAsync(registration, token, scope);
+            case ProvidersType.FactoryProvider:
+                return await this.resolveFactoryProviderAsync(registration);
+            case ProvidersType.ValueProvider:
+                return await this.resolveValueProvider(registration);
+            case ProvidersType.TokenProvider:
+                return await this.resolveAsync(registration.provider.useToken, scope);
+            default:
+                throw new Error(`Invalid registration type: "${registration.providerType}"`);
+        }
+    }
+
+    private resolveValueProvider<T>(registration: Registration): T {
+        return (registration.provider as ValueProvider<T>).useValue;
     }
 }
 
