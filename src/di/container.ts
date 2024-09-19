@@ -5,7 +5,7 @@ import { ClassProvider, isClassProvider } from "./types/providers/class-provider
 import { FactoryProvider } from "./types/providers/factory-provider";
 import { getProviderType, isProvider, Provider, ProvidersType } from "./types/providers/provider";
 import { Lifetime, Registration, RegistrationOptions } from "./types/registration";
-import { InjectionToken } from "./types/injection-token";
+import { InjectionToken, isNormalToken } from "./types/injection-token";
 import { ConstructorType, isConstructorType } from "./types/constructor.type";
 import { IContainer } from "./types/container.interface";
 import { STATIC_INJECT_KEY, STATIC_INJECT_LIFETIME } from "./constants";
@@ -14,11 +14,6 @@ import { isTokenProvider, TokenProvider } from "./types/providers/token-provider
 import { TokenRegistrationCycleError } from "./exceptions/TokenRegistrationCycleError";
 import { ServiceMap } from "./service-map";
 import { isAsyncDisposable, isDisposable } from "./helpers";
-
-/**
- * TODO
- * Unregister(token: InjectionToken, predicate?: (Registration) => boolean): IContainer
- */
 
 export class Container implements IContainer {
     private readonly _services: ServiceMap<InjectionToken, Registration> = new ServiceMap();
@@ -36,28 +31,31 @@ export class Container implements IContainer {
         if (typeof this._childContainer !== "undefined") {
             await this._childContainer[Symbol.asyncDispose]();
         }
+        await this.reset();
         //Dispose scopes
-        await Promise.all(Array.from(this._scopes).map(async (s) => await this.disposeScope(s)));
+        //await Promise.all(Array.from(this._scopes).map(async (s) => await this.disposeScope(s)));
 
         //Dispose registrations
-        await this._services[Symbol.asyncDispose]();
+        //await this._services[Symbol.asyncDispose]();
 
         this._resolutionStack.clear();
     }
 
     async clearInstances(): Promise<void> {
         for (const [token, registrations] of this._services.entries()) {
-            await Promise.all(registrations
-                .filter((x) => x.providerType !== ProvidersType.ValueProvider)
-                .map(async (registration) => {
-                    if (isAsyncDisposable(registration.instance)) {
-                        await registration.instance[Symbol.asyncDispose]();
-                    }
-                    if (isDisposable(registration.instance)) {
-                        registration.instance[Symbol.dispose]();
-                    }
-                    registration.instance = undefined;
-                }));
+            await Promise.all(
+                registrations
+                    .filter((x) => x.providerType !== ProvidersType.ValueProvider)
+                    .map(async (registration) => {
+                        if (isAsyncDisposable(registration.instance)) {
+                            await registration.instance[Symbol.asyncDispose]();
+                        }
+                        if (isDisposable(registration.instance)) {
+                            registration.instance[Symbol.dispose]();
+                        }
+                        registration.instance = undefined;
+                    }),
+            );
         }
     }
 
@@ -131,7 +129,18 @@ export class Container implements IContainer {
     }
 
     registerType<T>(from: InjectionToken, to: InjectionToken<T> | TokenProvider<T>): IContainer {
-        const toProvider = isTokenProvider(to as Provider<T>)
+        if (isTokenProvider(to as TokenProvider<T>)) {
+            if (!this.hasRegistration((to as TokenProvider<T>).useToken)) {
+                throw new TokenNotFoundError((to as TokenProvider<T>).useToken);
+            } else {
+                return this.register(from, to as TokenProvider<T>);
+            }
+        }
+        if (isNormalToken(to as InjectionToken)) {
+            return this.register(from, { useToken: to as InjectionToken });
+        }
+        return this.register(from, { useClass: to as ConstructorType<any> });
+        /*const toProvider = isTokenProvider(to as Provider<T>)
             ? (to as TokenProvider<T>).useToken
             : (to as InjectionToken);
         if (!this.hasRegistration(toProvider)) {
@@ -144,10 +153,13 @@ export class Container implements IContainer {
             return this.register(from, { useClass: to });
         }
 
-        return this.register(from, { useToken: to as InjectionToken<T> });
+        return this.register(from, { useToken: to as InjectionToken<T> });*/
     }
 
-    async removeRegistration<T>(token: InjectionToken, predicate?: (registration: Registration<T>) => boolean): Promise<IContainer> {
+    async removeRegistration<T>(
+        token: InjectionToken,
+        predicate?: (registration: Registration<T>) => boolean,
+    ): Promise<IContainer> {
         if (!this.hasRegistration(token)) {
             throw new TokenNotFoundError(token);
         }
@@ -156,7 +168,7 @@ export class Container implements IContainer {
             predicate = () => true;
         }
 
-        for(const registration of this._services.getAll(token).filter((x)=> predicate(x))) {
+        for (const registration of this._services.getAll(token).filter((x) => predicate(x))) {
             await this._services.delete(token, registration);
         }
 
