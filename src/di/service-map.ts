@@ -54,8 +54,8 @@ export class ServiceMap<K extends InjectionToken, V extends Registration> implem
 
     async [Symbol.asyncDispose](){
         for (const [token, registrations] of this._services.entries()) {
-            await Promise.all(registrations.filter((r) => isAsyncDisposable(r)).map((r) => r[Symbol.asyncDispose]()));
-            registrations.filter((r) => isDisposable(r)).map((r) => r[Symbol.dispose]());
+            await Promise.all(registrations.filter((r) => isAsyncDisposable(r.instance)).map(async (r) => await r.instance[Symbol.asyncDispose]()));
+            registrations.filter((r) => isDisposable(r.instance)).map((r) => r.instance[Symbol.dispose]());
         }
         this._services.clear();
     }

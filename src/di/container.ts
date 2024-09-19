@@ -37,7 +37,7 @@ export class Container implements IContainer {
             await this._childContainer[Symbol.asyncDispose]();
         }
         //Dispose scopes
-        await Promise.all(Array.from(this._scopes).map((s) => this.disposeScope(s)));
+        await Promise.all(Array.from(this._scopes).map(async (s) => await this.disposeScope(s)));
 
         //Dispose registrations
         await this._services[Symbol.asyncDispose]();
@@ -47,17 +47,17 @@ export class Container implements IContainer {
 
     async clearInstances(): Promise<void> {
         for (const [token, registrations] of this._services.entries()) {
-            registrations
+            await Promise.all(registrations
                 .filter((x) => x.providerType !== ProvidersType.ValueProvider)
                 .map(async (registration) => {
-                    if (isAsyncDisposable(registration)) {
-                        await registration[Symbol.asyncDispose]();
+                    if (isAsyncDisposable(registration.instance)) {
+                        await registration.instance[Symbol.asyncDispose]();
                     }
-                    if (isDisposable(registration)) {
-                        registration[Symbol.dispose]();
+                    if (isDisposable(registration.instance)) {
+                        registration.instance[Symbol.dispose]();
                     }
                     registration.instance = undefined;
-                });
+                }));
         }
     }
 
@@ -165,7 +165,7 @@ export class Container implements IContainer {
 
     async reset(): Promise<void> {
         //Dispose scopes
-        await Promise.all(Array.from(this._scopes).map((s) => this.disposeScope(s)));
+        await Promise.all(Array.from(this._scopes).map(async (s) => await this.disposeScope(s)));
 
         //Dispose registrations
         await this._services[Symbol.asyncDispose]();

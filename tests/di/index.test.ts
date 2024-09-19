@@ -4,6 +4,7 @@ import { TokenNotFoundError } from "../../src/di/exceptions/TokenNotFoundError";
 import { STATIC_INJECT_LIFETIME } from "../../src/di/constants";
 import { Lifetime } from "../../src/di/types/registration";
 import { UndefinedScopeError } from "../../src/di/exceptions/UndefinedScopeError";
+import { Singleton } from "../../src/di/decorators";
 
 describe("dependency Injection container", () => {
     beforeEach(async () => await container.reset());
@@ -13,6 +14,19 @@ describe("dependency Injection container", () => {
         });
         test("should throw an error when token not registered async", () => {
             expect(container.resolveAsync("test")).rejects.toThrow(TokenNotFoundError);
+        });
+        test("should handle async dispose", async () => {
+            class TestAsyncDisposable implements AsyncDisposable {
+                async [Symbol.asyncDispose](): Promise<void> {
+                    await new Promise((resolve) => setTimeout(resolve, 100));
+                }
+            }
+            container.register("asyncDisposable", TestAsyncDisposable, { lifetime: Lifetime.Singleton });
+            container.resolve("asyncDisposable");
+            const startTime = Date.now();
+            await container.clearInstances();
+            const endTime = Date.now();
+            expect(endTime - startTime).toBeGreaterThanOrEqual(100);
         });
         /*test("should register registration", () => {
             container.registerRegistration("test", {
@@ -54,7 +68,21 @@ describe("dependency Injection container", () => {
             expect(instances2[0]).toBeInstanceOf(Test);
             expect(instances2[0]).toBe(instances[0]);
             await container.removeRegistration("test", (reg) => reg.options.lifetime === Lifetime.Singleton);
-            expect(()=>container.resolveAll("test")).toThrow(TokenNotFoundError);
+            expect(() => container.resolveAll("test")).toThrow(TokenNotFoundError);
+        });
+        test("should resolve directly in constructor param", () => {
+            @Singleton()
+            class Test {}
+            @Singleton()
+            class Test2 {
+                constructor(public readonly test: Test = container.resolve(Test)) {}
+            }
+            const test2 = container.resolve<Test2>(Test2);
+            const test = container.resolve<Test>(Test);
+            expect(test2).toBeInstanceOf(Test2);
+            expect(test).toBeInstanceOf(Test);
+            expect(test2.test).toBeInstanceOf(Test);
+            expect(test2.test).toBe(test);
         });
         /*describe("hasRegistration", () => {
             test("should return false when token not registered", () => {
@@ -414,6 +442,16 @@ describe("dependency Injection container", () => {
                     const value = await container.resolveAsync<TestClass>("test");
                     expect(value).toBeInstanceOf(TestClass);
                     expect(value.propertyFactory).toBe("test");
+                });
+                test("should handle async factory providers", async () => {
+                    const asyncFactory = async () => {
+                        return new Promise((resolve) => {
+                            setTimeout(() => resolve({ key: "asyncValue" }), 100);
+                        });
+                    };
+                    container.register("asyncToken", { useFactory: asyncFactory });
+                    const resolved = await container.resolveAsync("asyncToken");
+                    expect(resolved).toEqual({ key: "asyncValue" });
                 });
                 test("register and resolve a factory value", async () => {
                     container.register("test", { useFactory: (cont) => cont });

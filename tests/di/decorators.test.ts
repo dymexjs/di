@@ -9,6 +9,30 @@ describe("Averix_DI",()=>{
     beforeEach(async ()=> await container.reset());
     describe("Class Decorators",()=>{
         describe("sync",()=>{
+            test('should work with @Singleton decorator', () => {
+                @Singleton()
+                class TestClass {}
+                const instance1 = container.resolve(TestClass);
+                const instance2 = container.resolve(TestClass);
+                expect(instance1).toBe(instance2);
+              });
+          
+              test('should work with @Transient decorator', () => {
+                @Transient()
+                class TestClass {}
+                const instance1 = container.resolve(TestClass);
+                const instance2 = container.resolve(TestClass);
+                expect(instance1).not.toBe(instance2);
+              });
+          
+              test('should work with @Scoped decorator', () => {
+                @Scoped()
+                class TestClass {}
+                const scope = container.createScope();
+                const instance1 = container.resolve(TestClass, scope);
+                const instance2 = container.resolve(TestClass, scope);
+                expect(instance1).toBe(instance2);
+              });
             test("should create an target and inject singleton",()=>{
                 @Singleton("serviceA")
                 class ServiceA {}
@@ -74,6 +98,30 @@ describe("Averix_DI",()=>{
             });    
         });
         describe("async",()=>{
+            test('should work with @Singleton decorator', async () => {
+                @Singleton()
+                class TestClass {}
+                const instance1 = await container.resolveAsync(TestClass);
+                const instance2 = await container.resolveAsync(TestClass);
+                expect(instance1).toBe(instance2);
+              });
+          
+              test('should work with @Transient decorator', async () => {
+                @Transient()
+                class TestClass {}
+                const instance1 = await container.resolveAsync(TestClass);
+                const instance2 = await container.resolveAsync(TestClass);
+                expect(instance1).not.toBe(instance2);
+              });
+          
+              test('should work with @Scoped decorator', async () => {
+                @Scoped()
+                class TestClass {}
+                const scope = await container.createScope();
+                const instance1 = await container.resolveAsync(TestClass, scope);
+                const instance2 = await container.resolveAsync(TestClass, scope);
+                expect(instance1).toBe(instance2);
+              });
             test("should create an target and inject singleton", async ()=>{
                 @Singleton()
                 class ServiceA {}
