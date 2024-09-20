@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test } from "@jest/globals";
+import { beforeEach, describe, expect, jest, test } from "@jest/globals";
 import { container } from "../../../src/di/container";
 import { UndefinedScopeError } from "../../../src/di/exceptions/UndefinedScopeError";
 import { Lifetime } from "../../../src/di/types/registration";
@@ -64,6 +64,31 @@ describe("Averix_DI ", () => {
                     container.register("test", { useFactory: (cont) => cont });
                     const value = await container.resolveAsync("test");
                     expect(value).toBe(container);
+                });
+
+                test("executes a registered factory each time resolve is called", async () => {
+                    const factoryMock = jest.fn();
+                    container.register("Test", { useFactory: factoryMock });
+
+                    await container.resolveAsync("Test");
+                    await container.resolveAsync("Test");
+
+                    expect(factoryMock.mock.calls.length).toBe(2);
+                });
+
+                test("resolves to factory result each time resolve is called", async () => {
+                    const factoryMock = jest.fn();
+                    container.register("Test", { useFactory: factoryMock });
+                    const value1 = 1;
+                    const value2 = 2;
+
+                    factoryMock.mockReturnValue(value1);
+                    const result1 = await container.resolveAsync("Test");
+                    factoryMock.mockReturnValue(value2);
+                    const result2 = await container.resolveAsync("Test");
+
+                    expect(result1).toBe(value1);
+                    expect(result2).toBe(value2);
                 });
             });
             describe("Class Provider", () => {

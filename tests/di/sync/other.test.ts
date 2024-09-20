@@ -3,6 +3,7 @@ import { Container, container } from "../../../src/di/container";
 import { TokenNotFoundError } from "../../../src/di/exceptions/TokenNotFoundError";
 import { Lifetime } from "../../../src/di/types/registration";
 import { Singleton } from "../../../src/di/decorators";
+import { TokenRegistrationCycleError } from "../../../src/di/exceptions/TokenRegistrationCycleError";
 
 describe("Averix_DI ", () => {
     beforeEach(async () => container.reset());
@@ -13,7 +14,7 @@ describe("Averix_DI ", () => {
                     expect(() => container.resolve("test")).toThrow(TokenNotFoundError);
                 });
             });
-            describe("direct resolve",()=>{
+            describe("direct resolve", () => {
                 test("should resolve directly in constructor param", () => {
                     @Singleton()
                     class Test {}
@@ -128,6 +129,47 @@ describe("Averix_DI ", () => {
                     expect(myFoo).toBeInstanceOf(Array);
                     expect(myFoo).toHaveLength(1);
                     expect(myFoo[0]).toBeInstanceOf(Foo);
+                });
+                test("should not create a new instance of requested singleton service", () => {
+                    @Singleton()
+                    class Bar {}
+
+                    const bar1 = container.resolve(Bar);
+
+                    expect(bar1).toBeInstanceOf(Bar);
+
+                    const childContainer = container.createChildContainer();
+                    const bar2 = childContainer.resolve(Bar);
+
+                    expect(bar2).toBeInstanceOf(Bar);
+                    expect(bar1).toBe(bar2);
+                });
+            });
+            describe("registerType", () => {
+                test("registerType() allows for classes to be swapped", () => {
+                    class Bar {}
+                    class Foo {}
+                    container.registerType(Bar, Foo);
+
+                    expect(container.resolve<Foo>(Bar)).toBeInstanceOf(Foo);
+                });
+
+                test("registerType() allows for names to be registered for a given type", () => {
+                    class Bar {}
+                    container.registerType("CoolName", Bar);
+
+                    expect(container.resolve<Bar>("CoolName")).toBeInstanceOf(Bar);
+                });
+
+                test("registerType() doesn't allow tokens to point to themselves", () => {
+                    expect(() => container.registerType("Bar", "Bar")).toThrow(TokenRegistrationCycleError);
+                });
+
+                test("registerType() doesn't allow registration cycles", () => {
+                    container.registerType("Bar", "Foo");
+                    container.registerType("Foo", "FooBar");
+
+                    expect(() => container.registerType("FooBar", "Bar")).toThrow(TokenRegistrationCycleError);
                 });
             });
         });

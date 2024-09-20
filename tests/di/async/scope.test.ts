@@ -31,7 +31,7 @@ describe("Averix_DI", () => {
                     expect(value2).toBeInstanceOf(TestClass);
                     expect(value2.propertyA).toBe("test2");
                 });
-                test("should register and resolveAsync scoped wrongly because scope is diferent", async () => {
+                test("should register and resolveAsync scoped diferent instances because scope is diferent", async () => {
                     class TestClass {
                         public propertyA = "test";
                     }

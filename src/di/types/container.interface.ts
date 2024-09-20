@@ -124,4 +124,7 @@ export interface IContainer extends AsyncDisposable {
      * @return An instance of the dependency
      */
     resolveAsync<T>(token: InjectionToken, scope?: ScopeContext): Promise<T>;
+
+    resolveWithArgs<T>(token: InjectionToken, args?: Array<unknown>, scope?: ScopeContext): T; 
+    resolveWithArgsAsync<T>(token: InjectionToken, args?: Array<unknown>, scope?: ScopeContext): Promise<T>;
 }

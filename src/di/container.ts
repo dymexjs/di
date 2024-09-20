@@ -140,20 +140,6 @@ export class Container implements IContainer {
             return this.register(from, { useToken: to as InjectionToken });
         }
         return this.register(from, { useClass: to as ConstructorType<any> });
-        /*const toProvider = isTokenProvider(to as Provider<T>)
-            ? (to as TokenProvider<T>).useToken
-            : (to as InjectionToken);
-        if (!this.hasRegistration(toProvider)) {
-            throw new TokenNotFoundError(to as InjectionToken);
-        }
-        if (isTokenProvider(to as Provider<T>)) {
-            return this.register(from, to as TokenProvider<T>);
-        }
-        if (isConstructorType(to)) {
-            return this.register(from, { useClass: to });
-        }
-
-        return this.register(from, { useToken: to as InjectionToken<T> });*/
     }
 
     async removeRegistration<T>(
@@ -196,7 +182,8 @@ export class Container implements IContainer {
         try {
             if (!this.hasRegistration(token)) {
                 if (isConstructorType(token)) {
-                    const lifetimeAux = (token as any)[STATIC_INJECT_LIFETIME];
+                    return this.resolveConstructor(token, scope);
+                    /*const lifetimeAux = (token as any)[STATIC_INJECT_LIFETIME];
                     const lifetime: Lifetime = typeof lifetimeAux !== "undefined" ? lifetimeAux : Lifetime.Transient;
                     let injections = [];
                     if (typeof (token as any)[STATIC_INJECT_KEY] !== "undefined") {
@@ -211,10 +198,10 @@ export class Container implements IContainer {
                         scope.services.set(token, instance);
                     }
                     this.register(token, { useClass: token }, { lifetime: lifetime });
-                    if (lifetime == Lifetime.Singleton) {
+                    if (lifetime === Lifetime.Singleton) {
                         this.getRegistration(token)!.instance = instance;
                     }
-                    return instance;
+                    return instance;*/
                 }
                 throw new TokenNotFoundError(token);
             }
@@ -265,25 +252,7 @@ export class Container implements IContainer {
         try {
             if (!this.hasRegistration(token)) {
                 if (isConstructorType(token)) {
-                    const lifetimeAux = (token as any)[STATIC_INJECT_LIFETIME];
-                    const lifetime: Lifetime = typeof lifetimeAux !== "undefined" ? lifetimeAux : Lifetime.Transient;
-                    let injections = [];
-                    if (typeof (token as any)[STATIC_INJECT_KEY] !== "undefined") {
-                        injections = (token as any)[STATIC_INJECT_KEY];
-                    }
-                    const args = await this.createArgsAsync({ injections } as Registration<any>, scope);
-                    const instance = this.createInstance(token, args);
-                    if (lifetime === Lifetime.Scoped) {
-                        if (typeof scope === "undefined") {
-                            throw new UndefinedScopeError(token);
-                        }
-                        scope.services.set(token, instance);
-                    }
-                    this.register(token, { useClass: token }, { lifetime: lifetime });
-                    if (lifetime == Lifetime.Singleton) {
-                        this.getRegistration(token)!.instance = instance;
-                    }
-                    return instance;
+                    return this.resolveConstructorAsync(token, scope);
                 }
                 throw new TokenNotFoundError(token);
             }
@@ -293,6 +262,30 @@ export class Container implements IContainer {
         } finally {
             this._resolutionStack.delete(token);
         }
+    }
+
+    resolveWithArgs<T>(token: InjectionToken, args: Array<unknown> = [], scope?: ScopeContext): T {
+        if (!this.hasRegistration(token)) {
+            if (isConstructorType(token)) {
+                return this.resolveConstructor(token);
+            }
+            throw new TokenNotFoundError(token);
+        }
+        const registration = this.getRegistration(token)!;
+        const resolvedArgs = this.createArgs(registration, scope);
+        return this.createInstance<T>(registration.provider.useClass, args.concat(resolvedArgs));
+    }
+
+    async resolveWithArgsAsync<T>(token: InjectionToken, args: Array<unknown> = [], scope?: ScopeContext): Promise<T> {
+        if (!this.hasRegistration(token)) {
+            if (isConstructorType(token)) {
+                return this.resolveConstructorAsync(token);
+            }
+            throw new TokenNotFoundError(token);
+        }
+        const registration = this.getRegistration(token)!;
+        const resolvedArgs = await this.createArgsAsync(registration, scope);
+        return this.createInstance<T>(registration.provider.useClass, args.concat(resolvedArgs));
     }
 
     private createArgs(registration: Registration, scope?: ScopeContext): Array<unknown> {
@@ -365,7 +358,7 @@ export class Container implements IContainer {
                 }
                 args[0] = resolvedObject();
                 const val = (Reflect[method] as any)(...args);
-                return typeof val === "function" ? val.bind(resolvedObject()) : val;
+                return typeof val === "function" ? val.bind(args[0]) : val;
             };
         };
         (Object.getOwnPropertyNames(Reflect) as Array<keyof ProxyHandler<any>>).forEach((method) => {
@@ -423,6 +416,50 @@ export class Container implements IContainer {
                 tokenProvider = null;
             }
         }
+    }
+
+    private resolveConstructor<T>(token: ConstructorType<T>, scope?: ScopeContext): T {
+        const lifetimeAux = (token as any)[STATIC_INJECT_LIFETIME];
+        const lifetime: Lifetime = typeof lifetimeAux !== "undefined" ? lifetimeAux : Lifetime.Transient;
+        let injections = [];
+        if (typeof (token as any)[STATIC_INJECT_KEY] !== "undefined") {
+            injections = (token as any)[STATIC_INJECT_KEY];
+        }
+        const args = this.createArgs({ injections } as Registration<any>, scope);
+        const instance = this.createInstance(token, args);
+        if (lifetime === Lifetime.Scoped) {
+            if (typeof scope === "undefined") {
+                throw new UndefinedScopeError(token);
+            }
+            scope.services.set(token, instance);
+        }
+        this.register(token, { useClass: token }, { lifetime: lifetime });
+        if (lifetime === Lifetime.Singleton) {
+            this.getRegistration(token)!.instance = instance;
+        }
+        return instance;
+    }
+
+    private async resolveConstructorAsync<T>(token: ConstructorType<T>, scope?: ScopeContext): Promise<T> {
+        const lifetimeAux = (token as any)[STATIC_INJECT_LIFETIME];
+        const lifetime: Lifetime = typeof lifetimeAux !== "undefined" ? lifetimeAux : Lifetime.Transient;
+        let injections = [];
+        if (typeof (token as any)[STATIC_INJECT_KEY] !== "undefined") {
+            injections = (token as any)[STATIC_INJECT_KEY];
+        }
+        const args = await this.createArgsAsync({ injections } as Registration<any>, scope);
+        const instance = this.createInstance(token, args);
+        if (lifetime === Lifetime.Scoped) {
+            if (typeof scope === "undefined") {
+                throw new UndefinedScopeError(token);
+            }
+            scope.services.set(token, instance);
+        }
+        this.register(token, { useClass: token }, { lifetime: lifetime });
+        if (lifetime == Lifetime.Singleton) {
+            this.getRegistration(token)!.instance = instance;
+        }
+        return instance;
     }
 
     private resolveClassProvider<T>(registration: Registration, token: InjectionToken, scope?: ScopeContext): T {

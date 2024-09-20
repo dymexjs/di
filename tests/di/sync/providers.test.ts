@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test } from "@jest/globals";
+import { beforeEach, describe, expect, jest, test } from "@jest/globals";
 import { container } from "../../../src/di/container";
 import { TokenRegistrationCycleError } from "../../../src/di/exceptions/TokenRegistrationCycleError";
 import { Lifetime } from "../../../src/di/types/registration";
@@ -55,6 +55,30 @@ describe("Averix_DI ", () => {
                     container.register("test", { useFactory: (cont) => cont });
                     const value = container.resolve("test");
                     expect(value).toBe(container);
+                });
+                test("executes a registered factory each time resolve is called", () => {
+                    const factoryMock = jest.fn();
+                    container.register("Test", { useFactory: factoryMock });
+
+                    container.resolve("Test");
+                    container.resolve("Test");
+
+                    expect(factoryMock.mock.calls.length).toBe(2);
+                });
+
+                test("resolves to factory result each time resolve is called", () => {
+                    const factoryMock = jest.fn();
+                    container.register("Test", { useFactory: factoryMock });
+                    const value1 = 1;
+                    const value2 = 2;
+
+                    factoryMock.mockReturnValue(value1);
+                    const result1 = container.resolve("Test");
+                    factoryMock.mockReturnValue(value2);
+                    const result2 = container.resolve("Test");
+
+                    expect(result1).toBe(value1);
+                    expect(result2).toBe(value2);
                 });
             });
             describe("Class Provider", () => {
@@ -125,7 +149,7 @@ describe("Averix_DI ", () => {
                     expect(container.resolve("test2")).toBe("test");
                 });
             });
-            describe("Constructor Provider",()=>{
+            describe("Constructor Provider", () => {
                 test("constructor token provider", () => {
                     class TestClass {
                         propertyA = "test";
