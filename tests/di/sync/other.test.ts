@@ -22,8 +22,8 @@ describe("Averix_DI ", () => {
                     class Test2 {
                         constructor(public readonly test: Test = container.resolve(Test)) {}
                     }
-                    const test2 = container.resolve<Test2>(Test2);
-                    const test = container.resolve<Test>(Test);
+                    const test2 = container.resolve(Test2);
+                    const test = container.resolve(Test);
                     expect(test2).toBeInstanceOf(Test2);
                     expect(test).toBeInstanceOf(Test);
                     expect(test2.test).toBeInstanceOf(Test);
@@ -59,8 +59,8 @@ describe("Averix_DI ", () => {
                 test("resolves all transient instances when not registered", () => {
                     class Foo {}
 
-                    const foo1 = container.resolveAll<Foo>(Foo);
-                    const foo2 = container.resolveAll<Foo>(Foo);
+                    const foo1 = container.resolveAll(Foo);
+                    const foo2 = container.resolveAll(Foo);
 
                     expect(Array.isArray(foo1)).toBeTruthy();
                     expect(Array.isArray(foo2)).toBeTruthy();
@@ -151,14 +151,14 @@ describe("Averix_DI ", () => {
                     class Foo {}
                     container.registerType(Bar, Foo);
 
-                    expect(container.resolve<Foo>(Bar)).toBeInstanceOf(Foo);
+                    expect(container.resolve(Bar)).toBeInstanceOf(Foo);
                 });
 
                 test("registerType() allows for names to be registered for a given type", () => {
                     class Bar {}
                     container.registerType("CoolName", Bar);
 
-                    expect(container.resolve<Bar>("CoolName")).toBeInstanceOf(Bar);
+                    expect(container.resolve("CoolName")).toBeInstanceOf(Bar);
                 });
 
                 test("registerType() doesn't allow tokens to point to themselves", () => {

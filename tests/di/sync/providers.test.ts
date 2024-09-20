@@ -96,7 +96,7 @@ describe("Averix_DI ", () => {
                         public propertyA = "test";
                     }
                     container.register(TestClass, { useClass: TestClass });
-                    const value = container.resolve<TestClass>(TestClass);
+                    const value = container.resolve(TestClass);
                     expect(value).toBeInstanceOf(TestClass);
                     expect(value.propertyA).toBe("test");
                 });
@@ -105,7 +105,7 @@ describe("Averix_DI ", () => {
                         public propertyA = "test";
                     }
                     container.register(TestClass, TestClass);
-                    const value = container.resolve<TestClass>(TestClass);
+                    const value = container.resolve(TestClass);
                     expect(value).toBeInstanceOf(TestClass);
                     expect(value.propertyA).toBe("test");
                 });
@@ -114,7 +114,7 @@ describe("Averix_DI ", () => {
                         public propertyA = "test";
                     }
                     container.register(TestClass, TestClass, { lifetime: Lifetime.Singleton });
-                    const value = container.resolve<TestClass>(TestClass);
+                    const value = container.resolve(TestClass);
                     expect(value).toBeInstanceOf(TestClass);
                     expect(value.propertyA).toBe("test");
                     value.propertyA = "test2";
@@ -127,7 +127,7 @@ describe("Averix_DI ", () => {
                         public propertyA = "test";
                     }
                     container.register(TestClass, TestClass, { lifetime: Lifetime.Transient });
-                    const value = container.resolve<TestClass>(TestClass);
+                    const value = container.resolve(TestClass);
                     expect(value).toBeInstanceOf(TestClass);
                     expect(value.propertyA).toBe("test");
                     value.propertyA = "test2";
@@ -155,7 +155,7 @@ describe("Averix_DI ", () => {
                         propertyA = "test";
                         public static [STATIC_INJECT_LIFETIME] = Lifetime.Singleton;
                     }
-                    const value = container.resolve<TestClass>(TestClass);
+                    const value = container.resolve(TestClass);
                     expect(value).toBeInstanceOf(TestClass);
                     expect(value.propertyA).toBe("test");
                     value.propertyA = "test2";

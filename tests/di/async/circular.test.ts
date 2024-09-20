@@ -63,8 +63,8 @@ describe("Averix_DI ", () => {
                 }
                 container.register("factoryTest", { useFactory: factoryTest });
                 container.register("factoryTest2", { useFactory: factoryTest2 });
-                const test2 = await container.resolveAsync<TestClass2>(TestClass2);
-                const test = await container.resolveAsync<TestClass>(TestClass);
+                const test2 = await container.resolveAsync(TestClass2);
+                const test = await container.resolveAsync(TestClass);
                 expect(test2).toBeInstanceOf(TestClass2);
                 expect(test).toBeInstanceOf(TestClass);
                 expect(test2.test).toBeInstanceOf(TestClass);
@@ -279,8 +279,8 @@ describe("Averix_DI ", () => {
                         };
                         constructor(public a: TestA) {}
                     }
-                    const a = await container.resolveAsync<TestA>(TestA);
-                    const b = await container.resolveAsync<TestB>(TestB);
+                    const a = await container.resolveAsync(TestA);
+                    const b = await container.resolveAsync(TestB);
                     expect(a).toBeInstanceOf(TestA);
                     expect(b).toBeInstanceOf(TestB);
                     expect(Object.keys(a)).toStrictEqual(["b"]);
@@ -407,8 +407,8 @@ describe("Averix_DI ", () => {
 
                     const serviceA = await container.resolveAsync<ServiceA>(SA);
                     const serviceB = await container.resolveAsync<ServiceB>(SB);
-                    const serviceC = await container.resolveAsync<ServiceC>(ServiceC);
-                    const serviceD = await container.resolveAsync<ServiceD>(ServiceD);
+                    const serviceC = await container.resolveAsync(ServiceC);
+                    const serviceD = await container.resolveAsync(ServiceD);
 
                     expect(serviceA).toBeInstanceOf(ServiceA);
                     expect(serviceA.serviceB).toBeInstanceOf(ServiceB);

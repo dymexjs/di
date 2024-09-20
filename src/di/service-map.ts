@@ -1,6 +1,6 @@
 import { isAsyncDisposable, isDisposable } from "./helpers";
 import { InjectionToken } from "./types/injection-token";
-import { Registration } from './types/registration';
+import { Registration } from "./types/registration";
 
 export class ServiceMap<K extends InjectionToken, V extends Registration> implements AsyncDisposable {
     private readonly _services = new Map<K, Array<V>>();
@@ -16,6 +16,10 @@ export class ServiceMap<K extends InjectionToken, V extends Registration> implem
     }
     public entries(): IterableIterator<[K, Array<V>]> {
         return this._services.entries();
+    }
+
+    public values(): MapIterator<Array<V>> {
+        return this._services.values();
     }
 
     public get(key: K): V {
@@ -37,26 +41,32 @@ export class ServiceMap<K extends InjectionToken, V extends Registration> implem
         this.ensuresKey(key);
         return this._services.get(key)!.length > 0;
     }
-    public clear(){
+    public clear() {
         this._services.clear();
     }
 
     public async delete(key: K, registration: V): Promise<void> {
         this.ensuresKey(key);
-        if(isAsyncDisposable(registration.instance)) {
+        if (isAsyncDisposable(registration.instance)) {
             await registration.instance[Symbol.asyncDispose]();
-        }else if(isDisposable(registration.instance)) {
+        } else if (isDisposable(registration.instance)) {
             registration.instance[Symbol.dispose]();
         }
         const index = this._services.get(key)!.indexOf(registration);
         this._services.get(key)!.splice(index, 1);
     }
 
-    async [Symbol.asyncDispose](){
-        for (const [token, registrations] of this._services.entries()) {
-            await Promise.all(registrations.filter((r) => isAsyncDisposable(r.instance)).map(async (r) => await r.instance[Symbol.asyncDispose]()));
-            registrations.filter((r) => isDisposable(r.instance)).map((r) => r.instance[Symbol.dispose]());
+    async [Symbol.asyncDispose]() {
+        const promises: Array<Promise<any>> = [];
+        for (const values of this._services.values()) {
+            values
+                .filter((r) => isAsyncDisposable(r.instance))
+                .forEach((r) => {
+                    promises.push(r.instance[Symbol.asyncDispose]());
+                });
+            values.filter((r) => isDisposable(r.instance)).forEach((r) => r.instance[Symbol.dispose]());
         }
+        await Promise.allSettled(promises);
         this._services.clear();
     }
 }

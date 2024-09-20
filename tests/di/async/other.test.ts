@@ -57,8 +57,8 @@ describe("Averix_DI ", () => {
                 test("resolves all transient instances when not registered", async () => {
                     class Foo {}
 
-                    const foo1 = await container.resolveAllAsync<Foo>(Foo);
-                    const foo2 = await container.resolveAllAsync<Foo>(Foo);
+                    const foo1 = await container.resolveAllAsync(Foo);
+                    const foo2 = await container.resolveAllAsync(Foo);
 
                     expect(Array.isArray(foo1)).toBeTruthy();
                     expect(Array.isArray(foo2)).toBeTruthy();
@@ -75,7 +75,7 @@ describe("Averix_DI ", () => {
                         constructor(public foo: Foo[] = container.resolveAll(Foo)) {}
                     }
 
-                    const bar = container.resolve<Bar>(Bar);
+                    const bar = container.resolve(Bar);
                     expect(bar.foo.length).toBe(1);
                 });
             });
@@ -199,7 +199,7 @@ describe("Averix_DI ", () => {
                     class Foo {}
                     container.registerType(Bar, Foo);
 
-                    expect(container.resolveAsync<Foo>(Bar)).resolves.toBeInstanceOf(Foo);
+                    expect(container.resolveAsync(Bar)).resolves.toBeInstanceOf(Foo);
                 });
 
                 test("registerType() allows for names to be registered for a given type", () => {

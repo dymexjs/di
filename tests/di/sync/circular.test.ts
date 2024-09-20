@@ -63,8 +63,8 @@ describe("Averix_DI ", () => {
                 }
                 container.register("factoryTest", { useFactory: factoryTest });
                 container.register("factoryTest2", { useFactory: factoryTest2 });
-                const test2 = container.resolve<TestClass2>(TestClass2);
-                const test = container.resolve<TestClass>(TestClass);
+                const test2 = container.resolve(TestClass2);
+                const test = container.resolve(TestClass);
                 expect(test2).toBeInstanceOf(TestClass2);
                 expect(test).toBeInstanceOf(TestClass);
                 expect(test2.test).toBeInstanceOf(TestClass);
@@ -279,8 +279,8 @@ describe("Averix_DI ", () => {
                         };
                         constructor(public a: TestA) {}
                     }
-                    const a = container.resolve<TestA>(TestA);
-                    const b = container.resolve<TestB>(TestB);
+                    const a = container.resolve(TestA);
+                    const b = container.resolve(TestB);
                     expect(a).toBeInstanceOf(TestA);
                     expect(b).toBeInstanceOf(TestB);
                     expect(Object.keys(a)).toStrictEqual(["b"]);

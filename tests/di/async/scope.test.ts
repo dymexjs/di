@@ -4,6 +4,7 @@ import { Lifetime } from "../../../src/di/types/registration";
 import { STATIC_INJECT_LIFETIME } from "../../../src/di/constants";
 import { UndefinedScopeError } from "../../../src/di/exceptions/UndefinedScopeError";
 import { ScopeContext } from "../../../src/di/scope-context";
+import { Scoped } from "../../../src/di/decorators";
 
 describe("Averix_DI", () => {
     beforeEach(async () => await container.reset());
@@ -23,11 +24,11 @@ describe("Averix_DI", () => {
                     }
                     const scope = container.createScope();
                     container.register(TestClass, TestClass, { lifetime: Lifetime.Scoped });
-                    const value = await container.resolveAsync<TestClass>(TestClass, scope);
+                    const value = await container.resolveAsync(TestClass, scope);
                     expect(value).toBeInstanceOf(TestClass);
                     expect(value.propertyA).toBe("test");
                     value.propertyA = "test2";
-                    const value2 = await container.resolveAsync<TestClass>(TestClass, scope);
+                    const value2 = await container.resolveAsync(TestClass, scope);
                     expect(value2).toBeInstanceOf(TestClass);
                     expect(value2.propertyA).toBe("test2");
                 });
@@ -37,12 +38,12 @@ describe("Averix_DI", () => {
                     }
                     const scope = container.createScope();
                     container.register(TestClass, TestClass, { lifetime: Lifetime.Scoped });
-                    const value = await container.resolveAsync<TestClass>(TestClass, scope);
+                    const value = await container.resolveAsync(TestClass, scope);
                     expect(value).toBeInstanceOf(TestClass);
                     expect(value.propertyA).toBe("test");
                     value.propertyA = "test2";
                     const scope2 = container.createScope();
-                    const value2 = await container.resolveAsync<TestClass>(TestClass, scope2);
+                    const value2 = await container.resolveAsync(TestClass, scope2);
                     expect(value2).toBeInstanceOf(TestClass);
                     expect(value2.propertyA).toBe("test");
                 });
@@ -60,6 +61,18 @@ describe("Averix_DI", () => {
                     class Test {
                         static [STATIC_INJECT_LIFETIME] = Lifetime.Scoped;
                     }
+                    expect(container.resolveAsync(Test)).rejects.toThrow(UndefinedScopeError);
+                });
+                test("register constructor in scope with decorator", async () => {
+                    @Scoped()
+                    class Test {}
+                    const scope = container.createScope();
+                    const test = await container.resolveAsync(Test, scope);
+                    expect(test).toBeInstanceOf(Test);
+                });
+                test("throw register constructor without scope with decorator", () => {
+                    @Scoped()
+                    class Test {}
                     expect(container.resolveAsync(Test)).rejects.toThrow(UndefinedScopeError);
                 });
             });

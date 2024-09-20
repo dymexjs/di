@@ -17,7 +17,7 @@ describe("Averix_DI", () => {
                     public static [STATIC_INJECT_KEY] = ["test"];
                 }
                 container.register("test", { useClass: TestClass }, { lifetime: Lifetime.Singleton });
-                const test2 = await container.resolveAsync<TestClass2>(TestClass2);
+                const test2 = await container.resolveAsync(TestClass2);
                 const test = await container.resolveAsync<TestClass>("test");
                 expect(test2).toBeInstanceOf(TestClass2);
                 expect(test2.test).toBeInstanceOf(TestClass);
@@ -39,7 +39,7 @@ describe("Averix_DI", () => {
                     public static [STATIC_INJECT_KEY] = ["test"];
                 }
                 container.register("test", { useClass: TestClass });
-                const test2 = await container.resolveAsync<TestClass2>(TestClass2);
+                const test2 = await container.resolveAsync(TestClass2);
                 const test = await container.resolveAsync<TestClass>("test");
                 expect(test2).toBeInstanceOf(TestClass2);
                 expect(test2.test).toBeInstanceOf(TestClass);
@@ -61,7 +61,7 @@ describe("Averix_DI", () => {
                     public static [STATIC_INJECT_KEY] = ["test"];
                 }
                 container.register("test", { useClass: TestClass });
-                const test2 = await container.resolveAsync<TestClass2>(TestClass2);
+                const test2 = await container.resolveAsync(TestClass2);
                 const test = await container.resolveAsync<TestClass>("test");
                 expect(test2).toBeInstanceOf(TestClass2);
                 expect(test2.test).toBeInstanceOf(TestClass);

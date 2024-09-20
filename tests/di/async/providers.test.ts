@@ -106,7 +106,7 @@ describe("Averix_DI ", () => {
                         public propertyA = "test";
                     }
                     container.register(TestClass, { useClass: TestClass });
-                    const value = await container.resolveAsync<TestClass>(TestClass);
+                    const value = await container.resolveAsync(TestClass);
                     expect(value).toBeInstanceOf(TestClass);
                     expect(value.propertyA).toBe("test");
                 });
@@ -115,7 +115,7 @@ describe("Averix_DI ", () => {
                         public propertyA = "test";
                     }
                     container.register(TestClass, TestClass);
-                    const value = await container.resolveAsync<TestClass>(TestClass);
+                    const value = await container.resolveAsync(TestClass);
                     expect(value).toBeInstanceOf(TestClass);
                     expect(value.propertyA).toBe("test");
                 });
@@ -124,11 +124,11 @@ describe("Averix_DI ", () => {
                         public propertyA = "test";
                     }
                     container.register(TestClass, TestClass, { lifetime: Lifetime.Singleton });
-                    const value = await container.resolveAsync<TestClass>(TestClass);
+                    const value = await container.resolveAsync(TestClass);
                     expect(value).toBeInstanceOf(TestClass);
                     expect(value.propertyA).toBe("test");
                     value.propertyA = "test2";
-                    const value2 = await container.resolveAsync<TestClass>(TestClass);
+                    const value2 = await container.resolveAsync(TestClass);
                     expect(value2).toBeInstanceOf(TestClass);
                     expect(value2.propertyA).toBe("test2");
                 });
@@ -137,11 +137,11 @@ describe("Averix_DI ", () => {
                         public propertyA = "test";
                     }
                     container.register(TestClass, TestClass, { lifetime: Lifetime.Transient });
-                    const value = await container.resolveAsync<TestClass>(TestClass);
+                    const value = await container.resolveAsync(TestClass);
                     expect(value).toBeInstanceOf(TestClass);
                     expect(value.propertyA).toBe("test");
                     value.propertyA = "test2";
-                    const value2 = await container.resolveAsync<TestClass>(TestClass);
+                    const value2 = await container.resolveAsync(TestClass);
                     expect(value2).toBeInstanceOf(TestClass);
                     expect(value2.propertyA).toBe("test");
                 });
@@ -165,7 +165,7 @@ describe("Averix_DI ", () => {
                         propertyA = "test";
                         public static [STATIC_INJECT_LIFETIME] = Lifetime.Singleton;
                     }
-                    const value = await container.resolveAsync<TestClass>(TestClass);
+                    const value = await container.resolveAsync(TestClass);
                     expect(value).toBeInstanceOf(TestClass);
                     expect(value.propertyA).toBe("test");
                     value.propertyA = "test2";

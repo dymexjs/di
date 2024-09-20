@@ -22,10 +22,10 @@ describe("Averix_DI", () => {
                     class ServiceB {
                         constructor(public serviceA: ServiceA) {}
                     }
-                    const b = await container.resolveAsync<ServiceB>(ServiceB);
+                    const b = await container.resolveAsync(ServiceB);
                     expect(b).toBeInstanceOf(ServiceB);
                     expect(b.serviceA).toBeInstanceOf(ServiceA);
-                    const a = await container.resolveAsync<ServiceA>("serviceA");
+                    const a = await container.resolveAsync("serviceA");
                     expect(a).toBeInstanceOf(ServiceA);
                     expect(b.serviceA).toBe(a);
                 });
@@ -40,7 +40,7 @@ describe("Averix_DI", () => {
                         constructor(public readonly test: Test) {}
                     }
                     container.registerType(Test, TestMock);
-                    const test = await container.resolveAsync<TestClass>(TestClass);
+                    const test = await container.resolveAsync(TestClass);
                     expect(test.test).toBeInstanceOf(TestMock);
                 });
             });
@@ -59,10 +59,10 @@ describe("Averix_DI", () => {
                     class ServiceB {
                         constructor(public serviceA: ServiceA) {}
                     }
-                    const b = await container.resolveAsync<ServiceB>(ServiceB);
+                    const b = await container.resolveAsync(ServiceB);
                     expect(b).toBeInstanceOf(ServiceB);
                     expect(b.serviceA).toBeInstanceOf(ServiceA);
-                    const a = await container.resolveAsync<ServiceA>(ServiceA);
+                    const a = await container.resolveAsync(ServiceA);
                     expect(a).toBeInstanceOf(ServiceA);
                     expect(b.serviceA).not.toBe(a);
                     expect(b.serviceA).toEqual(a);
@@ -74,14 +74,14 @@ describe("Averix_DI", () => {
                     class ServiceB {
                         constructor(public serviceA: ServiceA) {}
                     }
-                    const b = await container.resolveAsync<ServiceB>(ServiceB);
+                    const b = await container.resolveAsync(ServiceB);
                     expect(b).toBeInstanceOf(ServiceB);
                     expect(b.serviceA).toBeInstanceOf(ServiceA);
-                    const a = await container.resolveAsync<ServiceA>(ServiceA);
+                    const a = await container.resolveAsync(ServiceA);
                     expect(a).toBeInstanceOf(ServiceA);
                     expect(b.serviceA).not.toBe(a);
                     expect(b.serviceA).toEqual(a);
-                    const b2 = await container.resolveAsync<ServiceB>(ServiceB);
+                    const b2 = await container.resolveAsync(ServiceB);
                     expect(b).not.toBe(b2);
                     expect(b).toEqual(b2);
                 });        
@@ -103,10 +103,10 @@ describe("Averix_DI", () => {
                         constructor(public serviceA: ServiceA) {}
                     }
                     const scope = container.createScope();
-                    const b = await container.resolveAsync<ServiceB>(ServiceB, scope);
+                    const b = await container.resolveAsync(ServiceB, scope);
                     expect(b).toBeInstanceOf(ServiceB);
                     expect(b.serviceA).toBeInstanceOf(ServiceA);
-                    const a = await container.resolveAsync<ServiceA>(ServiceA, scope);
+                    const a = await container.resolveAsync(ServiceA, scope);
                     expect(a).toBeInstanceOf(ServiceA);
                     expect(b.serviceA).toBe(a);
                     expect(container.resolveAsync<ServiceB>(ServiceB)).rejects.toThrow(UndefinedScopeError);
@@ -120,7 +120,7 @@ describe("Averix_DI", () => {
                         class TestB {
                             constructor(public hello: string, public num: number, public a: TestA) {}
                         }
-                        const testB = await container.resolveWithArgsAsync<TestB>(TestB, ["test", 1]);
+                        const testB = await container.resolveWithArgsAsync(TestB, ["test", 1]);
                         expect(testB).toBeInstanceOf(TestB);
                         expect(testB.hello).toBe("test");
                         expect(testB.num).toBe(1);
@@ -134,7 +134,7 @@ describe("Averix_DI", () => {
                         }
 
                         const myBar = new Bar();
-                        const myFoo = await container.resolveWithArgsAsync<Foo>(Foo, [myBar]);
+                        const myFoo = await container.resolveWithArgsAsync(Foo, [myBar]);
 
                         expect(myFoo.myBar).toBe(myBar);
                     });
@@ -150,7 +150,7 @@ describe("Averix_DI", () => {
                         }
 
                         const myFooBar = new FooBar();
-                        const myFoo = await container.resolveWithArgsAsync<Foo>(Foo, [myFooBar]);
+                        const myFoo = await container.resolveWithArgsAsync(Foo, [myFooBar]);
 
                         expect(myFoo.myFooBar).toBe(myFooBar);
                         expect(myFoo.myBar).toBeInstanceOf(Bar);
@@ -171,7 +171,7 @@ describe("Averix_DI", () => {
                             }
                         }
 
-                        const instance = await container.resolveWithArgsAsync<Child>(Child);
+                        const instance = await container.resolveWithArgsAsync(Child);
 
                         expect(instance.myFoo).toBeInstanceOf(Foo);
                     });
@@ -199,7 +199,7 @@ describe("Averix_DI", () => {
                             }
                         }
 
-                        const instance = await container.resolveWithArgsAsync<Child>(Child);
+                        const instance = await container.resolveWithArgsAsync(Child);
 
                         expect(instance.a).toBe(a);
                         expect(instance.b).toBe(b);
@@ -216,7 +216,7 @@ describe("Averix_DI", () => {
                             constructor(public myBar?: Bar) {}
                         }
 
-                        const myFooBar = await container.resolveWithArgsAsync<FooBar>(FooBar);
+                        const myFooBar = await container.resolveWithArgsAsync(FooBar);
 
                         expect(myFooBar.myBar!.myFoo).toBeInstanceOf(Foo);
                     });
@@ -229,11 +229,47 @@ describe("Averix_DI", () => {
                             constructor(public bar: Bar) {}
                         }
 
-                        const instance1 = await container.resolveAsync<Foo>(Foo);
-                        const instance2 = await container.resolveAsync<Foo>(Foo);
+                        const instance1 = await container.resolveAsync(Foo);
+                        const instance2 = await container.resolveAsync(Foo);
 
                         expect(instance1).toBe(instance2);
                         expect(instance1.bar).toBe(instance2.bar);
+                    });
+                    test("@AutoInjectable resolves multiple registered dependencies", async () => {
+                        interface Bar {
+                            str: string;
+                        }
+
+                        @Transient()
+                        class FooBar implements Bar {
+                            str = "";
+                        }
+
+                        container.register<Bar>("Bar", { useClass: FooBar });
+
+                        @AutoInjectable(["Bar"], { all: ["Bar"] })
+                        class Foo {
+                            constructor(public bar?: Bar[]) {}
+                        }
+
+                        const foo = await container.resolveWithArgsAsync(Foo);
+                        expect(Array.isArray(foo.bar)).toBeTruthy();
+                        expect(foo.bar!.length).toBe(1);
+                        expect(foo.bar![0]).toBeInstanceOf(FooBar);
+                    });
+
+                    test("@AutoInjectable resolves multiple transient dependencies", async () => {
+                        class Foo {}
+
+                        @AutoInjectable([Foo], { all: [Foo] })
+                        class Bar {
+                            constructor(public foo?: Foo[]) {}
+                        }
+
+                        const bar = await container.resolveWithArgsAsync(Bar);
+                        expect(Array.isArray(bar.foo)).toBeTruthy();
+                        expect(bar.foo!.length).toBe(1);
+                        expect(bar.foo![0]).toBeInstanceOf(Foo);
                     });
                 });
             });
@@ -243,7 +279,7 @@ describe("Averix_DI", () => {
                 class TestB {
                     constructor(public a: TestA) {}
                 }
-                const test = await container.resolveAsync<TestB>(TestB);
+                const test = await container.resolveAsync(TestB);
                 expect(test).toBeInstanceOf(TestB);
                 expect(test.a).toBeInstanceOf(TestA);
             });
