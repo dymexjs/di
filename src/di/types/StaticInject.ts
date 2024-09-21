@@ -4,8 +4,8 @@ import { Lifetime } from "./registration";
 
 interface StaticInject {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  new (...args: Array<any>): any;
-  [STATIC_INJECT_KEY]?: Array<InjectionToken>;
+  new (...args: any[]): any;
+  [STATIC_INJECT_KEY]?: InjectionToken[];
   [STATIC_INJECT_LIFETIME]?: Lifetime;
 }
 
