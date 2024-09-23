@@ -131,7 +131,7 @@ export class Container implements IContainer {
 
     let injections = [];
 
-    if (isClassProvider(service as Provider<T>)) {
+    if (isClassProvider(service)) {
       if (
         typeof options === "undefined" &&
         // eslint-disable-next-line security/detect-object-injection

@@ -45,7 +45,7 @@ export function Singleton<TDependencies extends Array<InjectionToken | Interface
         }
       }
       // Register the class as a singleton in the container
-      container.registerRegistration(target, createRegistration(target, Lifetime.Singleton, dependencies || []));
+      container.registerRegistration(target, createRegistration(target, Lifetime.Singleton, dependencies ?? []));
       // If the registration token is different from the class itself, register the token as an alias
       // eslint-disable-next-line security/detect-possible-timing-attacks
       if (token !== target) {
@@ -87,7 +87,7 @@ export function Transient<TDependencies extends Array<InjectionToken | Interface
         }
       }
       // Register the class as a transient in the container
-      container.registerRegistration(target, createRegistration(target, Lifetime.Transient, dependencies || []));
+      container.registerRegistration(target, createRegistration(target, Lifetime.Transient, dependencies ?? []));
       // If the registration token is different from the class itself, register the token as an alias
       // eslint-disable-next-line security/detect-possible-timing-attacks
       if (token !== target) {
@@ -129,7 +129,7 @@ export function Scoped<TDependencies extends Array<InjectionToken | InterfaceId>
         }
       }
       // Register the class as a scoped in the container
-      container.registerRegistration(target, createRegistration(target, Lifetime.Scoped, dependencies || []));
+      container.registerRegistration(target, createRegistration(target, Lifetime.Scoped, dependencies ?? []));
       // If the registration token is different from the class itself, register the token as an alias
       // eslint-disable-next-line security/detect-possible-timing-attacks
       if (token !== target) {
@@ -203,7 +203,7 @@ export function AutoInjectable<TDependencies extends Array<InjectionToken | Inte
           // Calls the target class constructor with the injected dependencies
           super(
             ...args.concat(
-              (dependencies || []).map((a) =>
+              (dependencies ?? []).map((a) =>
                 options.all?.includes(a) ? container.resolveAll(a) : container.resolve(a),
               ),
             ),
