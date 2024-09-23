@@ -1,25 +1,25 @@
 image: node:lts
 
-# clone:
-#   depth: full # SonarCloud scanner needs the full history to assign issues properly
+clone:
+  depth: full # SonarCloud scanner needs the full history to assign issues properly
 
-# definitions:
-#   caches:
-#     sonar: ~/.sonar/cache # Caching SonarCloud artifacts will speed up your build
-#   steps:
-#     - step: &build-test-sonarcloud
-#         name: Build, test and analyze on SonarCloud
-#         caches:
-#           - node # See https://confluence.atlassian.com/bitbucket/caching-dependencies-895552876.html
-#           - sonar
-#         script:
-#           - npm install --force
-#           - npm test # Build your project and run
-#           - pipe: sonarsource/sonarcloud-scan:2.0.0
-#     - step: &check-quality-gate-sonarcloud
-#         name: Check the Quality Gate on SonarCloud
-#         script:
-#           - pipe: sonarsource/sonarcloud-quality-gate:0.1.6
+definitions:
+  caches:
+    sonar: ~/.sonar/cache # Caching SonarCloud artifacts will speed up your build
+  steps:
+    - step: &build-test-sonarcloud
+        name: Build, test and analyze on SonarCloud
+        caches:
+          - node # See https://confluence.atlassian.com/bitbucket/caching-dependencies-895552876.html
+          - sonar
+        script:
+          - npm install --force
+          - npm test # Build your project and run
+          - pipe: sonarsource/sonarcloud-scan:2.0.0
+    - step: &check-quality-gate-sonarcloud
+        name: Check the Quality Gate on SonarCloud
+        script:
+          - pipe: sonarsource/sonarcloud-quality-gate:0.1.6
 
 pipelines:
   default:
@@ -35,14 +35,14 @@ pipelines:
             name: Code linting
             script:
               - npm install --force
-              - npx esling .
+              - npx eslint .
             caches:
               - node
-  # branches:
-  #   master:
-  #     - step: *build-test-sonarcloud
-  #     - step: *check-quality-gate-sonarcloud
-  # pull-requests:
-  #   "**":
-  #     - step: *build-test-sonarcloud
-  #     - step: *check-quality-gate-sonarcloud
+  branches:
+    master:
+      - step: *build-test-sonarcloud
+      - step: *check-quality-gate-sonarcloud
+  pull-requests:
+    "**":
+      - step: *build-test-sonarcloud
+      - step: *check-quality-gate-sonarcloud
