@@ -17,8 +17,8 @@
   "scripts": {
     "build": "npx tsc -p tsconfig.json",
     "lint": "eslint",
-    "test": "npm run lint && npm run test:unit",
-    "test:unit": "jest",
+    "test": "jest",
+    "test:coverage": "jest --coverage",
     "test:watch": "jest --watch",
     "prepublishOnly": "npm test",
     "prepare": "npm run build",
