@@ -38,11 +38,9 @@ export function Singleton<TDependencies extends Array<InjectionToken | Interface
       if (Array.isArray(id)) {
         // If id is an array, use it as the dependencies
         dependencies = id as unknown as [...TDependencies];
-      } else {
+      } else if (typeof id !== "undefined") {
         // If id is a token, use it as the registration token
-        if (typeof id !== "undefined") {
-          token = id as unknown as InjectionToken<I>;
-        }
+        token = id as unknown as InjectionToken<I>;
       }
       // Register the class as a singleton in the container
       container.registerRegistration(target, createRegistration(target, Lifetime.Singleton, dependencies ?? []));
@@ -80,11 +78,9 @@ export function Transient<TDependencies extends Array<InjectionToken | Interface
       if (Array.isArray(id)) {
         // If id is an array, use it as the dependencies
         dependencies = id as unknown as [...TDependencies];
-      } else {
+      } else if (typeof id !== "undefined") {
         // If id is a token, use it as the registration token
-        if (typeof id !== "undefined") {
-          token = id as unknown as InjectionToken<I>;
-        }
+        token = id as unknown as InjectionToken<I>;
       }
       // Register the class as a transient in the container
       container.registerRegistration(target, createRegistration(target, Lifetime.Transient, dependencies ?? []));
@@ -122,11 +118,9 @@ export function Scoped<TDependencies extends Array<InjectionToken | InterfaceId>
       if (Array.isArray(id)) {
         // If id is an array, use it as the dependencies
         dependencies = id as unknown as [...TDependencies];
-      } else {
+      } else if (typeof id !== "undefined") {
         // If id is a token, use it as the registration token
-        if (typeof id !== "undefined") {
-          token = id as unknown as InjectionToken<I>;
-        }
+        token = id as unknown as InjectionToken<I>;
       }
       // Register the class as a scoped in the container
       container.registerRegistration(target, createRegistration(target, Lifetime.Scoped, dependencies ?? []));
@@ -229,10 +223,7 @@ export function Inject(token: InjectionToken) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): any {
     switch (context.kind) {
-      case "accessor":
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-case-declarations
-        const { get, set } = value;
-        // eslint-disable-next-line no-case-declarations
+      case "accessor": {
         const instance = container.resolve(token);
         return {
           get() {
@@ -242,6 +233,7 @@ export function Inject(token: InjectionToken) {
             return instance;
           },
         };
+      }
       case "field":
         return function () {
           return container.resolve(token);
@@ -253,11 +245,5 @@ export function Inject(token: InjectionToken) {
           "can only be used in a field or accessor",
         );
     }
-    /*if (context.kind === "field") {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      return function (_: V) {
-        return container.resolve(token);
-      };
-    }*/
   };
 }

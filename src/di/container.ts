@@ -912,18 +912,19 @@ export class Container implements IContainer {
      * If the registration is a class provider or a constructor provider, resolve it to an instance.
      * Otherwise, resolve it to an instance using the factory provider or the value provider.
      */
-    return registration.providerType === ProvidersType.ClassProvider ||
-      registration.providerType === ProvidersType.ConstructorProvider
-      ? this.resolveClassProvider(registration, token, scope)
-      : registration.providerType === ProvidersType.FactoryProvider
-        ? this.resolveFactoryProvider(registration)
-        : registration.providerType === ProvidersType.ValueProvider
-          ? this.resolveValueProvider(registration)
-          : registration.providerType === ProvidersType.TokenProvider
-            ? this.resolve((registration.provider as TokenProvider<T>).useToken, scope)
-            : (() => {
-                throw new Error(`Invalid registration type: "${registration.providerType}"`);
-              })();
+    switch (registration.providerType) {
+      case ProvidersType.ClassProvider:
+      case ProvidersType.ConstructorProvider:
+        return this.resolveClassProvider(registration, token, scope);
+      case ProvidersType.FactoryProvider:
+        return this.resolveFactoryProvider(registration);
+      case ProvidersType.ValueProvider:
+        return this.resolveValueProvider(registration);
+      case ProvidersType.TokenProvider:
+        return this.resolve((registration.provider as TokenProvider<T>).useToken, scope);
+      default:
+        throw new Error(`Invalid registration type: "${registration.providerType}"`);
+    }
   }
 
   /**
@@ -940,18 +941,19 @@ export class Container implements IContainer {
   ): Promise<T> {
     // If the registration is a class provider or a constructor provider, resolve it to an instance asynchronously.
     // Otherwise, resolve it to an instance using the factory provider or the value provider asynchronously.
-    return registration.providerType === ProvidersType.ClassProvider ||
-      registration.providerType === ProvidersType.ConstructorProvider
-      ? this.resolveClassProviderAsync(registration, token, scope)
-      : registration.providerType === ProvidersType.FactoryProvider
-        ? this.resolveFactoryProviderAsync(registration)
-        : registration.providerType === ProvidersType.ValueProvider
-          ? this.resolveValueProvider(registration)
-          : registration.providerType === ProvidersType.TokenProvider
-            ? this.resolveAsync((registration.provider as TokenProvider<T>).useToken, scope)
-            : (() => {
-                throw new Error(`Invalid registration type: "${registration.providerType}"`);
-              })();
+    switch (registration.providerType) {
+      case ProvidersType.ClassProvider:
+      case ProvidersType.ConstructorProvider:
+        return this.resolveClassProviderAsync(registration, token, scope);
+      case ProvidersType.FactoryProvider:
+        return this.resolveFactoryProviderAsync(registration);
+      case ProvidersType.ValueProvider:
+        return this.resolveValueProvider(registration);
+      case ProvidersType.TokenProvider:
+        return this.resolveAsync((registration.provider as TokenProvider<T>).useToken, scope);
+      default:
+        throw new Error(`Invalid registration type: "${registration.providerType}"`);
+    }
   }
 
   /**
