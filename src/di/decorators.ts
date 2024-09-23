@@ -3,7 +3,7 @@ import { InvalidDecoratorError } from "./exceptions/InvalidDecoratorError";
 import { ConstructorType } from "./types/constructor.type";
 import { InterfaceId, UnwrapDecoratorArgs } from "./types/decorators.type";
 import { InjectionToken } from "./types/injection-token.type";
-import { ProvidersType } from "./types/providers/provider";
+import { ProvidersType } from "./types/providers/provider.type";
 import { Lifetime, Registration } from "./types/registration.interface";
 
 const getRandomString = () => Math.random().toString(36).substring(2, 15);

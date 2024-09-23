@@ -3,7 +3,7 @@ import { ScopeContext } from "./scope-context";
 import { ValueProvider } from "./types/providers/value-provider";
 import { ClassProvider, isClassProvider } from "./types/providers/class-provider";
 import { FactoryProvider } from "./types/providers/factory-provider";
-import { getProviderType, isProvider, Provider, ProvidersType } from "./types/providers/provider";
+import { getProviderType, isProvider, Provider, ProvidersType } from "./types/providers/provider.type";
 import { Lifetime, Registration, RegistrationOptions } from "./types/registration.interface";
 import { InjectionToken, isNormalToken } from "./types/injection-token.type";
 import { ConstructorType, isConstructorType } from "./types/constructor.type";

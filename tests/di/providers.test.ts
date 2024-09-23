@@ -1,5 +1,5 @@
 import { describe, expect, test } from "@jest/globals";
-import { getProviderType, isProvider, Provider, ProvidersType } from "../../src/di/types/providers/provider";
+import { getProviderType, isProvider, Provider, ProvidersType } from "../../src/di/types/providers/provider.type";
 import { isValueProvider } from "../../src/di/types/providers/value-provider";
 import { isClassProvider } from "../../src/di/types/providers/class-provider";
 import { isFactoryProvider } from "../../src/di/types/providers/factory-provider";

@@ -3,7 +3,7 @@ import { InjectionToken } from "./injection-token.type";
 import { ConstructorType } from "./constructor.type";
 import { ScopeContext } from "../scope-context";
 import { TokenProvider } from "./providers/token-provider";
-import { Provider } from "./providers/provider";
+import { Provider } from "./providers/provider.type";
 
 export interface IContainer extends AsyncDisposable {
   readonly scopes: Set<ScopeContext>;

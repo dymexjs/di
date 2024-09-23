@@ -1,5 +1,5 @@
 import { InjectionToken } from "../injection-token.type";
-import { Provider } from "./provider";
+import { Provider } from "./provider.type";
 
 export interface TokenProvider<T> {
   useToken: InjectionToken<T>;

@@ -1,4 +1,4 @@
-import { Provider, ProvidersType } from "./providers/provider";
+import { Provider, ProvidersType } from "./providers/provider.type";
 import { InjectionToken } from "./injection-token.type";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
