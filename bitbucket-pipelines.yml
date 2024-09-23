@@ -34,7 +34,7 @@ pipelines:
         - step:
             name: Code linting
             script:
-              - npm install eslint
+              - npm install --force
               - npx esling .
             caches:
               - node
