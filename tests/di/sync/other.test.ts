@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test } from "@jest/globals";
 import { Container, container } from "../../../src/di/container";
 import { TokenNotFoundError } from "../../../src/di/exceptions/TokenNotFoundError";
-import { Lifetime } from "../../../src/di/types/registration";
+import { Lifetime } from "../../../src/di/types/registration.interface";
 import { Singleton } from "../../../src/di/decorators";
 import { TokenRegistrationCycleError } from "../../../src/di/exceptions/TokenRegistrationCycleError";
 

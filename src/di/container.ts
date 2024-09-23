@@ -4,8 +4,8 @@ import { ValueProvider } from "./types/providers/value-provider";
 import { ClassProvider, isClassProvider } from "./types/providers/class-provider";
 import { FactoryProvider } from "./types/providers/factory-provider";
 import { getProviderType, isProvider, Provider, ProvidersType } from "./types/providers/provider";
-import { Lifetime, Registration, RegistrationOptions } from "./types/registration";
-import { InjectionToken, isNormalToken } from "./types/injection-token";
+import { Lifetime, Registration, RegistrationOptions } from "./types/registration.interface";
+import { InjectionToken, isNormalToken } from "./types/injection-token.type";
 import { ConstructorType, isConstructorType } from "./types/constructor.type";
 import { IContainer } from "./types/container.interface";
 import { STATIC_INJECT_KEY, STATIC_INJECT_LIFETIME } from "./constants";
@@ -14,7 +14,7 @@ import { isTokenProvider, TokenProvider } from "./types/providers/token-provider
 import { TokenRegistrationCycleError } from "./exceptions/TokenRegistrationCycleError";
 import { ServiceMap } from "./service-map";
 import { isAsyncDisposable, isDisposable } from "./helpers";
-import { StaticInjectable } from "./types/staticInject";
+import { StaticInjectable } from "./types/static-inject.interface";
 
 export class Container implements IContainer {
   private readonly _services: ServiceMap<InjectionToken, Registration> = new ServiceMap();

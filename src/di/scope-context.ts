@@ -1,7 +1,7 @@
 import { isAsyncDisposable, isDisposable } from "./helpers";
 import { ServiceMap } from "./service-map";
-import { InjectionToken } from "./types/injection-token";
-import { Registration } from "./types/registration";
+import { InjectionToken } from "./types/injection-token.type";
+import { Registration } from "./types/registration.interface";
 
 export class ScopeContext implements AsyncDisposable {
   public readonly services: ServiceMap<InjectionToken, Registration> = new ServiceMap();

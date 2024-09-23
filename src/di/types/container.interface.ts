@@ -1,5 +1,5 @@
-import { Registration, RegistrationOptions } from "./registration";
-import { InjectionToken } from "./injection-token";
+import { Registration, RegistrationOptions } from "./registration.interface";
+import { InjectionToken } from "./injection-token.type";
 import { ConstructorType } from "./constructor.type";
 import { ScopeContext } from "../scope-context";
 import { TokenProvider } from "./providers/token-provider";

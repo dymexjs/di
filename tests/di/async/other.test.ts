@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test } from "@jest/globals";
 import { container } from "../../../src/di/container";
 import { TokenNotFoundError } from "../../../src/di/exceptions/TokenNotFoundError";
-import { Lifetime } from "../../../src/di/types/registration";
+import { Lifetime } from "../../../src/di/types/registration.interface";
 import { Singleton, Transient } from "../../../src/di/decorators";
 
 describe("Averix_DI ", () => {

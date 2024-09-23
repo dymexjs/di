@@ -1,5 +1,5 @@
 import { Provider, ProvidersType } from "./providers/provider";
-import { InjectionToken } from "./injection-token";
+import { InjectionToken } from "./injection-token.type";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface Registration<T = any> {

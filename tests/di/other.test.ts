@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, test } from "@jest/globals";
 import { InvalidDecoratorError } from "../../src/di/exceptions/InvalidDecoratorError";
 import { AutoInjectable, Scoped, Singleton, Transient } from "../../src/di/decorators";
 import { ServiceMap } from "../../src/di/service-map";
-import { Registration } from "../../src/di/types/registration";
+import { Registration } from "../../src/di/types/registration.interface";
 import { container } from "../../src/di/container";
 import { TokenNotFoundError } from "../../src/di/exceptions/TokenNotFoundError";
 

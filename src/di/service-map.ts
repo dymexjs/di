@@ -1,6 +1,6 @@
 import { isAsyncDisposable, isDisposable } from "./helpers";
-import { InjectionToken } from "./types/injection-token";
-import { Registration } from "./types/registration";
+import { InjectionToken } from "./types/injection-token.type";
+import { Registration } from "./types/registration.interface";
 
 export class ServiceMap<K extends InjectionToken, V extends Registration> implements AsyncDisposable {
   private readonly _services = new Map<K, Array<V>>();

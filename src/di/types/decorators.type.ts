@@ -1,4 +1,4 @@
-import { InjectionToken } from "./injection-token";
+import { InjectionToken } from "./injection-token.type";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type InterfaceId<T = any> = string & { __type: T };

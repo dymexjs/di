@@ -1,4 +1,4 @@
-import { InjectionToken } from "../types/injection-token";
+import { InjectionToken } from "../types/injection-token.type";
 
 export class TokenRegistrationCycleError extends Error {
   constructor(path: Array<InjectionToken>) {

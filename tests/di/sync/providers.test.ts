@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, jest, test } from "@jest/globals";
 import { container } from "../../../src/di/container";
-import { Lifetime } from "../../../src/di/types/registration";
+import { Lifetime } from "../../../src/di/types/registration.interface";
 import { UndefinedScopeError } from "../../../src/di/exceptions/UndefinedScopeError";
 import { STATIC_INJECT_LIFETIME } from "../../../src/di/constants";
 
