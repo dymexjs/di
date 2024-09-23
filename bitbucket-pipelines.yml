@@ -13,7 +13,7 @@ definitions:
           - node # See https://confluence.atlassian.com/bitbucket/caching-dependencies-895552876.html
           - sonar
         script:
-          - npm install
+          - npm install --force
           - npm test # Build your project and run
           - pipe: sonarsource/sonarcloud-scan:2.0.0
     - step: &check-quality-gate-sonarcloud
@@ -29,7 +29,7 @@ pipelines:
             caches:
               - node
             script:
-              - npm install
+              - npm install --force
               - npm test
         - step:
             name: Code linting
