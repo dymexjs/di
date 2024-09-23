@@ -38,11 +38,5 @@ pipelines:
               - npx eslint .
             caches:
               - node
-  branches:
-    master:
-      - step: *build-test-sonarcloud
-      - step: *check-quality-gate-sonarcloud
-  pull-requests:
-    "**":
-      - step: *build-test-sonarcloud
-      - step: *check-quality-gate-sonarcloud
+        - step: *build-test-sonarcloud
+        - step: *check-quality-gate-sonarcloud
