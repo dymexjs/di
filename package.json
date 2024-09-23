@@ -1,9 +1,19 @@
 {
-  "name": "averix_di",
+  "name": "@averix/di",
   "version": "0.0.1",
   "description": "Averix DI system",
+  "publishConfig": {
+    "access": "public"
+  },
   "main": "index.js",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://n3okill@bitbucket.org/n3okill/di.git"
+  },
+  "bugs": {
+    "url": "https://bitbucket.org/n3okill/di/issues"
+  },
   "scripts": {
     "build": "npx tsc -p tsconfig.json",
     "lint": "eslint",
