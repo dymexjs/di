@@ -17,23 +17,23 @@ import { isAsyncDisposable, isDisposable } from "./helpers";
 import { StaticInjectable } from "./types/static-inject.interface";
 
 export class Container implements IContainer {
-  private readonly _services: ServiceMap<InjectionToken, Registration> = new ServiceMap();
-  private readonly _scopes: Set<ScopeContext> = new Set();
-  private readonly _resolutionStack = new Map<InjectionToken, unknown>();
-  private _childContainer?: IContainer;
+  readonly #_services: ServiceMap<InjectionToken, Registration> = new ServiceMap();
+  readonly #_scopes: Set<ScopeContext> = new Set();
+  readonly #_resolutionStack = new Map<InjectionToken, unknown>();
+  #_childContainer?: IContainer;
 
   constructor(private readonly _parent?: Container) {}
 
   get scopes(): Set<ScopeContext> {
-    return this._scopes;
+    return this.#_scopes;
   }
 
   async [Symbol.asyncDispose]() {
-    if (typeof this._childContainer !== "undefined") {
-      await this._childContainer[Symbol.asyncDispose]();
+    if (typeof this.#_childContainer !== "undefined") {
+      await this.#_childContainer[Symbol.asyncDispose]();
     }
     await this.reset();
-    this._resolutionStack.clear();
+    this.#_resolutionStack.clear();
   }
 
   /**
@@ -50,7 +50,7 @@ export class Container implements IContainer {
   async clearInstances(): Promise<void> {
     const promises = [] as Promise<void>[];
 
-    for (const registrations of this._services.values()) {
+    for (const registrations of this.#_services.values()) {
       for (const registration of registrations.filter((x) => x.providerType !== ProvidersType.ValueProvider)) {
         if (registration.instance) {
           if (isAsyncDisposable(registration.instance)) {
@@ -78,7 +78,7 @@ export class Container implements IContainer {
   createChildContainer(): IContainer {
     const childContainer = new Container(this);
     //Saves child container for dispose from main container
-    this._childContainer = childContainer;
+    this.#_childContainer = childContainer;
     return childContainer;
   }
 
@@ -93,7 +93,7 @@ export class Container implements IContainer {
    */
   createScope(): ScopeContext {
     const scope = new ScopeContext();
-    this._scopes.add(scope);
+    this.#_scopes.add(scope);
     return scope;
   }
 
@@ -106,7 +106,7 @@ export class Container implements IContainer {
     //The scope will dispose all instances registered with the scoped lifetime
     await scope[Symbol.asyncDispose]();
     //Remove scope from the container's scope list
-    this._scopes.delete(scope);
+    this.#_scopes.delete(scope);
   }
 
   /**
@@ -164,7 +164,7 @@ export class Container implements IContainer {
    * @returns The container used for the registration
    */
   registerInstance<T>(token: InjectionToken, instance: T): IContainer {
-    this._services.set(token, {
+    this.#_services.set(token, {
       provider: { useValue: instance },
       providerType: ProvidersType.ValueProvider,
       options: { lifetime: Lifetime.Singleton },
@@ -180,7 +180,7 @@ export class Container implements IContainer {
    * @return The container used for the registration
    */
   registerRegistration(token: InjectionToken, registration: Registration): IContainer {
-    this._services.set(token, registration);
+    this.#_services.set(token, registration);
     return this;
   }
 
@@ -230,8 +230,8 @@ export class Container implements IContainer {
     }
 
     // Remove all registrations that match the predicate
-    for (const registration of this._services.getAll(token).filter((x) => predicate(x))) {
-      await this._services.delete(token, registration);
+    for (const registration of this.#_services.getAll(token).filter((x) => predicate(x))) {
+      await this.#_services.delete(token, registration);
     }
 
     return this;
@@ -246,11 +246,11 @@ export class Container implements IContainer {
   async reset(): Promise<void> {
     // Dispose all scopes
     // We use Promise.allSettled instead of Promise.all to ensure that all scopes are disposed of, even if one of them throws an error
-    await Promise.allSettled(Array.from(this._scopes).map((s) => this.disposeScope(s)));
+    await Promise.allSettled(Array.from(this.#_scopes).map((s) => this.disposeScope(s)));
 
     // Dispose all registrations
     // We use the [Symbol.asyncDispose] method to ensure that all registrations are disposed of, even if one of them throws an error
-    await this._services[Symbol.asyncDispose]();
+    await this.#_services[Symbol.asyncDispose]();
   }
 
   /**
@@ -263,16 +263,16 @@ export class Container implements IContainer {
    */
   resolve<T>(token: InjectionToken, scope?: ScopeContext): T {
     // Check if the token is already being resolved (i.e. a circular dependency is detected)
-    if (this._resolutionStack.has(token)) {
+    if (this.#_resolutionStack.has(token)) {
       // If so, return a proxy
-      if (this._resolutionStack.get(token) === null) {
-        this._resolutionStack.set(token, this.createProxy<T>(token));
+      if (this.#_resolutionStack.get(token) === null) {
+        this.#_resolutionStack.set(token, this.createProxy<T>(token));
       }
-      return this._resolutionStack.get(token) as T;
+      return this.#_resolutionStack.get(token) as T;
     }
 
     // If not, set the token to null in the resolution stack and try to resolve it
-    this._resolutionStack.set(token, null);
+    this.#_resolutionStack.set(token, null);
 
     try {
       if (!this.hasRegistration(token)) {
@@ -290,7 +290,7 @@ export class Container implements IContainer {
       return this.resolveRegistration(token, registration, scope);
     } finally {
       // Remove the token from the resolution stack
-      this._resolutionStack.delete(token);
+      this.#_resolutionStack.delete(token);
     }
   }
 
@@ -358,14 +358,14 @@ export class Container implements IContainer {
    */
   async resolveAsync<T>(token: InjectionToken, scope?: ScopeContext): Promise<T> {
     // Check if the token is already being resolved (i.e. a circular dependency is detected)
-    if (this._resolutionStack.has(token)) {
+    if (this.#_resolutionStack.has(token)) {
       //Circular dependency detected, return a proxy
-      if (this._resolutionStack.get(token) === null) {
-        this._resolutionStack.set(token, this.createProxyAsync<T>(token));
+      if (this.#_resolutionStack.get(token) === null) {
+        this.#_resolutionStack.set(token, this.createProxyAsync<T>(token));
       }
-      return (await this._resolutionStack.get(token)) as T;
+      return (await this.#_resolutionStack.get(token)) as T;
     }
-    this._resolutionStack.set(token, null);
+    this.#_resolutionStack.set(token, null);
 
     try {
       // If the token is not registered, throw an error
@@ -382,7 +382,7 @@ export class Container implements IContainer {
       return await this.resolveRegistrationAsync(token, registration, scope);
     } finally {
       // Remove the token from the resolution stack
-      this._resolutionStack.delete(token);
+      this.#_resolutionStack.delete(token);
     }
   }
 
@@ -606,7 +606,7 @@ export class Container implements IContainer {
     /**
      * If the token is registered in the current container, return the registrations.
      */
-    const regs = this._services.getAll(token);
+    const regs = this.#_services.getAll(token);
     if (regs.length > 0) {
       return regs;
     }
@@ -632,8 +632,8 @@ export class Container implements IContainer {
     /**
      * If the token is registered in the current container, return the registration.
      */
-    if (this._services.get(token)) {
-      return this._services.get(token);
+    if (this.#_services.get(token)) {
+      return this.#_services.get(token);
     }
 
     /**
@@ -661,7 +661,7 @@ export class Container implements IContainer {
     /**
      * If the token is registered in the current container, return true.
      */
-    if (this._services.has(token)) {
+    if (this.#_services.has(token)) {
       return true;
     }
 

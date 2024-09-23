@@ -31,9 +31,9 @@ export function Singleton<TDependencies extends Array<InjectionToken | Interface
 ): ClassDecorator {
   return function <T extends { new (...args: UnwrapDecoratorArgs<TDependencies>): I }>(
     target: T,
-    { kind }: ClassDecoratorContext,
+    context: ClassDecoratorContext,
   ) {
-    if (kind === "class") {
+    if (context.kind === "class") {
       let token: InjectionToken<I> = target;
       if (Array.isArray(id)) {
         // If id is an array, use it as the dependencies
@@ -53,7 +53,7 @@ export function Singleton<TDependencies extends Array<InjectionToken | Interface
       }
       return;
     }
-    throw new InvalidDecoratorError("Singleton", target);
+    throw new InvalidDecoratorError("Singleton", context.name);
   } as ClassDecorator;
 }
 
@@ -73,9 +73,9 @@ export function Transient<TDependencies extends Array<InjectionToken | Interface
 ): ClassDecorator {
   return function <T extends { new (...args: UnwrapDecoratorArgs<TDependencies>): I }>(
     target: T,
-    { kind }: ClassDecoratorContext,
+    context: ClassDecoratorContext,
   ) {
-    if (kind === "class") {
+    if (context.kind === "class") {
       let token: InjectionToken<I> = target;
       if (Array.isArray(id)) {
         // If id is an array, use it as the dependencies
@@ -95,7 +95,7 @@ export function Transient<TDependencies extends Array<InjectionToken | Interface
       }
       return;
     }
-    throw new InvalidDecoratorError("Transient", target);
+    throw new InvalidDecoratorError("Transient", context.name);
   } as ClassDecorator;
 }
 
@@ -115,9 +115,9 @@ export function Scoped<TDependencies extends Array<InjectionToken | InterfaceId>
 ): ClassDecorator {
   return function <T extends { new (...args: UnwrapDecoratorArgs<TDependencies>): I }>(
     target: T,
-    { kind }: ClassDecoratorContext,
+    context: ClassDecoratorContext,
   ) {
-    if (kind === "class") {
+    if (context.kind === "class") {
       let token: InjectionToken<I> = target;
       if (Array.isArray(id)) {
         // If id is an array, use it as the dependencies
@@ -137,7 +137,7 @@ export function Scoped<TDependencies extends Array<InjectionToken | InterfaceId>
       }
       return;
     }
-    throw new InvalidDecoratorError("Scoped", target);
+    throw new InvalidDecoratorError("Scoped", context.name);
   } as ClassDecorator;
 }
 
@@ -181,9 +181,9 @@ export function AutoInjectable<TDependencies extends Array<InjectionToken | Inte
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return function <T extends { new (...args: UnwrapDecoratorArgs<TDependencies> | any): I }>(
     target: T,
-    { kind }: ClassDecoratorContext,
+    context: ClassDecoratorContext,
   ) {
-    if (kind === "class") {
+    if (context.kind === "class") {
       /**
        * Creates a new class that extends the target class and injects its dependencies.
        *
@@ -217,6 +217,47 @@ export function AutoInjectable<TDependencies extends Array<InjectionToken | Inte
       // Returns the registered class
       return aClass;
     }
-    throw new InvalidDecoratorError("AutoInjectable", target);
+    throw new InvalidDecoratorError("AutoInjectable", context.name);
+  };
+}
+
+export function Inject(token: InjectionToken) {
+  return function FieldOrAccessorDecorator<C, V>(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    value: any,
+    context: ClassFieldDecoratorContext<C, V> | ClassAccessorDecoratorContext<C, V>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ): any {
+    switch (context.kind) {
+      case "accessor":
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-case-declarations
+        const { get, set } = value;
+        // eslint-disable-next-line no-case-declarations
+        const instance = container.resolve(token);
+        return {
+          get() {
+            return instance;
+          },
+          init() {
+            return instance;
+          },
+        };
+      case "field":
+        return function () {
+          return container.resolve(token);
+        };
+      default:
+        throw new InvalidDecoratorError(
+          "Inject",
+          (context as ClassFieldDecoratorContext<C, V> | ClassAccessorDecoratorContext<C, V>).name,
+          "can only be used in a field or accessor",
+        );
+    }
+    /*if (context.kind === "field") {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      return function (_: V) {
+        return container.resolve(token);
+      };
+    }*/
   };
 }

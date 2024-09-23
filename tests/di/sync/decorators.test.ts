@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, test } from "@jest/globals";
 import { container } from "../../../src/di/container";
-import { AutoInjectable, createInterfaceId, Scoped, Singleton, Transient } from "../../../src/di/decorators";
+import { AutoInjectable, createInterfaceId, Inject, Scoped, Singleton, Transient } from "../../../src/di/decorators";
 import { UndefinedScopeError } from "../../../src/di/exceptions/UndefinedScopeError";
+import { InvalidDecoratorError } from "../../../src/di/exceptions/InvalidDecoratorError";
 
 describe("Averix_DI", () => {
   beforeEach(async () => await container.reset());
@@ -436,6 +437,52 @@ describe("Averix_DI", () => {
             expect(Array.isArray(bar.foo)).toBeTruthy();
             expect(bar.foo!.length).toBe(1);
             expect(bar.foo![0]).toBeInstanceOf(Foo);
+          });
+        });
+      });
+      describe("Inject", () => {
+        test("should fail", () => {
+          expect(
+            () =>
+              class Test {
+                //@ts-expect-error For testing
+                @Inject("token")
+                method() {}
+              },
+          ).toThrow(InvalidDecoratorError);
+        });
+        describe("field", () => {
+          test("should inject an instance into the class field", () => {
+            @Singleton()
+            class TestA {
+              prop = "testA";
+            }
+
+            class TestB {
+              @Inject(TestA)
+              testA!: TestA;
+            }
+            const testB = new TestB();
+            expect(testB).toBeInstanceOf(TestB);
+            expect(testB.testA).toBeInstanceOf(TestA);
+            expect(testB.testA.prop).toBe("testA");
+          });
+        });
+        describe("accessor", () => {
+          test("should inject an instance into the class field", () => {
+            @Singleton()
+            class TestA {
+              prop = "testA";
+            }
+
+            class TestB {
+              @Inject(TestA)
+              accessor testA!: TestA;
+            }
+            const testB = new TestB();
+            expect(testB).toBeInstanceOf(TestB);
+            expect(testB.testA).toBeInstanceOf(TestA);
+            expect(testB.testA.prop).toBe("testA");
           });
         });
       });
