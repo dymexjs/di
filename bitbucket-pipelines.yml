@@ -16,9 +16,10 @@ pipelines:
         script:
           - npm install --force
           - npm run test:coverage
-          - pipe: wget -qO - https://coverage.codacy.com/get.sh | sh -s -- report -r coverage/lcov.info
+          - pipe: n3okill/codacy-coverage:0.0.1
             variables:
               CODACY_PROJECT_TOKEN: $CODACY_PROJECT_TOKEN
+              COVERAGE_REPORTS: coverage/lcov.info
         artifacts:
           - coverage/**
     - step:
