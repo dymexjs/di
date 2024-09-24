@@ -361,7 +361,7 @@ export class Container implements IContainer {
     if (this.#_resolutionStack.has(token)) {
       //Circular dependency detected, return a proxy
       if (this.#_resolutionStack.get(token) === null) {
-        this.#_resolutionStack.set(token, this.createProxyAsync<T>(token));
+        this.#_resolutionStack.set(token, this.createProxy<T>(token));
       }
       return (await this.#_resolutionStack.get(token)) as T;
     }
@@ -511,7 +511,12 @@ export class Container implements IContainer {
      * @param method The method or property to create a handler for.
      */
     const action = (method: keyof ProxyHandler<never>) => {
-      return (...args: Array<unknown>) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (...args: Array<any>) => {
+        // We need to maintain this condition to avoid an infinite loop when trying to resolve the await that calls the then() from the promise
+        if (method === "get" && args[1] === "then" && typeof args[0].then === "undefined") {
+          return proxy;
+        }
         // Call the resolvedObject function to resolve the token from the container
         args[0] = resolvedObject();
         // Call the method or property on the resolved object
@@ -533,66 +538,6 @@ export class Container implements IContainer {
     // Create the proxy
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const proxy = new Proxy<any>({}, handler) as T;
-    // Return the proxy
-    return proxy;
-  }
-
-  /**
-   * Creates a proxy for the specified token.
-   * The proxy will resolve the token from the container using the `resolve` method when any of the proxy's methods or properties are accessed.
-   * @param token The token to create a proxy for.
-   * @returns The created proxy.
-   */
-  private createProxyAsync<T>(token: InjectionToken): T {
-    let init = false;
-    let value: T;
-    /**
-     * Function that resolves the token from the container and stores the result in the `value` property.
-     * This function is used as the target of the proxy's methods and properties.
-     */
-    const resolvedObject: () => T = () => {
-      if (!init) {
-        value = container.resolve<T>(token);
-        init = true;
-      }
-      return value;
-    };
-    /**
-     * The proxy handler that will be used to intercept the proxy's methods and properties.
-     * The handler will call the `resolvedObject` function to resolve the token from the container and use the result as the target of the method or property.
-     */
-    const handler: ProxyHandler<never> = {};
-    // Create the proxy
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const proxy = new Proxy<any>({}, handler) as T;
-    /**
-     * Function that creates a proxy handler for a specific method or property.
-     * The handler will call the `resolvedObject` function to resolve the token from the container and use the result as the target of the method or property.
-     * @param method The method or property to create a handler for.
-     */
-    const action = (method: keyof ProxyHandler<never>) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return (...args: Array<any>) => {
-        // We need to maintain this condition to avoid an infinite loop when trying to resolve the await that calls the then() from the promise
-        if (method === "get" && args[1] === "then" && typeof args[0].then === "undefined") {
-          return proxy;
-        }
-        args[0] = resolvedObject();
-        // eslint-disable-next-line security/detect-object-injection, @typescript-eslint/no-explicit-any
-        const val = (Reflect[method] as any)(...args);
-        return typeof val === "function" ? val.bind(args[0]) : val;
-      };
-    };
-    // Create the proxy handler for each method and property
-    (Object.getOwnPropertyNames(Reflect) as Array<keyof ProxyHandler<never>>).forEach((method) => {
-      // eslint-disable-next-line security/detect-object-injection
-      handler[method] = action(method);
-    });
-    (Object.getOwnPropertySymbols(Reflect) as unknown as Array<keyof ProxyHandler<never>>).forEach((method) => {
-      // eslint-disable-next-line security/detect-object-injection
-      handler[method] = action(method);
-    });
-
     // Return the proxy
     return proxy;
   }
