@@ -20,6 +20,7 @@
     "test": "jest",
     "test:coverage": "jest --coverage",
     "test:watch": "jest --watch",
+    "format": "prettier --config .prettierrc \"src/**/*.ts\" \"tests/**/*.ts\" --write",
     "prepublishOnly": "npm test",
     "prepare": "npm run build",
     "preversion": "npm run lint",
