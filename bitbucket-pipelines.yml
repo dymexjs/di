@@ -22,9 +22,26 @@ pipelines:
               COVERAGE_REPORTS: coverage/lcov.info
         artifacts:
           - coverage/**
-    - step:
-        name: Security Scan
-        script:
-          # Run a security scan for sensitive data.
-          # See more security tools at https://bitbucket.org/product/features/pipelines/integrations?&category=security
-          - pipe: atlassian/git-secrets-scan:0.5.1
+  tags:
+    "v*.*.*":
+      - step:
+          name: Testing
+          caches:
+            - node
+          script:
+            - npm install --force
+            - npm test
+      - step:
+          name: Security Scan
+          script:
+            # Run a security scan for sensitive data.
+            # See more security tools at https://bitbucket.org/product/features/pipelines/integrations?&category=security
+            - pipe: atlassian/git-secrets-scan:0.5.1
+      - step:
+          name: Deploy to npm
+          deployment: Production
+          script:
+            # Publish package
+            - pipe: atlassian/npm-publish:0.3.2
+              variables:
+                NPM_TOKEN: $NPM_TOKEN
