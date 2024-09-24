@@ -1,43 +1,29 @@
 image: node:lts-alpine
 
-clone:
-  depth: full # SonarCloud scanner needs the full history to assign issues properly
-
-definitions:
-  caches:
-    sonar: ~/.sonar/cache # Caching SonarCloud artifacts will speed up your build
-  steps:
-    - step: &build-test-sonarcloud
-        name: Build, test and analyze on SonarCloud
-        caches:
-          - node # See https://confluence.atlassian.com/bitbucket/caching-dependencies-895552876.html
-          - sonar
-        script:
-          - npm install --force
-          - npm test # Build your project and run
-          - pipe: sonarsource/sonarcloud-scan:2.0.0
-    - step: &check-quality-gate-sonarcloud
-        name: Check the Quality Gate on SonarCloud
-        script:
-          - pipe: sonarsource/sonarcloud-quality-gate:0.1.6
-
 pipelines:
   default:
-    - parallel:
-        - step:
-            name: Build and Test
-            caches:
-              - node
-            script:
-              - npm install --force
-              - npm test
-        - step:
-            name: Code linting
-            script:
-              - npm install --force
-              - npx eslint -v
-              - npx eslint .
-            caches:
-              - node
-        - step: *build-test-sonarcloud
-        - step: *check-quality-gate-sonarcloud
+    #    - step:
+    #        name: Code linting
+    #        script:
+    #          - npm install --force
+    #          - npm run lint
+    #        caches:
+    #          - node
+    - step:
+        name: Testing
+        caches:
+          - node
+        script:
+          - npm install --force
+          - npm run test:coverage
+          - pipe: wget -qO - https://coverage.codacy.com/get.sh | sh -s -- report -r coverage/lcov.info
+            variables:
+              CODACY_PROJECT_TOKEN: $CODACY_PROJECT_TOKEN
+        artifacts:
+          - coverage/**
+    - step:
+        name: Security Scan
+        script:
+          # Run a security scan for sensitive data.
+          # See more security tools at https://bitbucket.org/product/features/pipelines/integrations?&category=security
+          - pipe: atlassian/git-secrets-scan:0.5.1
