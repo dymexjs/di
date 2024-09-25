@@ -1,59 +1,8 @@
 # Averix/DI
 
-A dependency injection library for Typescript/Javascript to help you build well-structured code and easily testable applications.
+A dependency injection library for Typescript/Javascript to help build well-structured code and easily testable applications.
 
-<!-- TOC depthFrom:1 depthTo:3 -->
-
-- [Averix/DI](#averixdi)
-  - [Installation](#installation)
-  - [Basic Usage](#basic-usage)
-    - [Decorators](#decorators)
-    - [Static Injection (without decorators)](#static-injection-without-decorators)
-  - [API](#api)
-    - [Lifetime/Scopes](#lifetime)
-    - [Static Injection](#static-injection)
-    - [Decorators](#decorators-1)
-      - [@Singleton](#singleton)
-      - [@Transient](#transient)
-      - [@Scoped](#scoped)
-      - [@AutoInjectable](#autoinjectable)
-      - [@Inject](#inject)
-      - [@InjectAll](#injectall)
-    - [Container](#container)
-      - [InjectionToken](#injectiontoken)
-      - [Providers](#providers)
-        - [Class Provider](#class-provider)
-        - [Value Provider](#value-provider)
-        - [Factory Provider](#factory-provider)
-        - [Token Provider](#token-provider)
-      - [Register](#register)
-        - [registerSingleton](#registersingleton)
-        - [registerTransient](#registertransient)
-        - [registerScoped](#registerscoped)
-        - [registerFactory](#registerfactory)
-        - [registerInstance](#registerinstance)
-        - [registerType](#registertype)
-        - [registerValue](#registervalue)
-        - [register](#register-1)
-        - [registerRegistration](#removeregistration)
-        - [removeRegistration](#removeregistration)
-      - [Resolution](#resolution)
-        - [resolve](#resolve)
-        - [resolveAsync](#resolve)
-        - [resolveAll](#resolveall)
-        - [resolveAllAsync](#resolveall)
-        - [resolveWithArgs](#resolvewithargs)
-        - [resolveWithArgsAsync](#resolvewithargs)
-      - [Child Containers](#child-containers)
-        - [createChildContainer](#createchildcontainer)
-      - [Scopes](#scopes)
-        - [createScope](#createscope)
-        - [disposeScope](#disposescope)
-      - [Clearing Instances](#clearing-instances)
-      - [Reset](#reset)
-      - [Circular Dependencies](#circular-dependencies)
-
-<!-- /TOC -->
+[TOC]
 
 ## Instalation
 
