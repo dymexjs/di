@@ -180,5 +180,24 @@ describe("Averix_DI ", () => {
         expect(container.removeRegistration("anyKey")).rejects.toThrow(TokenNotFoundError);
       });
     });
+    describe("README", () => {
+      test("test service", () => {
+        class TestService {
+          printMessage() {
+            return "I'm printting this message inside of TestService instance.";
+          }
+        }
+
+        @Singleton([TestService])
+        class Test {
+          constructor(public testService: TestService) {}
+        }
+
+        const testInstance = container.resolve(Test);
+        expect(testInstance.testService.printMessage()).toBe(
+          "I'm printting this message inside of TestService instance.",
+        );
+      });
+    });
   });
 });

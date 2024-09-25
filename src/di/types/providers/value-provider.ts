@@ -5,5 +5,10 @@ export interface ValueProvider<T> {
 }
 
 export function isValueProvider<T>(provider: Provider<T>): provider is ValueProvider<T> {
-  return typeof (provider as ValueProvider<T>).useValue !== "undefined";
+  try {
+    return "useValue" in provider;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (_) {
+    return false;
+  }
 }

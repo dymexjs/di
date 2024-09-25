@@ -1,5 +1,6 @@
 import { container } from "./container";
 import { InvalidDecoratorError } from "./exceptions/InvalidDecoratorError";
+import { ScopeContext } from "./scope-context";
 import { ConstructorType } from "./types/constructor.type";
 import { InterfaceId, UnwrapDecoratorArgs } from "./types/decorators.type";
 import { InjectionToken } from "./types/injection-token.type";
@@ -23,7 +24,7 @@ export const createInterfaceId = <T>(id: string): InterfaceId<T> => `${id}-${get
  * @returns A class decorator that registers the class as a singleton in the container.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function Singleton<TDependencies extends Array<InjectionToken | InterfaceId>, I = any>(
+export function Singleton<TDependencies extends Array<InjectionToken>, I = any>(
   id?: TDependencies extends Array<InterfaceId>
     ? InjectionToken | InterfaceId<I>
     : [...TDependencies] | InjectionToken | InterfaceId<I>,
@@ -63,7 +64,7 @@ export function Singleton<TDependencies extends Array<InjectionToken | Interface
  * @returns A class decorator that registers the class as a transient in the container.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function Transient<TDependencies extends Array<InjectionToken | InterfaceId>, I = any>(
+export function Transient<TDependencies extends Array<InjectionToken>, I = any>(
   id?: TDependencies extends Array<InterfaceId>
     ? InjectionToken | InterfaceId<I>
     : [...TDependencies] | InjectionToken | InterfaceId<I>,
@@ -103,7 +104,7 @@ export function Transient<TDependencies extends Array<InjectionToken | Interface
  * @returns A class decorator that registers the class as a scoped in the container.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function Scoped<TDependencies extends Array<InjectionToken | InterfaceId>, I = any>(
+export function Scoped<TDependencies extends Array<InjectionToken>, I = any>(
   id?: TDependencies extends Array<InterfaceId>
     ? InjectionToken | InterfaceId<I>
     : [...TDependencies] | InjectionToken | InterfaceId<I>,
@@ -151,6 +152,7 @@ function createRegistration<T extends ConstructorType<any>>(
 
 type IAutoInjectableOptions = {
   all?: Array<InjectionToken | InterfaceId>;
+  scope?: ScopeContext;
 };
 
 /**
@@ -161,7 +163,7 @@ type IAutoInjectableOptions = {
  * @returns A class decorator that registers the class with the container and injects its dependencies.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function AutoInjectable<TDependencies extends Array<InjectionToken | InterfaceId>, I = any>(
+export function AutoInjectable<TDependencies extends Array<InjectionToken>, I = any>(
   dependencies?: [...TDependencies],
   options: IAutoInjectableOptions = {},
 ) {
@@ -198,7 +200,7 @@ export function AutoInjectable<TDependencies extends Array<InjectionToken | Inte
           super(
             ...args.concat(
               (dependencies ?? []).map((a) =>
-                options.all?.includes(a) ? container.resolveAll(a) : container.resolve(a),
+                options.all?.includes(a) ? container.resolveAll(a, options.scope) : container.resolve(a, options.scope),
               ),
             ),
           );
@@ -215,16 +217,79 @@ export function AutoInjectable<TDependencies extends Array<InjectionToken | Inte
   };
 }
 
-export function Inject(token: InjectionToken) {
-  return function FieldOrAccessorDecorator<C, V>(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    value: any,
-    context: ClassFieldDecoratorContext<C, V> | ClassAccessorDecoratorContext<C, V>,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ): any {
+/**
+ * Decorator that injects a dependency into a class.
+ *
+ * @param token The token or array of tokens to inject.
+ * @returns A decorator function that injects the dependency.
+ *
+ * The decorator can be used in one of the following ways:
+ * - In a field: The dependency is injected when the class is instantiated.
+ * - In an accessor: The dependency is injected when the accessor is called.
+ * - In a getter: The dependency is injected when the getter is called.
+ * - In a method: The dependency is injected when the method is called.
+ * @throws {InvalidDecoratorError} If the decorator is used in a context that is not one of the above.
+ */
+export function Inject(token: InjectionToken | Array<InjectionToken>) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return function DecoratorFn(value: any, context: ClassMemberDecoratorContext): any {
     switch (context.kind) {
+      case "field":
+        return function () {
+          return Array.isArray(token) ? token.map((t) => container.resolve(t)) : container.resolve(token);
+        };
       case "accessor": {
-        const instance = container.resolve(token);
+        const instance = Array.isArray(token) ? token.map((t) => container.resolve(t)) : container.resolve(token);
+        return {
+          get() {
+            return instance;
+          },
+        };
+      }
+      case "method":
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return function (this: any, ...args: Array<any>) {
+          const instances = Array.isArray(token) ? token.map((t) => container.resolve(t)) : [container.resolve(token)];
+          const argsConcat = args.concat(instances);
+          return value.apply(this, argsConcat);
+        };
+      case "getter":
+        return function () {
+          return Array.isArray(token) ? token.map((t) => container.resolve(t)) : container.resolve(token);
+        };
+      default:
+        throw new InvalidDecoratorError(
+          "Inject",
+          context.name,
+          "can only be used in a field, accessor, getter or method",
+        );
+    }
+  };
+}
+
+/**
+ * Decorator that injects all instances of a token into a class.
+ *
+ * @param token The token or array of tokens to inject.
+ * @returns A decorator function that injects the dependency.
+ *
+ * The decorator can be used in one of the following ways:
+ * - In a field: The dependency is injected when the class is instantiated.
+ * - In an accessor: The dependency is injected when the accessor is called.
+ * - In a getter: The dependency is injected when the getter is called.
+ * - In a method: The dependency is injected when the method is called.
+ * @throws {InvalidDecoratorError} If the decorator is used in a context that is not one of the above.
+ */
+export function InjectAll(token: InjectionToken | Array<InjectionToken>) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return function DecoratorFn(value: any, context: ClassMemberDecoratorContext): any {
+    switch (context.kind) {
+      case "field":
+        return function () {
+          return Array.isArray(token) ? token.map((t) => container.resolveAll(t)) : container.resolveAll(token);
+        };
+      case "accessor": {
+        const instance = Array.isArray(token) ? token.map((t) => container.resolveAll(t)) : container.resolveAll(token);
         return {
           get() {
             return instance;
@@ -234,15 +299,24 @@ export function Inject(token: InjectionToken) {
           },
         };
       }
-      case "field":
+      case "method":
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return function (this: any, ...args: Array<any>) {
+          const instances = Array.isArray(token)
+            ? token.map((t) => container.resolveAll(t))
+            : [container.resolveAll(token)];
+          const argsConcat = args.concat(instances);
+          return value.apply(this, argsConcat);
+        };
+      case "getter":
         return function () {
-          return container.resolve(token);
+          return Array.isArray(token) ? token.map((t) => container.resolveAll(t)) : container.resolveAll(token);
         };
       default:
         throw new InvalidDecoratorError(
           "Inject",
-          (context as ClassFieldDecoratorContext<C, V> | ClassAccessorDecoratorContext<C, V>).name,
-          "can only be used in a field or accessor",
+          context.name,
+          "can only be used in a field, accessor, getter or method",
         );
     }
   };

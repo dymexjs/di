@@ -4,6 +4,8 @@ import { ConstructorType } from "./constructor.type";
 import { ScopeContext } from "../scope-context";
 import { TokenProvider } from "./providers/token-provider";
 import { Provider } from "./providers/provider.type";
+import { FactoryFunction } from "./providers/factory-provider";
+import { ClassProvider } from "./providers/class-provider";
 
 export interface IContainer extends AsyncDisposable {
   readonly scopes: Set<ScopeContext>;
@@ -48,6 +50,8 @@ export interface IContainer extends AsyncDisposable {
    */
   disposeScope(scope: ScopeContext): Promise<void>;
 
+  //#region Register
+
   /**
    * Registers a provider in the container.
    * @param token The token to register the provider with.
@@ -60,6 +64,15 @@ export interface IContainer extends AsyncDisposable {
     provider: Provider<T> | ConstructorType<T>,
     options?: RegistrationOptions,
   ): IContainer;
+
+  /**
+   * Registers a factory function with the specified token in the container.
+   * The factory function will be called each time the token is resolved.
+   * @param token The token to register the factory with.
+   * @param factory The factory function to register.
+   * @returns The container used for the registration.
+   */
+  registerFactory<T>(token: InjectionToken<T>, factory: FactoryFunction<T>): IContainer;
 
   /**
    * Registers an instance of a class with the specified token.
@@ -80,12 +93,46 @@ export interface IContainer extends AsyncDisposable {
   registerRegistration<T>(token: InjectionToken<T>, registration: Registration): IContainer;
 
   /**
+   * Registers a class as a scoped in the container.
+   * @param token The token to register the class with.
+   * @param target The class to register.
+   * @returns The container used for the registration.
+   */
+  registerScoped<T>(token: InjectionToken<T>, target: ConstructorType<T> | ClassProvider<T>): IContainer;
+
+  /**
+   * Registers a class as a singleton in the container.
+   * @param token The token to register the class with.
+   * @param target The class to register.
+   * @returns The container used for the registration.
+   */
+  registerSingleton<T>(token: InjectionToken<T>, target: ConstructorType<T> | ClassProvider<T>): IContainer;
+
+  /**
+   * Registers a class as a transient in the container.
+   * @param token The token to register the class with.
+   * @param target The class to register.
+   * @returns The container used for the registration.
+   */
+  registerTransient<T>(token: InjectionToken<T>, target: ConstructorType<T> | ClassProvider<T>): IContainer;
+
+  /**
    * Registers a token to redirect to another token, 'to' must exist before registration
    * @param from The token to be registered
    * @param to The token to where the from token will redirect to
    * @return The container used for the registration
    */
   registerType<T>(from: InjectionToken<T>, to: InjectionToken<T> | TokenProvider<T>): IContainer;
+
+  /**
+   * Registers a value with the specified token in the container.
+   * This registration is a singleton, meaning that the same value
+   * will be returned each time the token is resolved.
+   * @param token The token to register the value with.
+   * @param value The value to register.
+   * @returns The container used for the registration.
+   */
+  registerValue<T>(token: InjectionToken<T>, value: T): IContainer;
 
   /**
    * Removes all registrations that match the predicate from the container.
@@ -99,6 +146,8 @@ export interface IContainer extends AsyncDisposable {
     predicate?: (registration: Registration<T>) => boolean,
   ): Promise<IContainer>;
 
+  //#endregion Register
+
   /**
    * Resets the container by clearing all registrations and disposing all scopes.
    * This method is useful for testing, as it allows you to clear out all registrations
@@ -107,6 +156,8 @@ export interface IContainer extends AsyncDisposable {
    * NOTE: don't clean child containers
    */
   reset(): Promise<void>;
+
+  //#region Resolve
 
   /**
    * Resolves the specified token to an instance.
@@ -171,4 +222,6 @@ export interface IContainer extends AsyncDisposable {
    * @returns A promise that resolves with an instance of the type.
    */
   resolveWithArgsAsync<T>(token: InjectionToken<T>, args?: Array<unknown>, scope?: ScopeContext): Promise<T>;
+
+  //#endregion Resolve
 }

@@ -1,6 +1,14 @@
 import { beforeEach, describe, expect, test } from "@jest/globals";
 import { container } from "../../../src/di/container";
-import { AutoInjectable, createInterfaceId, Inject, Scoped, Singleton, Transient } from "../../../src/di/decorators";
+import {
+  AutoInjectable,
+  createInterfaceId,
+  Inject,
+  InjectAll,
+  Scoped,
+  Singleton,
+  Transient,
+} from "../../../src/di/decorators";
 import { UndefinedScopeError } from "../../../src/di/exceptions/UndefinedScopeError";
 import { InvalidDecoratorError } from "../../../src/di/exceptions/InvalidDecoratorError";
 
@@ -283,7 +291,7 @@ describe("Averix_DI", () => {
               constructor(
                 public hello: string,
                 public num: number,
-                public a: TestA,
+                public a?: TestA,
               ) {}
             }
             const testB = container.resolveWithArgs<TestB>(TestB, ["test", 1]);
@@ -440,14 +448,13 @@ describe("Averix_DI", () => {
           });
         });
       });
-      describe("Inject", () => {
+      describe("Inject and InjectAll", () => {
         test("should fail", () => {
           expect(
             () =>
               class Test {
-                //@ts-expect-error For testing
                 @Inject("token")
-                method() {}
+                set val(value: unknown) {}
               },
           ).toThrow(InvalidDecoratorError);
         });
@@ -467,9 +474,30 @@ describe("Averix_DI", () => {
             expect(testB.testA).toBeInstanceOf(TestA);
             expect(testB.testA.prop).toBe("testA");
           });
+          test("should injectAll registered instances into the class field", () => {
+            class TestA {
+              prop = "testA";
+            }
+            container.registerSingleton(TestA, TestA);
+            container.registerSingleton(TestA, TestA);
+
+            class TestB {
+              @InjectAll(TestA)
+              testA!: TestA[];
+            }
+
+            const testB = new TestB();
+            expect(testB).toBeInstanceOf(TestB);
+            expect(testB.testA).toBeInstanceOf(Array);
+            expect(testB.testA.length).toBe(2);
+            expect(testB.testA[0]).toBeInstanceOf(TestA);
+            expect(testB.testA[0].prop).toBe("testA");
+            expect(testB.testA[1]).toBeInstanceOf(TestA);
+            expect(testB.testA[1].prop).toBe("testA");
+          });
         });
         describe("accessor", () => {
-          test("should inject an instance into the class field", () => {
+          test("should inject an instance into the class accessor", () => {
             @Singleton()
             class TestA {
               prop = "testA";
@@ -483,6 +511,106 @@ describe("Averix_DI", () => {
             expect(testB).toBeInstanceOf(TestB);
             expect(testB.testA).toBeInstanceOf(TestA);
             expect(testB.testA.prop).toBe("testA");
+          });
+          test("should injectAll registered instances into the class accessor", () => {
+            class TestA {
+              prop = "testA";
+            }
+
+            container.registerSingleton(TestA, TestA);
+            container.registerSingleton(TestA, TestA);
+
+            class TestB {
+              @InjectAll(TestA)
+              accessor testA!: TestA[];
+            }
+
+            const testB = new TestB();
+            expect(testB).toBeInstanceOf(TestB);
+            expect(testB.testA).toBeInstanceOf(Array);
+            expect(testB.testA).toHaveLength(2);
+            expect(testB.testA[0]).toBeInstanceOf(TestA);
+            expect(testB.testA[0].prop).toBe("testA");
+            expect(testB.testA[1]).toBeInstanceOf(TestA);
+            expect(testB.testA[1].prop).toBe("testA");
+          });
+        });
+        describe("method", () => {
+          test("should inject an instance into the method of the class", () => {
+            @Singleton()
+            class TestA {
+              prop = "testA";
+            }
+            class TestB {
+              @Inject(TestA)
+              doSomething(testA?: TestA) {
+                return testA!.prop;
+              }
+            }
+            const testB = container.resolve(TestB);
+            expect(testB).toBeInstanceOf(TestB);
+            expect(testB.doSomething()).toBe("testA");
+          });
+
+          test("should inject all registered instances into the method of the class", () => {
+            class TestA {
+              prop = "testA";
+            }
+            container.registerSingleton(TestA, TestA);
+            container.registerSingleton(TestA, TestA);
+
+            class TestB {
+              @InjectAll(TestA)
+              doSomething(testA?: TestA[]): Array<TestA> {
+                return testA!;
+              }
+            }
+            const testB = container.resolve(TestB);
+            expect(testB).toBeInstanceOf(TestB);
+            expect(testB.doSomething()).toBeInstanceOf(Array);
+            expect(testB.doSomething()).toHaveLength(2);
+            expect(testB.doSomething()[0].prop).toBe("testA");
+          });
+        });
+        describe("getter", () => {
+          test("should inject an instance into the getter of the class", () => {
+            @Singleton()
+            class TestA {
+              prop = "testA";
+            }
+            class TestB {
+              propTestA?: TestA;
+              @Inject(TestA)
+              get testA(): TestA {
+                return this.propTestA!;
+              }
+            }
+            const testB = container.resolve(TestB);
+            expect(testB).toBeInstanceOf(TestB);
+            expect(testB.propTestA).toBeUndefined();
+            expect(testB.testA).toBeInstanceOf(TestA);
+            expect(testB.testA.prop).toBe("testA");
+          });
+          test("should inject all registered instances into the getter of the class", () => {
+            class TestA {
+              prop = "testA";
+            }
+            container.registerSingleton(TestA, TestA);
+            container.registerSingleton(TestA, TestA);
+
+            class TestB {
+              propTestA?: TestA[];
+              @InjectAll(TestA)
+              get testA(): TestA[] {
+                return this.propTestA!;
+              }
+            }
+            const testB = container.resolve(TestB);
+            expect(testB).toBeInstanceOf(TestB);
+            expect(testB.propTestA).toBeUndefined();
+            expect(testB.testA).toBeInstanceOf(Array);
+            expect(testB.testA).toHaveLength(2);
+            expect(testB.testA[0].prop).toBe("testA");
           });
         });
       });

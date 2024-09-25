@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test } from "@jest/globals";
 import { container } from "../../../src/di/container";
 import { StaticInjectable } from "../../../src/di/types/static-inject.interface";
-import { STATIC_INJECT_KEY, STATIC_INJECT_LIFETIME } from "../../../src/di/constants";
+import { STATIC_INJECTIONS, STATIC_INJECTION_LIFETIME } from "../../../src/di/constants";
 import { Lifetime } from "../../../src/di/types/registration.interface";
 import { IContainer } from "../../../src/di/types/container.interface";
 import { createInterfaceId, Singleton, Transient } from "../../../src/di/decorators";
@@ -15,32 +15,32 @@ describe("Averix_DI ", () => {
           public serviceB: ServiceB,
           public serviceC: ServiceC,
         ) {}
-        public static [STATIC_INJECT_KEY] = ["serviceB", "serviceC"];
-        public static [STATIC_INJECT_LIFETIME] = Lifetime.Singleton;
+        public static [STATIC_INJECTIONS] = ["serviceB", "serviceC"];
+        public static [STATIC_INJECTION_LIFETIME] = Lifetime.Singleton;
       }
       class ServiceB implements StaticInjectable<typeof ServiceB> {
         constructor(
           public serviceA: ServiceA,
           public serviceD: ServiceD,
         ) {}
-        public static [STATIC_INJECT_KEY] = ["serviceA", "serviceD"];
-        public static [STATIC_INJECT_LIFETIME] = Lifetime.Singleton;
+        public static [STATIC_INJECTIONS] = ["serviceA", "serviceD"];
+        public static [STATIC_INJECTION_LIFETIME] = Lifetime.Singleton;
       }
       class ServiceC implements StaticInjectable<typeof ServiceC> {
         constructor(
           public serviceB: ServiceB,
           public serviceD: ServiceD,
         ) {}
-        public static [STATIC_INJECT_KEY] = ["serviceB", "serviceD"];
-        public static [STATIC_INJECT_LIFETIME] = Lifetime.Singleton;
+        public static [STATIC_INJECTIONS] = ["serviceB", "serviceD"];
+        public static [STATIC_INJECTION_LIFETIME] = Lifetime.Singleton;
       }
       class ServiceD implements StaticInjectable<typeof ServiceD> {
         constructor(
           public serviceA: ServiceA,
           public serviceC: ServiceC,
         ) {}
-        public static [STATIC_INJECT_KEY] = ["serviceA", "serviceC"];
-        public static [STATIC_INJECT_LIFETIME] = Lifetime.Singleton;
+        public static [STATIC_INJECTIONS] = ["serviceA", "serviceC"];
+        public static [STATIC_INJECTION_LIFETIME] = Lifetime.Singleton;
       }
 
       test("circular dependency resolution simple case", () => {
@@ -52,14 +52,14 @@ describe("Averix_DI ", () => {
         };
         class TestClass2 implements StaticInjectable<typeof TestClass2> {
           constructor(public test: TestClass) {}
-          public static [STATIC_INJECT_KEY] = ["factoryTest"];
-          public static [STATIC_INJECT_LIFETIME] = Lifetime.Singleton;
+          public static [STATIC_INJECTIONS] = ["factoryTest"];
+          public static [STATIC_INJECTION_LIFETIME] = Lifetime.Singleton;
         }
         class TestClass implements StaticInjectable<typeof TestClass> {
           public propertyA = "test";
           constructor(public test2: TestClass2) {}
-          public static [STATIC_INJECT_KEY] = ["factoryTest2"];
-          public static [STATIC_INJECT_LIFETIME] = Lifetime.Singleton;
+          public static [STATIC_INJECTIONS] = ["factoryTest2"];
+          public static [STATIC_INJECTION_LIFETIME] = Lifetime.Singleton;
         }
         container.register("factoryTest", { useFactory: factoryTest });
         container.register("factoryTest2", { useFactory: factoryTest2 });

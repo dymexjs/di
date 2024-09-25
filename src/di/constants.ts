@@ -1,2 +1,2 @@
-export const STATIC_INJECT_KEY = Symbol("STATIC_INJECT_KEY");
-export const STATIC_INJECT_LIFETIME = Symbol("STATIC_INJECT_LIFETIME");
+export const STATIC_INJECTIONS: unique symbol = Symbol("STATIC_INJECTIONS");
+export const STATIC_INJECTION_LIFETIME: unique symbol = Symbol("STATIC_INJECTION_LIFETIME");

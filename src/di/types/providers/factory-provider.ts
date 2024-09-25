@@ -1,10 +1,17 @@
 import { IContainer } from "../container.interface";
 import { Provider } from "./provider.type";
 
+export type FactoryFunction<T> = (container: IContainer) => T | Promise<T>;
+
 export interface FactoryProvider<T> {
-  useFactory: (container: IContainer) => T;
+  useFactory: FactoryFunction<T>;
 }
 
 export function isFactoryProvider<T>(provider: Provider<T>): provider is FactoryProvider<T> {
-  return !!(provider as FactoryProvider<T>).useFactory;
+  try {
+    return "useFactory" in provider;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (_) {
+    return false;
+  }
 }

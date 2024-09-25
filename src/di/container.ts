@@ -2,13 +2,13 @@ import { TokenNotFoundError } from "./exceptions/TokenNotFoundError";
 import { ScopeContext } from "./scope-context";
 import { ValueProvider } from "./types/providers/value-provider";
 import { ClassProvider, isClassProvider } from "./types/providers/class-provider";
-import { FactoryProvider } from "./types/providers/factory-provider";
+import { FactoryFunction, FactoryProvider } from "./types/providers/factory-provider";
 import { getProviderType, isProvider, Provider, ProvidersType } from "./types/providers/provider.type";
 import { Lifetime, Registration, RegistrationOptions } from "./types/registration.interface";
 import { InjectionToken, isNormalToken } from "./types/injection-token.type";
 import { ConstructorType, isConstructorType } from "./types/constructor.type";
 import { IContainer } from "./types/container.interface";
-import { STATIC_INJECT_KEY, STATIC_INJECT_LIFETIME } from "./constants";
+import { STATIC_INJECTIONS, STATIC_INJECTION_LIFETIME } from "./constants";
 import { UndefinedScopeError } from "./exceptions/UndefinedScopeError";
 import { isTokenProvider, TokenProvider } from "./types/providers/token-provider";
 import { TokenRegistrationCycleError } from "./exceptions/TokenRegistrationCycleError";
@@ -109,6 +109,8 @@ export class Container implements IContainer {
     this.#_scopes.delete(scope);
   }
 
+  //#region Register
+
   /**
    * Registers a provider in the container.
    * @param token The token to register the provider with.
@@ -135,15 +137,15 @@ export class Container implements IContainer {
       if (
         typeof options === "undefined" &&
         // eslint-disable-next-line security/detect-object-injection
-        typeof ((service as ClassProvider<T>).useClass as StaticInjectable)[STATIC_INJECT_LIFETIME] !== "undefined"
+        typeof ((service as ClassProvider<T>).useClass as StaticInjectable)[STATIC_INJECTION_LIFETIME] !== "undefined"
       ) {
         // eslint-disable-next-line security/detect-object-injection
-        opt.lifetime = ((service as ClassProvider<T>).useClass as StaticInjectable)[STATIC_INJECT_LIFETIME];
+        opt.lifetime = ((service as ClassProvider<T>).useClass as StaticInjectable)[STATIC_INJECTION_LIFETIME];
       }
       // eslint-disable-next-line security/detect-object-injection
-      if (typeof ((service as ClassProvider<T>).useClass as StaticInjectable)[STATIC_INJECT_KEY] !== "undefined") {
+      if (typeof ((service as ClassProvider<T>).useClass as StaticInjectable)[STATIC_INJECTIONS] !== "undefined") {
         // eslint-disable-next-line security/detect-object-injection
-        injections = ((service as ClassProvider<T>).useClass as StaticInjectable)[STATIC_INJECT_KEY];
+        injections = ((service as ClassProvider<T>).useClass as StaticInjectable)[STATIC_INJECTIONS];
       }
     }
 
@@ -153,6 +155,17 @@ export class Container implements IContainer {
       options: opt,
       injections,
     });
+  }
+
+  /**
+   * Registers a factory function with the specified token in the container.
+   * The factory function will be called each time the token is resolved.
+   * @param token The token to register the factory with.
+   * @param factory The factory function to register.
+   * @returns The container used for the registration.
+   */
+  registerFactory<T>(token: InjectionToken<T>, factory: FactoryFunction<T>): IContainer {
+    return this.register(token, { useFactory: factory });
   }
 
   /**
@@ -185,6 +198,35 @@ export class Container implements IContainer {
   }
 
   /**
+   * Registers a class as a scoped in the container.
+   * @param token The token to register the class with.
+   * @param target The class to register.
+   * @returns The container used for the registration.
+   */
+  registerScoped<T>(token: InjectionToken<T>, target: ConstructorType<T> | ClassProvider<T>): IContainer {
+    return this.register(token, target, { lifetime: Lifetime.Scoped });
+  }
+
+  /**
+   * Registers a class as a singleton in the container.
+   * @param token The token to register the class with.
+   * @param target The class to register.
+   * @returns The container used for the registration.
+   */
+  registerSingleton<T>(token: InjectionToken<T>, target: ConstructorType<T> | ClassProvider<T>): IContainer {
+    return this.register(token, target, { lifetime: Lifetime.Singleton });
+  }
+  /**
+   * Registers a class as a transient in the container.
+   * @param token The token to register the class with.
+   * @param target The class to register.
+   * @returns The container used for the registration.
+   */
+  registerTransient<T>(token: InjectionToken<T>, target: ConstructorType<T> | ClassProvider<T>): IContainer {
+    return this.register(token, target, { lifetime: Lifetime.Transient });
+  }
+
+  /**
    * Registers a token to redirect to another token, 'to' must exist before registration
    * @param from The token to be registered
    * @param to The token to where the from token will redirect to
@@ -207,6 +249,18 @@ export class Container implements IContainer {
     }
     // If 'to' is a constructor, register 'from' with a new ClassProvider
     return this.register(from, { useClass: to as ConstructorType<unknown> });
+  }
+
+  /**
+   * Registers a value with the specified token in the container.
+   * This registration is a singleton, meaning that the same value
+   * will be returned each time the token is resolved.
+   * @param token The token to register the value with.
+   * @param value The value to register.
+   * @returns The container used for the registration.
+   */
+  registerValue<T>(token: InjectionToken<T>, value: T): IContainer {
+    return this.register(token, { useValue: value });
   }
 
   /**
@@ -237,6 +291,8 @@ export class Container implements IContainer {
     return this;
   }
 
+  //#endregion Register
+
   /**
    * Resets the container by clearing all registrations and disposing all scopes.
    * This method is useful for testing, as it allows you to clear out all registrations
@@ -252,6 +308,8 @@ export class Container implements IContainer {
     // We use the [Symbol.asyncDispose] method to ensure that all registrations are disposed of, even if one of them throws an error
     await this.#_services[Symbol.asyncDispose]();
   }
+
+  //#region Resolve
 
   /**
    * Resolves the specified token to an instance.
@@ -436,6 +494,8 @@ export class Container implements IContainer {
     // Create an instance of the class with the resolved arguments and the arguments passed by the user
     return this.createInstance<T>((registration.provider as ClassProvider<T>).useClass, args.concat(resolvedArgs));
   }
+
+  //#endregion Resolve
 
   /**
    * Creates an array of arguments to pass to the constructor of the implementation of the specified registration.
@@ -657,10 +717,10 @@ export class Container implements IContainer {
    */
   private resolveConstructor<T>(token: ConstructorType<T>, scope?: ScopeContext): T {
     //Get the lifetime of the token. If not specified, the lifetime is Transient.
-    // eslint-disable-next-line security/detect-object-injection
-    const lifetime: Lifetime = (token as StaticInjectable)[STATIC_INJECT_LIFETIME] ?? Lifetime.Transient;
-    // eslint-disable-next-line security/detect-object-injection
-    const injections = (token as StaticInjectable)[STATIC_INJECT_KEY] ?? [];
+    // eslint-disable-next-line security/detect-object-injection, @typescript-eslint/no-explicit-any
+    const lifetime: Lifetime = (token as StaticInjectable<any>)[STATIC_INJECTION_LIFETIME] ?? Lifetime.Transient;
+    // eslint-disable-next-line security/detect-object-injection, @typescript-eslint/no-explicit-any
+    const injections = (token as StaticInjectable<any>)[STATIC_INJECTIONS] ?? [];
     const args = this.createArgs({ injections } as Registration, scope);
 
     const instance = this.createInstance(token, args);
@@ -697,9 +757,9 @@ export class Container implements IContainer {
   private async resolveConstructorAsync<T>(token: ConstructorType<T>, scope?: ScopeContext): Promise<T> {
     // Get the lifetime of the token. If not specified, the lifetime is Transient.
     // eslint-disable-next-line security/detect-object-injection
-    const lifetime: Lifetime = (token as StaticInjectable)[STATIC_INJECT_LIFETIME] ?? Lifetime.Transient;
+    const lifetime: Lifetime = (token as StaticInjectable)[STATIC_INJECTION_LIFETIME] ?? Lifetime.Transient;
     // eslint-disable-next-line security/detect-object-injection
-    const injections = (token as StaticInjectable)[STATIC_INJECT_KEY] ?? [];
+    const injections = (token as StaticInjectable)[STATIC_INJECTIONS] ?? [];
     const args = await this.createArgsAsync({ injections } as Registration, scope);
 
     const instance = this.createInstance(token, args);

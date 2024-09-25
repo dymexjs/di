@@ -121,7 +121,7 @@ describe("Averix_DI", () => {
               constructor(
                 public hello: string,
                 public num: number,
-                public a: TestA,
+                public a?: TestA,
               ) {}
             }
             const testB = await container.resolveWithArgsAsync(TestB, ["test", 1]);

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test } from "@jest/globals";
 import { container } from "../../../src/di/container";
 import { Lifetime } from "../../../src/di/types/registration.interface";
-import { STATIC_INJECT_LIFETIME } from "../../../src/di/constants";
+import { STATIC_INJECTION_LIFETIME } from "../../../src/di/constants";
 import { UndefinedScopeError } from "../../../src/di/exceptions/UndefinedScopeError";
 import { ScopeContext } from "../../../src/di/scope-context";
 import { Scoped } from "../../../src/di/decorators";
@@ -51,7 +51,7 @@ describe("Averix_DI", () => {
       describe("other", () => {
         test("register constructor in scope", async () => {
           class Test {
-            static [STATIC_INJECT_LIFETIME] = Lifetime.Scoped;
+            static [STATIC_INJECTION_LIFETIME] = Lifetime.Scoped;
           }
           const scope = container.createScope();
           const test = await container.resolveAsync(Test, scope);
@@ -59,7 +59,7 @@ describe("Averix_DI", () => {
         });
         test("throw register constructor without scope", async () => {
           class Test {
-            static [STATIC_INJECT_LIFETIME] = Lifetime.Scoped;
+            static [STATIC_INJECTION_LIFETIME] = Lifetime.Scoped;
           }
           expect(container.resolveAsync(Test)).rejects.toThrow(UndefinedScopeError);
         });

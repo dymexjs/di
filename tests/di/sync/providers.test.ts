@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, jest, test } from "@jest/globals";
 import { container } from "../../../src/di/container";
 import { Lifetime } from "../../../src/di/types/registration.interface";
 import { UndefinedScopeError } from "../../../src/di/exceptions/UndefinedScopeError";
-import { STATIC_INJECT_LIFETIME } from "../../../src/di/constants";
+import { STATIC_INJECTION_LIFETIME } from "../../../src/di/constants";
 
 describe("Averix_DI ", () => {
   beforeEach(async () => container.reset());
@@ -152,7 +152,7 @@ describe("Averix_DI ", () => {
         test("constructor token provider", () => {
           class TestClass {
             propertyA = "test";
-            public static [STATIC_INJECT_LIFETIME] = Lifetime.Singleton;
+            public static [STATIC_INJECTION_LIFETIME] = Lifetime.Singleton;
           }
           const value = container.resolve(TestClass);
           expect(value).toBeInstanceOf(TestClass);
