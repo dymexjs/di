@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, test } from "@jest/globals";
 import { container } from "../../../src/di/container";
-import { STATIC_INJECTIONS, STATIC_INJECTION_LIFETIME } from "../../../src/di/constants";
+import {
+  STATIC_INJECTIONS,
+  STATIC_INJECTION_LIFETIME,
+} from "../../../src/di/constants";
 import { Lifetime } from "../../../src/di/types/registration.interface";
 import { StaticInjectable } from "../../../src/di/types/static-inject.interface";
 
@@ -16,7 +19,11 @@ describe("Dymexjs_DI", () => {
           constructor(public test: TestClass) {}
           public static [STATIC_INJECTIONS] = ["test"];
         }
-        container.register("test", { useClass: TestClass }, { lifetime: Lifetime.Singleton });
+        container.register(
+          "test",
+          { useClass: TestClass },
+          { lifetime: Lifetime.Singleton },
+        );
         const test2 = container.resolve(TestClass2);
         const test = container.resolve<TestClass>("test");
         expect(test2).toBeInstanceOf(TestClass2);

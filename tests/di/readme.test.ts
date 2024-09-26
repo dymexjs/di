@@ -2,7 +2,10 @@ import { beforeEach, describe, expect, test } from "@jest/globals";
 import { container } from "../../src/di/container";
 import { Scoped, Singleton } from "../../src/di/decorators";
 import { StaticInjectable } from "../../src/di/types/static-inject.interface";
-import { STATIC_INJECTION_LIFETIME, STATIC_INJECTIONS } from "../../src/di/constants";
+import {
+  STATIC_INJECTION_LIFETIME,
+  STATIC_INJECTIONS,
+} from "../../src/di/constants";
 import { Lifetime } from "../../src/di/types/registration.interface";
 import { UndefinedScopeError } from "../../src/di/exceptions/UndefinedScopeError";
 import { Token } from "../../src/di/types/injection-token.type";

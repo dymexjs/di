@@ -31,7 +31,8 @@ describe("Dymexjs_DI ", () => {
           class Test {}
           container.register(Test, { useClass: Test });
           container.register("array", {
-            useFactory: async (cont): Promise<Array<Test>> => Promise.resolve([await cont.resolve(Test)]),
+            useFactory: async (cont): Promise<Array<Test>> =>
+              Promise.resolve([await cont.resolve(Test)]),
           });
           const result = await container.resolveAsync<Array<Test>>("array");
           expect(result).toBeInstanceOf(Array);
@@ -123,7 +124,9 @@ describe("Dymexjs_DI ", () => {
           class TestClass {
             public propertyA = "test";
           }
-          container.register(TestClass, TestClass, { lifetime: Lifetime.Singleton });
+          container.register(TestClass, TestClass, {
+            lifetime: Lifetime.Singleton,
+          });
           const value = await container.resolveAsync(TestClass);
           expect(value).toBeInstanceOf(TestClass);
           expect(value.propertyA).toBe("test");
@@ -136,7 +139,9 @@ describe("Dymexjs_DI ", () => {
           class TestClass {
             public propertyA = "test";
           }
-          container.register(TestClass, TestClass, { lifetime: Lifetime.Transient });
+          container.register(TestClass, TestClass, {
+            lifetime: Lifetime.Transient,
+          });
           const value = await container.resolveAsync(TestClass);
           expect(value).toBeInstanceOf(TestClass);
           expect(value.propertyA).toBe("test");
@@ -148,8 +153,14 @@ describe("Dymexjs_DI ", () => {
 
         test("should throw an error when trying to instanciate a scoped object without a scope", async () => {
           class TestClass {}
-          container.register("test", { useClass: TestClass }, { lifetime: Lifetime.Scoped });
-          expect(container.resolveAsync<TestClass>("test")).rejects.toThrow(UndefinedScopeError);
+          container.register(
+            "test",
+            { useClass: TestClass },
+            { lifetime: Lifetime.Scoped },
+          );
+          expect(container.resolveAsync<TestClass>("test")).rejects.toThrow(
+            UndefinedScopeError,
+          );
         });
       });
       describe("Token Provider", () => {

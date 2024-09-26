@@ -1,6 +1,11 @@
 import { beforeEach, describe, expect, test } from "@jest/globals";
 import { InvalidDecoratorError } from "../../src/di/exceptions/InvalidDecoratorError";
-import { AutoInjectable, Scoped, Singleton, Transient } from "../../src/di/decorators";
+import {
+  AutoInjectable,
+  Scoped,
+  Singleton,
+  Transient,
+} from "../../src/di/decorators";
 import { ServiceMap } from "../../src/di/service-map";
 import { Registration } from "../../src/di/types/registration.interface";
 import { container } from "../../src/di/container";
@@ -87,7 +92,10 @@ describe("Dymexjs_DI ", () => {
         });
         test("should setAll registrations to one key an return them", () => {
           serviceMap.setAll("anyKey", [registration, registration2]);
-          expect(serviceMap.getAll("anyKey")).toEqual([registration, registration2]);
+          expect(serviceMap.getAll("anyKey")).toEqual([
+            registration,
+            registration2,
+          ]);
           expect(serviceMap.getAll("anyKey")).toHaveLength(2);
           expect(serviceMap.getAll("anyKey")[0].providerType).toBe(0);
           expect(serviceMap.getAll("anyKey")[1].providerType).toBe(1);
@@ -174,10 +182,14 @@ describe("Dymexjs_DI ", () => {
         expect(container.resolve("anyToken")).toBe(4);
       });
       test("registerType should throw when tokenProvider to not found", () => {
-        expect(() => container.registerType("anyKey", { useToken: "anyToken" })).toThrow(TokenNotFoundError);
+        expect(() =>
+          container.registerType("anyKey", { useToken: "anyToken" }),
+        ).toThrow(TokenNotFoundError);
       });
       test("removeRegistration should throw when token not found", () => {
-        expect(container.removeRegistration("anyKey")).rejects.toThrow(TokenNotFoundError);
+        expect(container.removeRegistration("anyKey")).rejects.toThrow(
+          TokenNotFoundError,
+        );
       });
     });
     describe("README", () => {

@@ -1,10 +1,17 @@
 import { beforeEach, describe, expect, test } from "@jest/globals";
 import { container } from "../../../src/di/container";
 import { StaticInjectable } from "../../../src/di/types/static-inject.interface";
-import { STATIC_INJECTIONS, STATIC_INJECTION_LIFETIME } from "../../../src/di/constants";
+import {
+  STATIC_INJECTIONS,
+  STATIC_INJECTION_LIFETIME,
+} from "../../../src/di/constants";
 import { Lifetime } from "../../../src/di/types/registration.interface";
 import { IContainer } from "../../../src/di/types/container.interface";
-import { createInterfaceId, Singleton, Transient } from "../../../src/di/decorators";
+import {
+  createInterfaceId,
+  Singleton,
+  Transient,
+} from "../../../src/di/decorators";
 
 describe("Dymexjs_DI ", () => {
   beforeEach(async () => await container.reset());
@@ -286,7 +293,11 @@ describe("Dymexjs_DI ", () => {
           expect(Object.keys(a)).toStrictEqual(["b"]);
           expect(Object.keys(b)).toStrictEqual(["a", "name", "prop"]);
           expect(Object.getOwnPropertyNames(a)).toStrictEqual(["b"]);
-          expect(Object.getOwnPropertyNames(b)).toStrictEqual(["a", "name", "prop"]);
+          expect(Object.getOwnPropertyNames(b)).toStrictEqual([
+            "a",
+            "name",
+            "prop",
+          ]);
         });
       });
       describe("Interface", () => {

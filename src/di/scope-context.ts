@@ -4,12 +4,19 @@ import { InjectionToken } from "./types/injection-token.type";
 import { Registration } from "./types/registration.interface";
 
 export class ScopeContext implements AsyncDisposable {
-  public readonly services: ServiceMap<InjectionToken, Registration> = new ServiceMap();
+  public readonly services: ServiceMap<InjectionToken, Registration> =
+    new ServiceMap();
 
   async [Symbol.asyncDispose]() {
     for (const registrations of this.services.values()) {
-      await Promise.all(registrations.filter((r) => isAsyncDisposable(r)).map((r) => r[Symbol.asyncDispose]()));
-      registrations.filter((r) => isDisposable(r)).map((r) => r[Symbol.dispose]());
+      await Promise.all(
+        registrations
+          .filter((r) => isAsyncDisposable(r))
+          .map((r) => r[Symbol.asyncDispose]()),
+      );
+      registrations
+        .filter((r) => isDisposable(r))
+        .map((r) => r[Symbol.dispose]());
     }
     this.services.clear();
   }

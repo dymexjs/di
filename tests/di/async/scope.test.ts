@@ -23,7 +23,9 @@ describe("Dymexjs_DI", () => {
             public propertyA = "test";
           }
           const scope = container.createScope();
-          container.register(TestClass, TestClass, { lifetime: Lifetime.Scoped });
+          container.register(TestClass, TestClass, {
+            lifetime: Lifetime.Scoped,
+          });
           const value = await container.resolveAsync(TestClass, scope);
           expect(value).toBeInstanceOf(TestClass);
           expect(value.propertyA).toBe("test");
@@ -37,7 +39,9 @@ describe("Dymexjs_DI", () => {
             public propertyA = "test";
           }
           const scope = container.createScope();
-          container.register(TestClass, TestClass, { lifetime: Lifetime.Scoped });
+          container.register(TestClass, TestClass, {
+            lifetime: Lifetime.Scoped,
+          });
           const value = await container.resolveAsync(TestClass, scope);
           expect(value).toBeInstanceOf(TestClass);
           expect(value.propertyA).toBe("test");
@@ -61,7 +65,9 @@ describe("Dymexjs_DI", () => {
           class Test {
             static [STATIC_INJECTION_LIFETIME] = Lifetime.Scoped;
           }
-          expect(container.resolveAsync(Test)).rejects.toThrow(UndefinedScopeError);
+          expect(container.resolveAsync(Test)).rejects.toThrow(
+            UndefinedScopeError,
+          );
         });
         test("register constructor in scope with decorator", async () => {
           @Scoped()
@@ -73,7 +79,9 @@ describe("Dymexjs_DI", () => {
         test("throw register constructor without scope with decorator", () => {
           @Scoped()
           class Test {}
-          expect(container.resolveAsync(Test)).rejects.toThrow(UndefinedScopeError);
+          expect(container.resolveAsync(Test)).rejects.toThrow(
+            UndefinedScopeError,
+          );
         });
       });
     });

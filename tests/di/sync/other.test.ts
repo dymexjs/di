@@ -32,7 +32,9 @@ describe("Dymexjs_DI ", () => {
       });
       describe("resolveAll", () => {
         test("fails to resolveAll unregistered dependency by name sync", () => {
-          expect(() => container.resolveAll("NotRegistered")).toThrow(TokenNotFoundError);
+          expect(() => container.resolveAll("NotRegistered")).toThrow(
+            TokenNotFoundError,
+          );
         });
         test("resolves an array of transient instances bound to a single interface", () => {
           interface FooInterface {
@@ -47,8 +49,12 @@ describe("Dymexjs_DI ", () => {
             public bar = "foo2";
           }
 
-          container.register<FooInterface>("FooInterface", { useClass: FooOne });
-          container.register<FooInterface>("FooInterface", { useClass: FooTwo });
+          container.register<FooInterface>("FooInterface", {
+            useClass: FooOne,
+          });
+          container.register<FooInterface>("FooInterface", {
+            useClass: FooTwo,
+          });
 
           const fooArray = container.resolveAll<FooInterface>("FooInterface");
           expect(Array.isArray(fooArray)).toBeTruthy();
@@ -93,7 +99,9 @@ describe("Dymexjs_DI ", () => {
           container.register("test", Test, { lifetime: Lifetime.Scoped });
           const childContainer = container.createChildContainer();
           const scope = childContainer.createScope();
-          expect(childContainer.resolve<Test>("test", scope).propertyA).toBe("test");
+          expect(childContainer.resolve<Test>("test", scope).propertyA).toBe(
+            "test",
+          );
         });
         test("child container resolves even when parent doesn't have registration", () => {
           // eslint-disable-next-line @typescript-eslint/no-empty-object-type
@@ -166,14 +174,18 @@ describe("Dymexjs_DI ", () => {
         });
 
         test("registerType() doesn't allow tokens to point to themselves", () => {
-          expect(() => container.registerType("Bar", "Bar")).toThrow(TokenRegistrationCycleError);
+          expect(() => container.registerType("Bar", "Bar")).toThrow(
+            TokenRegistrationCycleError,
+          );
         });
 
         test("registerType() doesn't allow registration cycles", () => {
           container.registerType("Bar", "Foo");
           container.registerType("Foo", "FooBar");
 
-          expect(() => container.registerType("FooBar", "Bar")).toThrow(TokenRegistrationCycleError);
+          expect(() => container.registerType("FooBar", "Bar")).toThrow(
+            TokenRegistrationCycleError,
+          );
         });
       });
     });

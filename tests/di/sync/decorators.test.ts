@@ -118,7 +118,9 @@ describe("Dymexjs_DI", () => {
           const a = container.resolve<ServiceA>(ServiceA, scope);
           expect(a).toBeInstanceOf(ServiceA);
           expect(b.serviceA).toBe(a);
-          expect(() => container.resolve<ServiceB>(ServiceB)).toThrow(UndefinedScopeError);
+          expect(() => container.resolve<ServiceB>(ServiceB)).toThrow(
+            UndefinedScopeError,
+          );
         });
       });
       describe("AutoInjectable", () => {

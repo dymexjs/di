@@ -1,6 +1,12 @@
 import { beforeEach, describe, expect, test } from "@jest/globals";
 import { container } from "../../../src/di/container";
-import { AutoInjectable, createInterfaceId, Scoped, Singleton, Transient } from "../../../src/di/decorators";
+import {
+  AutoInjectable,
+  createInterfaceId,
+  Scoped,
+  Singleton,
+  Transient,
+} from "../../../src/di/decorators";
 import { UndefinedScopeError } from "../../../src/di/exceptions/UndefinedScopeError";
 
 describe("Dymexjs_DI", () => {
@@ -109,7 +115,9 @@ describe("Dymexjs_DI", () => {
           const a = await container.resolveAsync(ServiceA, scope);
           expect(a).toBeInstanceOf(ServiceA);
           expect(b.serviceA).toBe(a);
-          expect(container.resolveAsync<ServiceB>(ServiceB)).rejects.toThrow(UndefinedScopeError);
+          expect(container.resolveAsync<ServiceB>(ServiceB)).rejects.toThrow(
+            UndefinedScopeError,
+          );
         });
       });
       describe("AutoInjectable", () => {
@@ -124,7 +132,10 @@ describe("Dymexjs_DI", () => {
                 public a?: TestA,
               ) {}
             }
-            const testB = await container.resolveWithArgsAsync(TestB, ["test", 1]);
+            const testB = await container.resolveWithArgsAsync(TestB, [
+              "test",
+              1,
+            ]);
             expect(testB).toBeInstanceOf(TestB);
             expect(testB.hello).toBe("test");
             expect(testB.num).toBe(1);
@@ -381,7 +392,9 @@ describe("Dymexjs_DI", () => {
         expect(a).toBeInstanceOf(ServiceA);
         expect(b.serviceA).toBe(a);
         expect(b.serviceA).toEqual(a);
-        expect(container.resolveAsync<SB>(SB)).rejects.toThrow(UndefinedScopeError);
+        expect(container.resolveAsync<SB>(SB)).rejects.toThrow(
+          UndefinedScopeError,
+        );
       });
     });
   });

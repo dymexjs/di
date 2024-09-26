@@ -20,7 +20,9 @@ describe("Dymexjs_DI", () => {
             public propertyA = "test";
           }
           const scope = container.createScope();
-          container.register(TestClass, TestClass, { lifetime: Lifetime.Scoped });
+          container.register(TestClass, TestClass, {
+            lifetime: Lifetime.Scoped,
+          });
           const value = container.resolve(TestClass, scope);
           expect(value).toBeInstanceOf(TestClass);
           expect(value.propertyA).toBe("test");
@@ -34,7 +36,9 @@ describe("Dymexjs_DI", () => {
             public propertyA = "test";
           }
           const scope = container.createScope();
-          container.register(TestClass, TestClass, { lifetime: Lifetime.Scoped });
+          container.register(TestClass, TestClass, {
+            lifetime: Lifetime.Scoped,
+          });
           const value = container.resolve(TestClass, scope);
           expect(value).toBeInstanceOf(TestClass);
           expect(value.propertyA).toBe("test");

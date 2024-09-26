@@ -10,7 +10,9 @@ describe("Dymexjs_DI ", () => {
     describe("other", () => {
       describe("register and resolve", () => {
         test("should throw an error when token not registered async", () => {
-          expect(container.resolveAsync("test")).rejects.toThrow(TokenNotFoundError);
+          expect(container.resolveAsync("test")).rejects.toThrow(
+            TokenNotFoundError,
+          );
         });
       });
       describe("asyncDispose", () => {
@@ -20,7 +22,9 @@ describe("Dymexjs_DI ", () => {
               await new Promise((resolve) => setTimeout(resolve, 100));
             }
           }
-          container.register("asyncDisposable", TestAsyncDisposable, { lifetime: Lifetime.Singleton });
+          container.register("asyncDisposable", TestAsyncDisposable, {
+            lifetime: Lifetime.Singleton,
+          });
           container.resolve("asyncDisposable");
           const startTime = Date.now();
           await container.clearInstances();
@@ -30,7 +34,9 @@ describe("Dymexjs_DI ", () => {
       });
       describe("resolveAll", () => {
         test("fails to resolveAll unregistered dependency by name sync", () => {
-          expect(container.resolveAllAsync("NotRegistered")).rejects.toThrow(TokenNotFoundError);
+          expect(container.resolveAllAsync("NotRegistered")).rejects.toThrow(
+            TokenNotFoundError,
+          );
         });
         test("resolves an array of transient instances bound to a single interface", async () => {
           interface FooInterface {
@@ -45,10 +51,15 @@ describe("Dymexjs_DI ", () => {
             public bar = "foo2";
           }
 
-          container.register<FooInterface>("FooInterface", { useClass: FooOne });
-          container.register<FooInterface>("FooInterface", { useClass: FooTwo });
+          container.register<FooInterface>("FooInterface", {
+            useClass: FooOne,
+          });
+          container.register<FooInterface>("FooInterface", {
+            useClass: FooTwo,
+          });
 
-          const fooArray = await container.resolveAllAsync<FooInterface>("FooInterface");
+          const fooArray =
+            await container.resolveAllAsync<FooInterface>("FooInterface");
           expect(Array.isArray(fooArray)).toBeTruthy();
           expect(fooArray[0]).toBeInstanceOf(FooOne);
           expect(fooArray[1]).toBeInstanceOf(FooTwo);
@@ -104,7 +115,9 @@ describe("Dymexjs_DI ", () => {
           const childContainer = container.createChildContainer();
           childContainer.register("test", { useValue: "test" });
           expect(childContainer.resolveAsync("test")).resolves.toBe("test");
-          expect(container.resolveAsync("test")).rejects.toThrow(TokenNotFoundError);
+          expect(container.resolveAsync("test")).rejects.toThrow(
+            TokenNotFoundError,
+          );
         });
         test("should resolve in parent container", () => {
           const childContainer = container.createChildContainer();
@@ -119,7 +132,9 @@ describe("Dymexjs_DI ", () => {
           container.register("test", Test, { lifetime: Lifetime.Scoped });
           const childContainer = container.createChildContainer();
           const scope = childContainer.createScope();
-          expect((await childContainer.resolveAsync<Test>("test", scope)).propertyA).toBe("test");
+          expect(
+            (await childContainer.resolveAsync<Test>("test", scope)).propertyA,
+          ).toBe("test");
         });
         test("child container resolves even when parent doesn't have registration", () => {
           // eslint-disable-next-line @typescript-eslint/no-empty-object-type
@@ -127,7 +142,9 @@ describe("Dymexjs_DI ", () => {
           class Foo implements IFoo {}
           const childContainer = container.createChildContainer();
           childContainer.register("IFoo", { useClass: Foo });
-          expect(childContainer.resolveAsync<Foo>("IFoo")).resolves.toBeInstanceOf(Foo);
+          expect(
+            childContainer.resolveAsync<Foo>("IFoo"),
+          ).resolves.toBeInstanceOf(Foo);
         });
         test("child container resolves using parent's registration when child container doesn't have registration", () => {
           // eslint-disable-next-line @typescript-eslint/no-empty-object-type
@@ -135,7 +152,9 @@ describe("Dymexjs_DI ", () => {
           class Foo implements IFoo {}
           container.register("IFoo", { useClass: Foo });
           const childContainer = container.createChildContainer();
-          expect(childContainer.resolveAsync<Foo>("IFoo")).resolves.toBeInstanceOf(Foo);
+          expect(
+            childContainer.resolveAsync<Foo>("IFoo"),
+          ).resolves.toBeInstanceOf(Foo);
         });
         test("child container resolves all even when parent doesn't have registration", async () => {
           // eslint-disable-next-line @typescript-eslint/no-empty-object-type
@@ -186,14 +205,22 @@ describe("Dymexjs_DI ", () => {
           expect(instances[0]).toBeInstanceOf(Test);
           expect(instances[1]).toBeInstanceOf(Test);
           expect(instances[0]).not.toBe(instances[1]);
-          await container.removeRegistration("test", (reg) => reg.options.lifetime === Lifetime.Transient);
+          await container.removeRegistration(
+            "test",
+            (reg) => reg.options.lifetime === Lifetime.Transient,
+          );
           const instances2 = container.resolveAll("test");
           expect(instances2).toBeInstanceOf(Array);
           expect(instances2).toHaveLength(1);
           expect(instances2[0]).toBeInstanceOf(Test);
           expect(instances2[0]).toBe(instances[0]);
-          await container.removeRegistration("test", (reg) => reg.options.lifetime === Lifetime.Singleton);
-          expect(() => container.resolveAll("test")).toThrow(TokenNotFoundError);
+          await container.removeRegistration(
+            "test",
+            (reg) => reg.options.lifetime === Lifetime.Singleton,
+          );
+          expect(() => container.resolveAll("test")).toThrow(
+            TokenNotFoundError,
+          );
         });
       });
       describe("registerType", () => {
@@ -209,7 +236,9 @@ describe("Dymexjs_DI ", () => {
           class Bar {}
           container.registerType("CoolName", Bar);
 
-          expect(container.resolveAsync<Bar>("CoolName")).resolves.toBeInstanceOf(Bar);
+          expect(
+            container.resolveAsync<Bar>("CoolName"),
+          ).resolves.toBeInstanceOf(Bar);
         });
       });
     });

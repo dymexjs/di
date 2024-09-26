@@ -112,7 +112,9 @@ describe("Dymexjs_DI ", () => {
           class TestClass {
             public propertyA = "test";
           }
-          container.register(TestClass, TestClass, { lifetime: Lifetime.Singleton });
+          container.register(TestClass, TestClass, {
+            lifetime: Lifetime.Singleton,
+          });
           const value = container.resolve(TestClass);
           expect(value).toBeInstanceOf(TestClass);
           expect(value.propertyA).toBe("test");
@@ -125,7 +127,9 @@ describe("Dymexjs_DI ", () => {
           class TestClass {
             public propertyA = "test";
           }
-          container.register(TestClass, TestClass, { lifetime: Lifetime.Transient });
+          container.register(TestClass, TestClass, {
+            lifetime: Lifetime.Transient,
+          });
           const value = container.resolve(TestClass);
           expect(value).toBeInstanceOf(TestClass);
           expect(value.propertyA).toBe("test");
@@ -137,8 +141,14 @@ describe("Dymexjs_DI ", () => {
 
         test("should throw an error when trying to instanciate a scoped object without a scope", () => {
           class TestClass {}
-          container.register("test", { useClass: TestClass }, { lifetime: Lifetime.Scoped });
-          expect(() => container.resolve<TestClass>("test")).toThrow(UndefinedScopeError);
+          container.register(
+            "test",
+            { useClass: TestClass },
+            { lifetime: Lifetime.Scoped },
+          );
+          expect(() => container.resolve<TestClass>("test")).toThrow(
+            UndefinedScopeError,
+          );
         });
       });
       describe("Token Provider", () => {

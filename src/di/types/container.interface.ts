@@ -72,7 +72,10 @@ export interface IContainer extends AsyncDisposable {
    * @param factory The factory function to register.
    * @returns The container used for the registration.
    */
-  registerFactory<T>(token: InjectionToken<T>, factory: FactoryFunction<T>): IContainer;
+  registerFactory<T>(
+    token: InjectionToken<T>,
+    factory: FactoryFunction<T>,
+  ): IContainer;
 
   /**
    * Registers an instance of a class with the specified token.
@@ -90,7 +93,10 @@ export interface IContainer extends AsyncDisposable {
    * @param registration The registration object
    * @return The container used for the registration
    */
-  registerRegistration<T>(token: InjectionToken<T>, registration: Registration): IContainer;
+  registerRegistration<T>(
+    token: InjectionToken<T>,
+    registration: Registration,
+  ): IContainer;
 
   /**
    * Registers a class as a scoped in the container.
@@ -98,7 +104,10 @@ export interface IContainer extends AsyncDisposable {
    * @param target The class to register.
    * @returns The container used for the registration.
    */
-  registerScoped<T>(token: InjectionToken<T>, target: ConstructorType<T> | ClassProvider<T>): IContainer;
+  registerScoped<T>(
+    token: InjectionToken<T>,
+    target: ConstructorType<T> | ClassProvider<T>,
+  ): IContainer;
 
   /**
    * Registers a class as a singleton in the container.
@@ -106,7 +115,10 @@ export interface IContainer extends AsyncDisposable {
    * @param target The class to register.
    * @returns The container used for the registration.
    */
-  registerSingleton<T>(token: InjectionToken<T>, target: ConstructorType<T> | ClassProvider<T>): IContainer;
+  registerSingleton<T>(
+    token: InjectionToken<T>,
+    target: ConstructorType<T> | ClassProvider<T>,
+  ): IContainer;
 
   /**
    * Registers a class as a transient in the container.
@@ -114,7 +126,10 @@ export interface IContainer extends AsyncDisposable {
    * @param target The class to register.
    * @returns The container used for the registration.
    */
-  registerTransient<T>(token: InjectionToken<T>, target: ConstructorType<T> | ClassProvider<T>): IContainer;
+  registerTransient<T>(
+    token: InjectionToken<T>,
+    target: ConstructorType<T> | ClassProvider<T>,
+  ): IContainer;
 
   /**
    * Registers a token to redirect to another token, 'to' must exist before registration
@@ -122,7 +137,10 @@ export interface IContainer extends AsyncDisposable {
    * @param to The token to where the from token will redirect to
    * @return The container used for the registration
    */
-  registerType<T>(from: InjectionToken<T>, to: InjectionToken<T> | TokenProvider<T>): IContainer;
+  registerType<T>(
+    from: InjectionToken<T>,
+    to: InjectionToken<T> | TokenProvider<T>,
+  ): IContainer;
 
   /**
    * Registers a value with the specified token in the container.
@@ -187,7 +205,10 @@ export interface IContainer extends AsyncDisposable {
    * @param scope Optional scope to resolve the token in.
    * @returns A promise that resolves with an array of resolved instances.
    */
-  resolveAllAsync<T>(token: InjectionToken<T>, scope?: ScopeContext): Promise<Array<T>>;
+  resolveAllAsync<T>(
+    token: InjectionToken<T>,
+    scope?: ScopeContext,
+  ): Promise<Array<T>>;
 
   /**
    * Resolves the specified token asynchronously.
@@ -210,7 +231,11 @@ export interface IContainer extends AsyncDisposable {
    * @param scope Optional scope to resolve the token in.
    * @returns An instance of the type.
    */
-  resolveWithArgs<T>(token: InjectionToken<T>, args?: Array<unknown>, scope?: ScopeContext): T;
+  resolveWithArgs<T>(
+    token: InjectionToken<T>,
+    args?: Array<unknown>,
+    scope?: ScopeContext,
+  ): T;
 
   /**
    * Resolves the specified token with the given arguments asynchronously.
@@ -221,7 +246,11 @@ export interface IContainer extends AsyncDisposable {
    * @param scope Optional scope to resolve the token in.
    * @returns A promise that resolves with an instance of the type.
    */
-  resolveWithArgsAsync<T>(token: InjectionToken<T>, args?: Array<unknown>, scope?: ScopeContext): Promise<T>;
+  resolveWithArgsAsync<T>(
+    token: InjectionToken<T>,
+    args?: Array<unknown>,
+    scope?: ScopeContext,
+  ): Promise<T>;
 
   //#endregion Resolve
 }
