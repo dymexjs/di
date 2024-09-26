@@ -161,7 +161,7 @@ Cyclic dependencies are a problem, and should be avoided, but sometimes that's n
 
 ## Documentation
 
-The detailed usage guide and API documentation for the project can be found in the `./docs` folder of the repository
+The detailed usage guide and API documentation for the project can be found in the [./docs](docs/01-getting-started.md) folder of the repository
 
 ## License
 
