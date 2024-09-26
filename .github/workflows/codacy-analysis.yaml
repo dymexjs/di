@@ -47,14 +47,13 @@ jobs:
           cache: npm
       - run: npm install --force
       - run: npm run test:coverage
-      - run: ls -al ./coverage
-      - uses: actions/checkout@v2
+
       - name: Run codacy-coverage-reporter
         uses: codacy/codacy-coverage-reporter-action@89d6c85cfafaec52c72b6c5e8b2878d33104c699
         with:
           #project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
           # or
           api-token: ${{ secrets.CODACY_API_TOKEN }}
-          coverage-reports: coverage/lcov.info
+          coverage-reports: ./coverage/lcov.info
           # or a comma-separated list for multiple reports
           # coverage-reports: <PATH_TO_REPORT>, <PATH_TO_REPORT>
