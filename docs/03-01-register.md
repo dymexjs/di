@@ -50,7 +50,7 @@ registerFactory<T>(token: InjectionToken<T>, factory: FactoryFunction<T>): ICont
 
 ## registerInstance
 
-Helper to register an instance in the container, the instance will be registered as a [Value Provider](#value-provider)
+Helper to register an instance in the container, the instance will be registered as a [Value Provider](03-container.md#value-provider)
 
 ```typescript
 registerInstance<T>(token: InjectionToken<T>, instance: T): IContainer;
@@ -58,7 +58,7 @@ registerInstance<T>(token: InjectionToken<T>, instance: T): IContainer;
 
 ## registerType
 
-Helper to register a redirect or alias in the container see [Token Provider](#token-provider)
+Helper to register a redirect or alias in the container see [Token Provider](03-container.md#token-provider)
 
 ```typescript
 registerType<T>(from: InjectionToken<T>, to: InjectionToken<T> | TokenProvider<T>): IContainer;
@@ -66,7 +66,7 @@ registerType<T>(from: InjectionToken<T>, to: InjectionToken<T> | TokenProvider<T
 
 ## registerValue
 
-Helper to register a value in the container, see [Value Provider](#value-provider)
+Helper to register a value in the container, see [Value Provider](03-container.md#value-provider)
 
 ```typescript
 registerValue<T>(token: InjectionToken<T>, value: T): IContainer;

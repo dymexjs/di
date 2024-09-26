@@ -4,8 +4,11 @@ Process to resolve a token into an instance, resolving all the necessary depende
 
 - [Resolution](#resolution)
   - [resolve](#resolve)
+    - [Example](#example)
   - [resolveAll](#resolveall)
+    - [Example](#example-1)
   - [resolveWithArgs](#resolvewithargs)
+    - [Example](#example-2)
 
 ## resolve
 
@@ -21,7 +24,7 @@ or
  resolveAsync<T>(token: InjectionToken<T>, scope?: ScopeContext): Promise<T>;
 ```
 
-**Example**
+### Example
 
 ```typescript
 const obj: TestClass = container.resolve(TestClass);
@@ -47,7 +50,7 @@ or
  resolveAllAsync<T>(token: InjectionToken<T>, scope?: ScopeContext): Promise<Array<T>>;
 ```
 
-**Example**
+### Example
 
 ```typescript
 const obj: TestClass[] = container.resolveAll(TestClass);
@@ -56,7 +59,8 @@ const obj: TestClass[] = container.resolveAll(TestClass);
 or
 
 ```typescript
-const obj: TestClass[] = await container.resolveAllAsync<TestClass>("testClass");
+const obj: TestClass[] =
+  await container.resolveAllAsync<TestClass>("testClass");
 ```
 
 ## resolveWithArgs
@@ -75,7 +79,7 @@ or
  resolveWithArgsAsync<T>(token: InjectionToken<T>, args?: Array<unknown>, scope?: ScopeContext): Promise<T>;
 ```
 
-**Example**
+### Example
 
 ```typescript
 class TestA {}

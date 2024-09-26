@@ -22,8 +22,8 @@ Dymexjs/DI performs [Constructor Injection](https://en.wikipedia.org/wiki/Depend
     - [Child Containers and Scopes](#child-containers-and-scopes)
     - [Cleaning](#cleaning)
   - [Circular Dependencies](#circular-dependencies)
-- [Documentation](#documentation)
-- [License](#license)
+  - [Documentation](#documentation)
+  - [License](#license)
 
 <!-- /TOC -->
 
@@ -67,7 +67,7 @@ console.log(testInstance.testService.printMessage());
 
 ### Static Injection (without decorators)
 
-**[STATIC_INJECTION_LIFETIME] and [STATIC_INJECTIONS]**
+**`STATIC_INJECTION_LIFETIME` and `STATIC_INJECTIONS`**
 
 ```typescript
 import {
@@ -159,11 +159,11 @@ It's also possible to [clean](docs/03-04-cleaning.md#cleaning) the instances of 
 
 Cyclic dependencies are a problem, and should be avoided, but sometimes that's not possible, to solve this problem the container resolves an already existing instance in resolution by creating a proxy of the instance that will later be resolved into the instance.
 
-# Documentation
+## Documentation
 
 The detailed usage guide and API documentation for the project can be found in the `./docs` folder of the repository
 
-# License
+## License
 
 The MIT License (MIT)
 

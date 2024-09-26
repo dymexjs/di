@@ -4,16 +4,20 @@
 
 - [Decorators](#decorators)
   - [@Singleton](#singleton)
+    - [Example](#example)
   - [@Transient](#transient)
   - [@Scoped](#scoped)
+    - [Example](#example-1)
   - [@AutoInjectable](#autoinjectable)
+    - [Example](#example-2)
   - [@Inject](#inject)
+    - [Example](#example-3)
     - [Inject into a class field](#inject-into-a-class-field)
     - [Inject into a class accessor](#inject-into-a-class-accessor)
     - [Inject into a class method](#inject-into-a-class-method)
     - [Inject into a class getter](#inject-into-a-class-getter)
   - [@InjectAll](#injectall)
-    - [Inject into a class field](#inject-into-a-class-field-1)
+    - [Inject all instances into a class field](#inject-all-instances-into-a-class-field)
 
 <!-- /TOC -->
 
@@ -22,16 +26,17 @@
 Class decorator factory that registers the class as a `singleton` in the container.
 
 ```typescript
-function Singleton(id?: InjectionToken | Array<InjectionToken>, dependencies?: Array<InjectionToken>): ClassDecorator;
+function Singleton(
+  id?: InjectionToken | Array<InjectionToken>,
+  dependencies?: Array<InjectionToken>,
+): ClassDecorator;
 ```
 
-```
-@param id Optional token or array of dependencies to inject into the class.
-@param dependencies Optional array of dependencies to inject into the class.
-@returns A class decorator that registers the class as a singleton in the container.
-```
+> @param id Optional token or array of dependencies to inject into the class.  
+> @param dependencies Optional array of dependencies to inject into the class.  
+> @returns A class decorator that registers the class as a singleton in the container.
 
-**Example**
+### Example
 
 ```typescript
 @Singleton()
@@ -70,30 +75,32 @@ const b = container.resolve<ServiceB>(ServiceB);
 Class decorator factory that registers the class as transient within the container.
 
 ```typescript
-function Transient(id?: InjectionToken | Array<InjectionToken>, dependencies?: Array<InjectionToken>): ClassDecorator;
+function Transient(
+  id?: InjectionToken | Array<InjectionToken>,
+  dependencies?: Array<InjectionToken>,
+): ClassDecorator;
 ```
 
-```
-@param id Optional token or array of dependencies to inject into the class.
-@param dependencies Optional array of dependencies to inject into the class.
-@returns A class decorator that registers the class as a transient in the container.
-```
+> @param id Optional token or array of dependencies to inject into the class.  
+> @param dependencies Optional array of dependencies to inject into the class.  
+> @returns A class decorator that registers the class as a transient in the container.
 
 ## @Scoped
 
 Class decorator factory that registers the class as scoped within the container.
 
 ```typescript
-function Scoped(id?: InjectionToken | Array<InjectionToken>, dependencies?: Array<InjectionToken>): ClassDecorator;
+function Scoped(
+  id?: InjectionToken | Array<InjectionToken>,
+  dependencies?: Array<InjectionToken>,
+): ClassDecorator;
 ```
 
-```
-@param id Optional token or array of dependencies to inject into the class.
-@param dependencies Optional array of dependencies to inject into the class.
-@returns A class decorator that registers the class as a scoped in the container.
-```
+> @param id Optional token or array of dependencies to inject into the class.  
+> @param dependencies Optional array of dependencies to inject into the class.  
+> @returns A class decorator that registers the class as a scoped in the container.
 
-**Example**
+### Example
 
 _Wrong way:_
 
@@ -121,15 +128,16 @@ type IAutoInjectableOptions = {
   all?: Array<InjectionToken | InterfaceId>;
 };
 
-function AutoInjectable(dependencies?: Array<InjectionToken>, options?: IAutoInjectableOptions);
+function AutoInjectable(
+  dependencies?: Array<InjectionToken>,
+  options?: IAutoInjectableOptions,
+);
 ```
 
-```
-@param dependencies Optional array of dependencies to inject into the class.
-@returns A class decorator factory that replaces the decorated class constructor with a parameterless constructor that will resolve the dependencies automatically
-```
+> @param dependencies Optional array of dependencies to inject into the class.  
+> @returns A class decorator factory that replaces the decorated class constructor with a parameterless constructor that will resolve the dependencies automatically
 
-**Example**
+### Example
 
 ```typescript
 class TestA {}
@@ -150,12 +158,10 @@ const testB = new TestB("test");
 function Inject(token: InjectionToken | Array<InjectionToken>);
 ```
 
-```
-@param token The token or array of tokens to inject.
-@returns A decorator function that injects the dependency.
-```
+> @param token The token or array of tokens to inject.  
+> @returns A decorator function that injects the dependency.
 
-**Example**
+### Example
 
 ### Inject into a class field
 
@@ -228,7 +234,7 @@ function InjectAll(token: InjectionToken | Array<InjectionToken>);
 
 Works like the [@Inject](#inject) decorator but will solve all the registrations of the token(s) and return array(s) of instance(s).
 
-### Inject into a class field
+### Inject all instances into a class field
 
 ```typescript
 class TestA {

@@ -5,7 +5,7 @@ Dymexjs/DI is a dependency injection library for Typescript/Javascript to help b
 <!-- TOC depthFrom:1 depthTo:3 -->
 
 - [Dymexjs/DI](#dymexjsdi)
-- [Getting Started](#getting-started)
+  - [Getting Started](#getting-started)
   - [Instalation](#instalation)
   - [Basic Usage](#basic-usage)
     - [Decorators](#decorators)
@@ -15,7 +15,7 @@ Dymexjs/DI is a dependency injection library for Typescript/Javascript to help b
 
 <!-- /TOC -->
 
-# Getting Started
+## Getting Started
 
 Dymexjs/DI performs [Constructor Injection](https://en.wikipedia.org/wiki/Dependency_injection#Constructor_injection) on the constructors of decorated classes or classes with the properties `STATIC_INJECTIONS` and `STATIC_INJECTION_LIFETIME`, but also allows for injection into class fields, accessor's, methods and getter's.
 
@@ -59,11 +59,16 @@ console.log(testInstance.testService.printMessage());
 
 ### Static Injection (without decorators)
 
-- [STATIC_INJECTION_LIFETIME]
-- [STATIC_INJECTIONS]
+- `STATIC_INJECTION_LIFETIME`
+- `STATIC_INJECTIONS`
 
 ```typescript
-import { container, STATIC_INJECTIONS, STATIC_INJECTION_LIFETIME, StaticInjectable } from "@dymexjs/di";
+import {
+  container,
+  STATIC_INJECTIONS,
+  STATIC_INJECTION_LIFETIME,
+  StaticInjectable,
+} from "@dymexjs/di";
 
 class TestClass implements StaticInjectable<typeof TestClass> {
   public propertyA = "test";
@@ -84,7 +89,12 @@ This snippet creates (resolves to) one instance of `TestClass` that will be a `S
 Instead of using `container.register` it's also possible to use the `TestClass` directly:
 
 ```typescript
-import { container, STATIC_INJECTIONS, STATIC_INJECTION_LIFETIME, StaticInjectable } from "@dymexjs/di";
+import {
+  container,
+  STATIC_INJECTIONS,
+  STATIC_INJECTION_LIFETIME,
+  StaticInjectable,
+} from "@dymexjs/di";
 
 class TestClass implements StaticInjectable<typeof TestClass> {
   public propertyA = "test";
