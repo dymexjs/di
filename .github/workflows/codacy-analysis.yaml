@@ -20,7 +20,7 @@ jobs:
         uses: actions/checkout@main
 
       - name: Run Codacy Analysis CLI
-        uses: codacy/codacy-analysis-cli-action@97bf5df
+        uses: codacy/codacy-analysis-cli-action@97bf5df3c09e75f5bcd72695998f96ebd701846e
         with:
           output: results.sarif
           format: sarif
@@ -50,7 +50,7 @@ jobs:
       - run: ls -al ./coverage
       - uses: actions/checkout@v2
       - name: Run codacy-coverage-reporter
-        uses: codacy/codacy-coverage-reporter-action@89d6c85
+        uses: codacy/codacy-coverage-reporter-action@89d6c85cfafaec52c72b6c5e8b2878d33104c699
         with:
           #project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
           # or
