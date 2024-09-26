@@ -50,7 +50,7 @@ or
  resolveAllAsync<T>(token: InjectionToken<T>, scope?: ScopeContext): Promise<Array<T>>;
 ```
 
-### Example
+### Example<!-- markdownlint-disable-line no-duplicate-heading -->
 
 ```typescript
 const obj: TestClass[] = container.resolveAll(TestClass);
@@ -79,7 +79,7 @@ or
  resolveWithArgsAsync<T>(token: InjectionToken<T>, args?: Array<unknown>, scope?: ScopeContext): Promise<T>;
 ```
 
-### Example
+### Example<!-- markdownlint-disable-line no-duplicate-heading -->
 
 ```typescript
 class TestA {}

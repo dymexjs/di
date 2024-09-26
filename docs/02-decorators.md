@@ -1,3 +1,5 @@
+<!-- markdownlint-disable-next-line no-duplicate-heading -->
+
 # Decorators
 
 <!-- TOC depthFrom:1 depthTo:3 -->
@@ -100,7 +102,7 @@ function Scoped(
 > @param dependencies Optional array of dependencies to inject into the class.  
 > @returns A class decorator that registers the class as a scoped in the container.
 
-### Example
+### Example<!-- markdownlint-disable-line no-duplicate-heading -->
 
 _Wrong way:_
 
@@ -137,7 +139,7 @@ function AutoInjectable(
 > @param dependencies Optional array of dependencies to inject into the class.  
 > @returns A class decorator factory that replaces the decorated class constructor with a parameterless constructor that will resolve the dependencies automatically
 
-### Example
+### Example<!-- markdownlint-disable-line no-duplicate-heading -->
 
 ```typescript
 class TestA {}
@@ -161,7 +163,7 @@ function Inject(token: InjectionToken | Array<InjectionToken>);
 > @param token The token or array of tokens to inject.  
 > @returns A decorator function that injects the dependency.
 
-### Example
+### Example<!-- markdownlint-disable-line no-duplicate-heading -->
 
 ### Inject into a class field
 
