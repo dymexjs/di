@@ -22,7 +22,7 @@
     "test:watch": "jest --watch",
     "format": "prettier --config .prettierrc \"src/**/*.ts\" \"tests/**/*.ts\" --write",
     "prepare": "npm run build",
-    "preversion": "npm run lint",
+    "preversion": "npm run lint && npm test",
     "version": "npm run format && git add -A .",
     "postversion": "git push && git push --tags"
   },
