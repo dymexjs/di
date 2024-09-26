@@ -2,7 +2,7 @@
 
 Dymexjs stands for DYnamic, Modular, EXtensible JavaScript/Typescript framework.
 
-[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](code_of_conduct.md) [![Codacy Badge](https://app.codacy.com/project/badge/Grade/05c09871fd25433384b24de5285f27b1)](https://app.codacy.com/bb/n3okill/di/dashboard?utm_source=bb&utm_medium=referral&utm_content=&utm_campaign=Badge_grade) [![Codacy Badge](https://app.codacy.com/project/badge/Coverage/05c09871fd25433384b24de5285f27b1)](https://app.codacy.com/bb/n3okill/di/dashboard?utm_source=bb&utm_medium=referral&utm_content=&utm_campaign=Badge_coverage)
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](code_of_conduct.md) [![Codacy Badge](https://app.codacy.com/project/badge/Grade/56ccd37ecb9e4e3fb7e2caa42627c19c)](https://app.codacy.com/gh/dymexjs/di/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade) [![Codacy Badge](https://app.codacy.com/project/badge/Coverage/05c09871fd25433384b24de5285f27b1)](https://app.codacy.com/bb/n3okill/di/dashboard?utm_source=bb&utm_medium=referral&utm_content=&utm_campaign=Badge_coverage)
 
 A dependency injection library for Typescript/Javascript to help build well-structured code and easily testable applications.
 
@@ -70,7 +70,12 @@ console.log(testInstance.testService.printMessage());
 **[STATIC_INJECTION_LIFETIME] and [STATIC_INJECTIONS]**
 
 ```typescript
-import { container, STATIC_INJECTIONS, STATIC_INJECTION_LIFETIME, StaticInjectable } from "@dymexjs/di";
+import {
+  container,
+  STATIC_INJECTIONS,
+  STATIC_INJECTION_LIFETIME,
+  StaticInjectable,
+} from "@dymexjs/di";
 
 class TestClass implements StaticInjectable<typeof TestClass> {
   public propertyA = "test";
@@ -91,7 +96,12 @@ This snippet creates (resolves to) one instance of `TestClass` that will be a `S
 Instead of using `container.register` it's also possible to use the `TestClass` directly:
 
 ```typescript
-import { container, STATIC_INJECTIONS, STATIC_INJECTION_LIFETIME, StaticInjectable } from "@dymexjs/di";
+import {
+  container,
+  STATIC_INJECTIONS,
+  STATIC_INJECTION_LIFETIME,
+  StaticInjectable,
+} from "@dymexjs/di";
 
 class TestClass implements StaticInjectable<typeof TestClass> {
   public propertyA = "test";
