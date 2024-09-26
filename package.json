@@ -1,6 +1,6 @@
 {
   "name": "@dymexjs/di",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Dymexjs DI system",
   "publishConfig": {
     "access": "public"
