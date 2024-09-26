@@ -4,7 +4,7 @@ import { TokenNotFoundError } from "../../../src/di/exceptions/TokenNotFoundErro
 import { Lifetime } from "../../../src/di/types/registration.interface";
 import { Singleton, Transient } from "../../../src/di/decorators";
 
-describe("Averix_DI ", () => {
+describe("Dymexjs_DI ", () => {
   beforeEach(async () => container.reset());
   describe("async", () => {
     describe("other", () => {

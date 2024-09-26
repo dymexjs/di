@@ -6,7 +6,7 @@ import { UndefinedScopeError } from "../../../src/di/exceptions/UndefinedScopeEr
 import { ScopeContext } from "../../../src/di/scope-context";
 import { Scoped } from "../../../src/di/decorators";
 
-describe("Averix_DI", () => {
+describe("Dymexjs_DI", () => {
   beforeEach(async () => await container.reset());
   describe("sync", () => {
     describe("scope", () => {

@@ -5,7 +5,7 @@ import { Lifetime } from "../../../src/di/types/registration.interface";
 import { Singleton } from "../../../src/di/decorators";
 import { TokenRegistrationCycleError } from "../../../src/di/exceptions/TokenRegistrationCycleError";
 
-describe("Averix_DI ", () => {
+describe("Dymexjs_DI ", () => {
   beforeEach(async () => container.reset());
   describe("sync", () => {
     describe("other", () => {

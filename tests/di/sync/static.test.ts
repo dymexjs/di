@@ -4,7 +4,7 @@ import { STATIC_INJECTIONS, STATIC_INJECTION_LIFETIME } from "../../../src/di/co
 import { Lifetime } from "../../../src/di/types/registration.interface";
 import { StaticInjectable } from "../../../src/di/types/static-inject.interface";
 
-describe("Averix_DI", () => {
+describe("Dymexjs_DI", () => {
   beforeEach(async () => await container.reset());
   describe("sync", () => {
     describe("Static Injector", () => {

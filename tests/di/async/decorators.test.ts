@@ -3,7 +3,7 @@ import { container } from "../../../src/di/container";
 import { AutoInjectable, createInterfaceId, Scoped, Singleton, Transient } from "../../../src/di/decorators";
 import { UndefinedScopeError } from "../../../src/di/exceptions/UndefinedScopeError";
 
-describe("Averix_DI", () => {
+describe("Dymexjs_DI", () => {
   beforeEach(async () => await container.reset());
   describe("async", () => {
     describe("Class Decorators", () => {

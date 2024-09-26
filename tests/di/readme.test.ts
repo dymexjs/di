@@ -7,7 +7,7 @@ import { Lifetime } from "../../src/di/types/registration.interface";
 import { UndefinedScopeError } from "../../src/di/exceptions/UndefinedScopeError";
 import { Token } from "../../src/di/types/injection-token.type";
 
-describe("Averix_DI ", () => {
+describe("Dymexjs_DI ", () => {
   beforeEach(async () => await container.reset());
   describe("README", () => {
     describe("Basic Usage", () => {

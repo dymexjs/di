@@ -6,7 +6,7 @@ import { Registration } from "../../src/di/types/registration.interface";
 import { container } from "../../src/di/container";
 import { TokenNotFoundError } from "../../src/di/exceptions/TokenNotFoundError";
 
-describe("Averix_DI ", () => {
+describe("Dymexjs_DI ", () => {
   describe("Other", () => {
     describe("Decorators - InvalidDecoratorError", () => {
       test("Singleton", () => {

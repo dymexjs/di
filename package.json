@@ -1,7 +1,7 @@
 {
-  "name": "@averix/di",
+  "name": "@dymexjs/di",
   "version": "0.0.1",
-  "description": "Averix DI system",
+  "description": "Dymexjs DI system",
   "publishConfig": {
     "access": "public"
   },

@@ -12,7 +12,7 @@ import {
 import { UndefinedScopeError } from "../../../src/di/exceptions/UndefinedScopeError";
 import { InvalidDecoratorError } from "../../../src/di/exceptions/InvalidDecoratorError";
 
-describe("Averix_DI", () => {
+describe("Dymexjs_DI", () => {
   beforeEach(async () => await container.reset());
   describe("sync", () => {
     describe("Class Decorators", () => {

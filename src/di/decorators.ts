@@ -25,9 +25,7 @@ export const createInterfaceId = <T>(id: string): InterfaceId<T> => `${id}-${get
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function Singleton<TDependencies extends Array<InjectionToken>, I = any>(
-  id?: TDependencies extends Array<InterfaceId>
-    ? InjectionToken | InterfaceId<I>
-    : [...TDependencies] | InjectionToken | InterfaceId<I>,
+  id?: TDependencies extends Array<InterfaceId> ? InjectionToken : [...TDependencies] | InjectionToken,
   dependencies?: [...TDependencies],
 ): ClassDecorator {
   return function <T extends { new (...args: UnwrapDecoratorArgs<TDependencies>): I }>(
@@ -65,9 +63,7 @@ export function Singleton<TDependencies extends Array<InjectionToken>, I = any>(
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function Transient<TDependencies extends Array<InjectionToken>, I = any>(
-  id?: TDependencies extends Array<InterfaceId>
-    ? InjectionToken | InterfaceId<I>
-    : [...TDependencies] | InjectionToken | InterfaceId<I>,
+  id?: TDependencies extends Array<InterfaceId> ? InjectionToken : [...TDependencies] | InjectionToken,
   dependencies?: [...TDependencies],
 ): ClassDecorator {
   return function <T extends { new (...args: UnwrapDecoratorArgs<TDependencies>): I }>(
@@ -105,9 +101,7 @@ export function Transient<TDependencies extends Array<InjectionToken>, I = any>(
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function Scoped<TDependencies extends Array<InjectionToken>, I = any>(
-  id?: TDependencies extends Array<InterfaceId>
-    ? InjectionToken | InterfaceId<I>
-    : [...TDependencies] | InjectionToken | InterfaceId<I>,
+  id?: TDependencies extends Array<InterfaceId> ? InjectionToken : [...TDependencies] | InjectionToken,
   dependencies?: [...TDependencies],
 ): ClassDecorator {
   return function <T extends { new (...args: UnwrapDecoratorArgs<TDependencies>): I }>(

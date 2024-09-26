@@ -6,7 +6,7 @@ import { Lifetime } from "../../../src/di/types/registration.interface";
 import { IContainer } from "../../../src/di/types/container.interface";
 import { createInterfaceId, Singleton, Transient } from "../../../src/di/decorators";
 
-describe("Averix_DI ", () => {
+describe("Dymexjs_DI ", () => {
   beforeEach(async () => container.reset());
   describe("async", () => {
     describe("Static inject", () => {

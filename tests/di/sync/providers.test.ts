@@ -4,7 +4,7 @@ import { Lifetime } from "../../../src/di/types/registration.interface";
 import { UndefinedScopeError } from "../../../src/di/exceptions/UndefinedScopeError";
 import { STATIC_INJECTION_LIFETIME } from "../../../src/di/constants";
 
-describe("Averix_DI ", () => {
+describe("Dymexjs_DI ", () => {
   beforeEach(async () => container.reset());
   describe("sync", () => {
     describe("Provider", () => {
