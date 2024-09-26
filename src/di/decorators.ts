@@ -169,9 +169,9 @@ type IAutoInjectableOptions = {
  * @param options Optional options to customize the behavior of the decorator.
  * @returns A class decorator that registers the class with the container and injects its dependencies.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function AutoInjectable<
   TDependencies extends Array<InjectionToken>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   I = any,
 >(dependencies?: [...TDependencies], options: IAutoInjectableOptions = {}) {
   /**
@@ -181,8 +181,8 @@ export function AutoInjectable<
    * @param {kind} The kind of the target, which should be a class.
    * @returns The registered class.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return function <
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     T extends { new (...args: UnwrapDecoratorArgs<TDependencies> | any): I },
   >(target: T, context: ClassDecoratorContext) {
     if (context.kind === "class") {
@@ -239,10 +239,11 @@ export function AutoInjectable<
  * @throws {InvalidDecoratorError} If the decorator is used in a context that is not one of the above.
  */
 export function Inject(token: InjectionToken | Array<InjectionToken>) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return function DecoratorFn(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     value: any,
     context: ClassMemberDecoratorContext,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): any {
     switch (context.kind) {
       case "field":
@@ -300,10 +301,11 @@ export function Inject(token: InjectionToken | Array<InjectionToken>) {
  * @throws {InvalidDecoratorError} If the decorator is used in a context that is not one of the above.
  */
 export function InjectAll(token: InjectionToken | Array<InjectionToken>) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return function DecoratorFn(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     value: any,
     context: ClassMemberDecoratorContext,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): any {
     switch (context.kind) {
       case "field":

@@ -173,8 +173,8 @@ export class Container implements IContainer {
           (service as ClassProvider<T>).useClass as StaticInjectable
         )[STATIC_INJECTION_LIFETIME];
       }
-      // eslint-disable-next-line security/detect-object-injection
       if (
+        // eslint-disable-next-line security/detect-object-injection
         typeof ((service as ClassProvider<T>).useClass as StaticInjectable)[
           STATIC_INJECTIONS
         ] !== "undefined"
@@ -829,12 +829,12 @@ export class Container implements IContainer {
     scope?: ScopeContext,
   ): T {
     //Get the lifetime of the token. If not specified, the lifetime is Transient.
-    // eslint-disable-next-line security/detect-object-injection, @typescript-eslint/no-explicit-any
     const lifetime: Lifetime =
+      // eslint-disable-next-line security/detect-object-injection, @typescript-eslint/no-explicit-any
       (token as StaticInjectable<any>)[STATIC_INJECTION_LIFETIME] ??
       Lifetime.Transient;
-    // eslint-disable-next-line security/detect-object-injection, @typescript-eslint/no-explicit-any
     const injections =
+      // eslint-disable-next-line security/detect-object-injection, @typescript-eslint/no-explicit-any
       (token as StaticInjectable<any>)[STATIC_INJECTIONS] ?? [];
     const args = this.createArgs({ injections } as Registration, scope);
 
@@ -874,8 +874,8 @@ export class Container implements IContainer {
     scope?: ScopeContext,
   ): Promise<T> {
     // Get the lifetime of the token. If not specified, the lifetime is Transient.
-    // eslint-disable-next-line security/detect-object-injection
     const lifetime: Lifetime =
+      // eslint-disable-next-line security/detect-object-injection
       (token as StaticInjectable)[STATIC_INJECTION_LIFETIME] ??
       Lifetime.Transient;
     // eslint-disable-next-line security/detect-object-injection

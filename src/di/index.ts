@@ -4,3 +4,4 @@ export { container, Container } from "./container";
 export * from "./decorators";
 export * from "./constants";
 export * from "./types/registration.interface";
+export { Token } from "./types/injection-token.type";
