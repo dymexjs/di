@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, test } from "@jest/globals";
-import { container } from "../../../src/di/container";
-import { TokenNotFoundError } from "../../../src/di/exceptions/TokenNotFoundError";
-import { Lifetime } from "../../../src/di/types/registration.interface";
-import { Singleton, Transient } from "../../../src/di/decorators";
+import { container } from "../../src/container";
+import { TokenNotFoundError } from "../../src/exceptions/TokenNotFoundError";
+import { Lifetime } from "../../src/types/registration.interface";
+import { Singleton, Transient } from "../../src/decorators";
 
 describe("Dymexjs_DI ", () => {
   beforeEach(async () => container.reset());
