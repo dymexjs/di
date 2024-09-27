@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test } from "@jest/globals";
-import { container } from "../../../src/di/container";
+import { container } from "../../src/container";
 import {
   AutoInjectable,
   createInterfaceId,
@@ -8,9 +8,9 @@ import {
   Scoped,
   Singleton,
   Transient,
-} from "../../../src/di/decorators";
-import { UndefinedScopeError } from "../../../src/di/exceptions/UndefinedScopeError";
-import { InvalidDecoratorError } from "../../../src/di/exceptions/InvalidDecoratorError";
+} from "../../src/decorators";
+import { UndefinedScopeError } from "../../src/exceptions/UndefinedScopeError";
+import { InvalidDecoratorError } from "../../src/exceptions/InvalidDecoratorError";
 
 describe("Dymexjs_DI", () => {
   beforeEach(async () => await container.reset());

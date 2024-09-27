@@ -1,15 +1,15 @@
 import { beforeEach, describe, expect, test } from "@jest/globals";
-import { InvalidDecoratorError } from "../../src/di/exceptions/InvalidDecoratorError";
+import { InvalidDecoratorError } from "../src/exceptions/InvalidDecoratorError";
 import {
   AutoInjectable,
   Scoped,
   Singleton,
   Transient,
-} from "../../src/di/decorators";
-import { ServiceMap } from "../../src/di/service-map";
-import { Registration } from "../../src/di/types/registration.interface";
-import { container } from "../../src/di/container";
-import { TokenNotFoundError } from "../../src/di/exceptions/TokenNotFoundError";
+} from "../src/decorators";
+import { ServiceMap } from "../src/service-map";
+import { Registration } from "../src/types/registration.interface";
+import { container } from "../src/container";
+import { TokenNotFoundError } from "../src/exceptions/TokenNotFoundError";
 
 describe("Dymexjs_DI ", () => {
   describe("Other", () => {

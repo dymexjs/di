@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, test } from "@jest/globals";
-import { container } from "../../../src/di/container";
-import { Lifetime } from "../../../src/di/types/registration.interface";
-import { STATIC_INJECTION_LIFETIME } from "../../../src/di/constants";
-import { UndefinedScopeError } from "../../../src/di/exceptions/UndefinedScopeError";
-import { ScopeContext } from "../../../src/di/scope-context";
-import { Scoped } from "../../../src/di/decorators";
+import { container } from "../../src/container";
+import { Lifetime } from "../../src/types/registration.interface";
+import { STATIC_INJECTION_LIFETIME } from "../../src/constants";
+import { UndefinedScopeError } from "../../src/exceptions/UndefinedScopeError";
+import { ScopeContext } from "../../src/scope-context";
+import { Scoped } from "../../src/decorators";
 
 describe("Dymexjs_DI", () => {
   beforeEach(async () => await container.reset());

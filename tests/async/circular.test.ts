@@ -1,20 +1,16 @@
 import { beforeEach, describe, expect, test } from "@jest/globals";
-import { container } from "../../../src/di/container";
-import { StaticInjectable } from "../../../src/di/types/static-inject.interface";
+import { container } from "../../src/container";
+import { StaticInjectable } from "../../src/types/static-inject.interface";
 import {
   STATIC_INJECTIONS,
   STATIC_INJECTION_LIFETIME,
-} from "../../../src/di/constants";
-import { Lifetime } from "../../../src/di/types/registration.interface";
-import { IContainer } from "../../../src/di/types/container.interface";
-import {
-  createInterfaceId,
-  Singleton,
-  Transient,
-} from "../../../src/di/decorators";
+} from "../../src/constants";
+import { Lifetime } from "../../src/types/registration.interface";
+import { IContainer } from "../../src/types/container.interface";
+import { createInterfaceId, Singleton, Transient } from "../../src/decorators";
 
 describe("Dymexjs_DI ", () => {
-  beforeEach(async () => container.reset());
+  beforeEach(async () => await container.reset());
   describe("async", () => {
     describe("Static inject", () => {
       class ServiceA implements StaticInjectable<typeof ServiceA> {
@@ -50,12 +46,12 @@ describe("Dymexjs_DI ", () => {
         public static [STATIC_INJECTION_LIFETIME] = Lifetime.Singleton;
       }
 
-      test("circular dependency resolution simple case", () => {
-        const factoryTest = (cont: IContainer) => {
-          return cont.resolve(TestClass);
+      test("circular dependency resolution simple case", async () => {
+        const factoryTest = async (cont: IContainer) => {
+          return await cont.resolveAsync(TestClass);
         };
-        const factoryTest2 = (cont: IContainer) => {
-          return cont.resolve(TestClass2);
+        const factoryTest2 = async (cont: IContainer) => {
+          return await cont.resolveAsync(TestClass2);
         };
         class TestClass2 implements StaticInjectable<typeof TestClass2> {
           constructor(public test: TestClass) {}
@@ -70,8 +66,8 @@ describe("Dymexjs_DI ", () => {
         }
         container.register("factoryTest", { useFactory: factoryTest });
         container.register("factoryTest2", { useFactory: factoryTest2 });
-        const test2 = container.resolve(TestClass2);
-        const test = container.resolve(TestClass);
+        const test2 = await container.resolveAsync(TestClass2);
+        const test = await container.resolveAsync(TestClass);
         expect(test2).toBeInstanceOf(TestClass2);
         expect(test).toBeInstanceOf(TestClass);
         expect(test2.test).toBeInstanceOf(TestClass);
@@ -82,7 +78,7 @@ describe("Dymexjs_DI ", () => {
         expect(test.test2).toEqual(test2);
         expect(test.test2.test.propertyA).toBe("test");
       });
-      test("circular dependency resolution complex case", () => {
+      test("circular dependency resolution complex case", async () => {
         container.register("serviceA", { useClass: ServiceA });
         container.register("serviceB", { useClass: ServiceB });
         container.register("serviceC", { useClass: ServiceC });
@@ -95,10 +91,10 @@ describe("Dymexjs_DI ", () => {
                         ServiceA(A) -> ServiceB(A) -> proxy(ServiceA(B)) -> ServiceD(B) -> proxy(ServiceA(D)) -> ServiceC(D) -> proxy(ServiceB(C)) -> proxy(ServiceD(C)) -> ServiceC(A)
                     */
 
-        const serviceA = container.resolve<ServiceA>("serviceA");
-        const serviceB = container.resolve<ServiceB>("serviceB");
-        const serviceC = container.resolve<ServiceC>("serviceC");
-        const serviceD = container.resolve<ServiceD>("serviceD");
+        const serviceA = await container.resolveAsync<ServiceA>("serviceA");
+        const serviceB = await container.resolveAsync<ServiceB>("serviceB");
+        const serviceC = await container.resolveAsync<ServiceC>("serviceC");
+        const serviceD = await container.resolveAsync<ServiceD>("serviceD");
 
         expect(serviceA).toBeInstanceOf(ServiceA);
         expect(serviceA.serviceB).toBeInstanceOf(ServiceB);
@@ -157,7 +153,7 @@ describe("Dymexjs_DI ", () => {
     });
     describe("Decorators", () => {
       describe("Class", () => {
-        test("circular dependency resolution simple case", () => {
+        test("circular dependency resolution simple case", async () => {
           @Singleton("test", ["test2"])
           class TestClass {
             public propertyA = "test";
@@ -168,17 +164,17 @@ describe("Dymexjs_DI ", () => {
             constructor(public test: TestClass) {}
           }
 
-          const test = container.resolve<TestClass>("test");
-          const test2 = container.resolve<TestClass2>("test2");
+          const test = await container.resolveAsync<TestClass>("test");
+          const test2 = await container.resolveAsync<TestClass2>("test2");
           expect(test).toBeInstanceOf(TestClass);
           expect(test2).toBeInstanceOf(TestClass2);
           expect(test.test2).toBeInstanceOf(TestClass2);
           expect(test2.test).toBeInstanceOf(TestClass);
           expect(test.test2).toBe(test2);
-          //This needs to be toEqual because we are comparing the generated proxy, and toEqual will make a deep equal assertion
+          //This needs to be toEqual because where comparing the generated proxy, and toEqual will make a deep equal assertion
           expect(test2.test).toEqual(test);
         });
-        test("circular dependency complex case", () => {
+        test("circular dependency complex case", async () => {
           @Singleton("serviceA", ["serviceB", "serviceC"])
           class ServiceA {
             constructor(
@@ -214,10 +210,10 @@ describe("Dymexjs_DI ", () => {
                         ServiceA(A) -> ServiceB(A) -> proxy(ServiceA(B)) -> ServiceD(B) -> proxy(ServiceA(D)) -> ServiceC(D) -> proxy(ServiceB(C)) -> proxy(ServiceD(C)) -> ServiceC(A)
                     */
 
-          const serviceA = container.resolve<ServiceA>("serviceA");
-          const serviceB = container.resolve<ServiceB>("serviceB");
-          const serviceC = container.resolve<ServiceC>("serviceC");
-          const serviceD = container.resolve<ServiceD>("serviceD");
+          const serviceA = await container.resolveAsync<ServiceA>("serviceA");
+          const serviceB = await container.resolveAsync<ServiceB>("serviceB");
+          const serviceC = await container.resolveAsync<ServiceC>("serviceC");
+          const serviceD = await container.resolveAsync<ServiceD>("serviceD");
 
           expect(serviceA).toBeInstanceOf(ServiceA);
           expect(serviceA.serviceB).toBeInstanceOf(ServiceB);
@@ -273,7 +269,7 @@ describe("Dymexjs_DI ", () => {
           expect(serviceD.serviceC.serviceB).toEqual(serviceB); //Proxy
           expect(serviceD.serviceC.serviceD).toEqual(serviceD); //Proxy
         });
-        test("Lazily created proxy allows iterating over keys of the original service", () => {
+        test("Lazily created proxy allows iterating over keys of the original service", async () => {
           @Transient(["TestB"])
           class TestA {
             constructor(public b: TestB) {}
@@ -286,8 +282,8 @@ describe("Dymexjs_DI ", () => {
             };
             constructor(public a: TestA) {}
           }
-          const a = container.resolve(TestA);
-          const b = container.resolve(TestB);
+          const a = await container.resolveAsync(TestA);
+          const b = await container.resolveAsync(TestB);
           expect(a).toBeInstanceOf(TestA);
           expect(b).toBeInstanceOf(TestB);
           expect(Object.keys(a)).toStrictEqual(["b"]);
@@ -301,7 +297,7 @@ describe("Dymexjs_DI ", () => {
         });
       });
       describe("Interface", () => {
-        test("simple case", () => {
+        test("simple case", async () => {
           interface TC {
             readonly propertyA: string;
             readonly test2: TC2;
@@ -321,8 +317,8 @@ describe("Dymexjs_DI ", () => {
           class TestClass2 implements TC2 {
             constructor(public test: TestClass) {}
           }
-          const test2 = container.resolve<TC2>(TC2);
-          const test = container.resolve<TestClass>(TC);
+          const test2 = await container.resolveAsync<TC2>(TC2);
+          const test = await container.resolveAsync<TestClass>(TC);
           expect(test2).toBeInstanceOf(TestClass2);
           expect(test).toBeInstanceOf(TestClass);
           expect(test2.test).toBeInstanceOf(TestClass);
@@ -331,7 +327,7 @@ describe("Dymexjs_DI ", () => {
           //This needs to be toEqual because where comparing the generated proxy, and toEqual will make a deep equal assertion
           expect(test.test2).toEqual(test2);
         });
-        test("Lazy creation with proxies allow circular dependencies using interfaces", () => {
+        test("Lazy creation with proxies allow circular dependencies using interfaces", async () => {
           interface ITestA {
             name: string;
           }
@@ -353,8 +349,8 @@ describe("Dymexjs_DI ", () => {
             constructor(public a: ITestA) {}
           }
 
-          const a = container.resolve<TestA>(ITestA);
-          const b = container.resolve<TestB>(ITestB);
+          const a = await container.resolveAsync<TestA>(ITestA);
+          const b = await container.resolveAsync<TestB>(ITestB);
           expect(a).toBeInstanceOf(TestA);
           expect(a.b).toBeInstanceOf(TestB);
           expect(b.a).toBeInstanceOf(TestA);
@@ -416,10 +412,10 @@ describe("Dymexjs_DI ", () => {
                         ServiceA(A) -> ServiceB(A) -> proxy(ServiceA(B)) -> ServiceD(B) -> proxy(ServiceA(D)) -> ServiceC(D) -> proxy(ServiceB(C)) -> proxy(ServiceD(C)) -> ServiceC(A)
                     */
 
-          const serviceA = container.resolve<ServiceA>(SA);
-          const serviceB = container.resolve<ServiceB>(SB);
-          const serviceC = container.resolve<ServiceC>(ServiceC);
-          const serviceD = container.resolve<ServiceD>(ServiceD);
+          const serviceA = await container.resolveAsync<ServiceA>(SA);
+          const serviceB = await container.resolveAsync<ServiceB>(SB);
+          const serviceC = await container.resolveAsync(ServiceC);
+          const serviceD = await container.resolveAsync(ServiceD);
 
           expect(serviceA).toBeInstanceOf(ServiceA);
           expect(serviceA.serviceB).toBeInstanceOf(ServiceB);

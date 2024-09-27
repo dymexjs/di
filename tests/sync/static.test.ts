@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, test } from "@jest/globals";
-import { container } from "../../../src/di/container";
+import { container } from "../../src/container";
 import {
   STATIC_INJECTIONS,
   STATIC_INJECTION_LIFETIME,
-} from "../../../src/di/constants";
-import { Lifetime } from "../../../src/di/types/registration.interface";
-import { StaticInjectable } from "../../../src/di/types/static-inject.interface";
+} from "../../src/constants";
+import { Lifetime } from "../../src/types/registration.interface";
+import { StaticInjectable } from "../../src/types/static-inject.interface";
 
 describe("Dymexjs_DI", () => {
   beforeEach(async () => await container.reset());
