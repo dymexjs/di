@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test } from "@jest/globals";
+import { beforeEach, describe, test } from "node:test";
 import { container } from "../../src/container";
 import {
   AutoInjectable,
@@ -11,6 +11,7 @@ import {
 } from "../../src/decorators";
 import { UndefinedScopeError } from "../../src/exceptions/UndefinedScopeError";
 import { InvalidDecoratorError } from "../../src/exceptions/InvalidDecoratorError";
+import * as assert from "node:assert/strict";
 
 describe("Dymexjs_DI", () => {
   beforeEach(async () => await container.reset());
@@ -22,7 +23,7 @@ describe("Dymexjs_DI", () => {
           class TestClass {}
           const instance1 = container.resolve(TestClass);
           const instance2 = container.resolve(TestClass);
-          expect(instance1).toBe(instance2);
+          assert.strictEqual(instance1, instance2);
         });
         test("should create an target and inject singleton", () => {
           @Singleton("serviceA")
@@ -32,11 +33,11 @@ describe("Dymexjs_DI", () => {
             constructor(public serviceA: ServiceA) {}
           }
           const b = container.resolve<ServiceB>(ServiceB);
-          expect(b).toBeInstanceOf(ServiceB);
-          expect(b.serviceA).toBeInstanceOf(ServiceA);
+          assert.ok(b instanceof ServiceB);
+          assert.ok(b.serviceA instanceof ServiceA);
           const a = container.resolve<ServiceA>("serviceA");
-          expect(a).toBeInstanceOf(ServiceA);
-          expect(b.serviceA).toBe(a);
+          assert.ok(a instanceof ServiceA);
+          assert.strictEqual(b.serviceA, a);
         });
         test("should redirect the registration", () => {
           @Singleton()
@@ -50,7 +51,7 @@ describe("Dymexjs_DI", () => {
           }
           container.registerType(Test, TestMock);
           const test = container.resolve<TestClass>(TestClass);
-          expect(test.test).toBeInstanceOf(TestMock);
+          assert.ok(test.test instanceof TestMock);
         });
       });
       describe("Transient", () => {
@@ -59,7 +60,7 @@ describe("Dymexjs_DI", () => {
           class TestClass {}
           const instance1 = container.resolve(TestClass);
           const instance2 = container.resolve(TestClass);
-          expect(instance1).not.toBe(instance2);
+          assert.notStrictEqual(instance1, instance2);
         });
         test("should create an target and inject transient", () => {
           @Transient()
@@ -69,12 +70,12 @@ describe("Dymexjs_DI", () => {
             constructor(public serviceA: ServiceA) {}
           }
           const b = container.resolve<ServiceB>(ServiceB);
-          expect(b).toBeInstanceOf(ServiceB);
-          expect(b.serviceA).toBeInstanceOf(ServiceA);
+          assert.ok(b instanceof ServiceB);
+          assert.ok(b.serviceA instanceof ServiceA);
           const a = container.resolve<ServiceA>(ServiceA);
-          expect(a).toBeInstanceOf(ServiceA);
-          expect(b.serviceA).not.toBe(a);
-          expect(b.serviceA).toEqual(a);
+          assert.ok(a instanceof ServiceA);
+          assert.notStrictEqual(b.serviceA, a);
+          assert.deepStrictEqual(b.serviceA, a);
         });
         test("should create transients", () => {
           @Transient()
@@ -84,15 +85,15 @@ describe("Dymexjs_DI", () => {
             constructor(public serviceA: ServiceA) {}
           }
           const b = container.resolve<ServiceB>(ServiceB);
-          expect(b).toBeInstanceOf(ServiceB);
-          expect(b.serviceA).toBeInstanceOf(ServiceA);
+          assert.ok(b instanceof ServiceB);
+          assert.ok(b.serviceA instanceof ServiceA);
           const a = container.resolve<ServiceA>(ServiceA);
-          expect(a).toBeInstanceOf(ServiceA);
-          expect(b.serviceA).not.toBe(a);
-          expect(b.serviceA).toEqual(a);
+          assert.ok(a instanceof ServiceA);
+          assert.notStrictEqual(b.serviceA, a);
+          assert.deepStrictEqual(b.serviceA, a);
           const b2 = container.resolve<ServiceB>(ServiceB);
-          expect(b).not.toBe(b2);
-          expect(b).toEqual(b2);
+          assert.notStrictEqual(b, b2);
+          assert.deepStrictEqual(b, b2);
         });
       });
       describe("Scoped", () => {
@@ -102,7 +103,7 @@ describe("Dymexjs_DI", () => {
           const scope = container.createScope();
           const instance1 = container.resolve(TestClass, scope);
           const instance2 = container.resolve(TestClass, scope);
-          expect(instance1).toBe(instance2);
+          assert.strictEqual(instance1, instance2);
         });
         test("should create scoped", () => {
           @Scoped()
@@ -113,12 +114,13 @@ describe("Dymexjs_DI", () => {
           }
           const scope = container.createScope();
           const b = container.resolve<ServiceB>(ServiceB, scope);
-          expect(b).toBeInstanceOf(ServiceB);
-          expect(b.serviceA).toBeInstanceOf(ServiceA);
+          assert.ok(b instanceof ServiceB);
+          assert.ok(b.serviceA instanceof ServiceA);
           const a = container.resolve<ServiceA>(ServiceA, scope);
-          expect(a).toBeInstanceOf(ServiceA);
-          expect(b.serviceA).toBe(a);
-          expect(() => container.resolve<ServiceB>(ServiceB)).toThrow(
+          assert.ok(a instanceof ServiceA);
+          assert.strictEqual(b.serviceA, a);
+          assert.throws(
+            () => container.resolve<ServiceB>(ServiceB),
             UndefinedScopeError,
           );
         });
@@ -135,9 +137,9 @@ describe("Dymexjs_DI", () => {
               ) {}
             }
             const testB = new TestB("test");
-            expect(testB).toBeInstanceOf(TestB);
-            expect(testB.otherArg).toBe("test");
-            expect(testB.a).toBeInstanceOf(TestA);
+            assert.ok(testB instanceof TestB);
+            assert.strictEqual(testB.otherArg, "test");
+            assert.ok(testB.a instanceof TestA);
           });
           test("@AutoInjectable allows for parameters to be specified manually", () => {
             class Bar {}
@@ -149,7 +151,7 @@ describe("Dymexjs_DI", () => {
             const myBar = new Bar();
             const myFoo = new Foo(myBar);
 
-            expect(myFoo.myBar).toBe(myBar);
+            assert.strictEqual(myFoo.myBar, myBar);
           });
           test("@AutoInjectable injects parameters beyond those specified manually", () => {
             class Bar {}
@@ -165,8 +167,8 @@ describe("Dymexjs_DI", () => {
             const myFooBar = new FooBar();
             const myFoo = new Foo(myFooBar);
 
-            expect(myFoo.myFooBar).toBe(myFooBar);
-            expect(myFoo.myBar).toBeInstanceOf(Bar);
+            assert.strictEqual(myFoo.myFooBar, myFooBar);
+            assert.ok(myFoo.myBar instanceof Bar);
           });
           test("@AutoInjectable works when the @AutoInjectable is a polymorphic ancestor", () => {
             class Foo {
@@ -186,7 +188,7 @@ describe("Dymexjs_DI", () => {
 
             const instance = new Child();
 
-            expect(instance.myFoo).toBeInstanceOf(Foo);
+            assert.ok(instance.myFoo instanceof Foo);
           });
           test("@AutoInjectable classes keep behavior from their ancestor's constructors", () => {
             const a = 5;
@@ -214,8 +216,8 @@ describe("Dymexjs_DI", () => {
 
             const instance = new Child();
 
-            expect(instance.a).toBe(a);
-            expect(instance.b).toBe(b);
+            assert.strictEqual(instance.a, a);
+            assert.strictEqual(instance.b, b);
           });
           test("@AutoInjectable classes resolve their @Transient dependencies", () => {
             class Foo {}
@@ -230,7 +232,7 @@ describe("Dymexjs_DI", () => {
 
             const myFooBar = new FooBar();
 
-            expect(myFooBar.myBar!.myFoo).toBeInstanceOf(Foo);
+            assert.ok(myFooBar.myBar!.myFoo instanceof Foo);
           });
           test("@AutoInjectable works with @Singleton", () => {
             class Bar {}
@@ -244,8 +246,8 @@ describe("Dymexjs_DI", () => {
             const instance1 = container.resolve<Foo>(Foo);
             const instance2 = container.resolve<Foo>(Foo);
 
-            expect(instance1).toBe(instance2);
-            expect(instance1.bar).toBe(instance2.bar);
+            assert.strictEqual(instance1, instance2);
+            assert.strictEqual(instance1.bar, instance2.bar);
           });
 
           test("@AutoInjectable resolves multiple registered dependencies", () => {
@@ -266,9 +268,9 @@ describe("Dymexjs_DI", () => {
             }
 
             const foo = new Foo();
-            expect(Array.isArray(foo.bar)).toBeTruthy();
-            expect(foo.bar!.length).toBe(1);
-            expect(foo.bar![0]).toBeInstanceOf(FooBar);
+            assert.ok(Array.isArray(foo.bar));
+            assert.strictEqual(foo.bar!.length, 1);
+            assert.ok(foo.bar![0] instanceof FooBar);
           });
 
           test("@AutoInjectable resolves multiple transient dependencies", () => {
@@ -280,9 +282,9 @@ describe("Dymexjs_DI", () => {
             }
 
             const bar = new Bar();
-            expect(Array.isArray(bar.foo)).toBeTruthy();
-            expect(bar.foo!.length).toBe(1);
-            expect(bar.foo![0]).toBeInstanceOf(Foo);
+            assert.ok(Array.isArray(bar.foo));
+            assert.strictEqual(bar.foo!.length, 1);
+            assert.ok(bar.foo![0] instanceof Foo);
           });
         });
         describe("resolveWithArgs", () => {
@@ -297,10 +299,10 @@ describe("Dymexjs_DI", () => {
               ) {}
             }
             const testB = container.resolveWithArgs<TestB>(TestB, ["test", 1]);
-            expect(testB).toBeInstanceOf(TestB);
-            expect(testB.hello).toBe("test");
-            expect(testB.num).toBe(1);
-            expect(testB.a).toBeInstanceOf(TestA);
+            assert.ok(testB instanceof TestB);
+            assert.strictEqual(testB.hello, "test");
+            assert.strictEqual(testB.num, 1);
+            assert.ok(testB.a instanceof TestA);
           });
           test("@AutoInjectable allows for parameters to be specified manually", () => {
             class Bar {}
@@ -312,7 +314,7 @@ describe("Dymexjs_DI", () => {
             const myBar = new Bar();
             const myFoo = container.resolveWithArgs<Foo>(Foo, [myBar]);
 
-            expect(myFoo.myBar).toBe(myBar);
+            assert.strictEqual(myFoo.myBar, myBar);
           });
           test("@AutoInjectable injects parameters beyond those specified manually", () => {
             class Bar {}
@@ -328,8 +330,8 @@ describe("Dymexjs_DI", () => {
             const myFooBar = new FooBar();
             const myFoo = container.resolveWithArgs<Foo>(Foo, [myFooBar]);
 
-            expect(myFoo.myFooBar).toBe(myFooBar);
-            expect(myFoo.myBar).toBeInstanceOf(Bar);
+            assert.strictEqual(myFoo.myFooBar, myFooBar);
+            assert.ok(myFoo.myBar instanceof Bar);
           });
           test("@AutoInjectable works when the @AutoInjectable is a polymorphic ancestor", () => {
             class Foo {
@@ -349,7 +351,7 @@ describe("Dymexjs_DI", () => {
 
             const instance = container.resolveWithArgs<Child>(Child);
 
-            expect(instance.myFoo).toBeInstanceOf(Foo);
+            assert.ok(instance.myFoo instanceof Foo);
           });
           test("@AutoInjectable classes keep behavior from their ancestor's constructors", () => {
             const a = 5;
@@ -378,9 +380,9 @@ describe("Dymexjs_DI", () => {
             const instance = container.resolveWithArgs<Child>(Child);
             //const instance = new Child();
 
-            expect(instance.a).toBe(a);
-            expect(instance.b).toBe(b);
-            expect(instance.myFoo).toBeInstanceOf(Foo);
+            assert.strictEqual(instance.a, a);
+            assert.strictEqual(instance.b, b);
+            assert.ok(instance.myFoo instanceof Foo);
           });
           test("@AutoInjectable classes resolve their @Transient dependencies", () => {
             class Foo {}
@@ -395,7 +397,7 @@ describe("Dymexjs_DI", () => {
 
             const myFooBar = container.resolveWithArgs<FooBar>(FooBar);
 
-            expect(myFooBar.myBar!.myFoo).toBeInstanceOf(Foo);
+            assert.ok(myFooBar.myBar!.myFoo instanceof Foo);
           });
           test("@AutoInjectable works with @Singleton", () => {
             class Bar {}
@@ -409,8 +411,8 @@ describe("Dymexjs_DI", () => {
             const instance1 = container.resolve<Foo>(Foo);
             const instance2 = container.resolve<Foo>(Foo);
 
-            expect(instance1).toBe(instance2);
-            expect(instance1.bar).toBe(instance2.bar);
+            assert.strictEqual(instance1, instance2);
+            assert.strictEqual(instance1.bar, instance2.bar);
           });
           test("@AutoInjectable resolves multiple registered dependencies", () => {
             interface Bar {
@@ -430,9 +432,9 @@ describe("Dymexjs_DI", () => {
             }
 
             const foo = container.resolveWithArgs(Foo);
-            expect(Array.isArray(foo.bar)).toBeTruthy();
-            expect(foo.bar!.length).toBe(1);
-            expect(foo.bar![0]).toBeInstanceOf(FooBar);
+            assert.ok(Array.isArray(foo.bar));
+            assert.strictEqual(foo.bar!.length, 1);
+            assert.ok(foo.bar![0] instanceof FooBar);
           });
 
           test("@AutoInjectable resolves multiple transient dependencies", () => {
@@ -444,21 +446,22 @@ describe("Dymexjs_DI", () => {
             }
 
             const bar = container.resolveWithArgs(Bar);
-            expect(Array.isArray(bar.foo)).toBeTruthy();
-            expect(bar.foo!.length).toBe(1);
-            expect(bar.foo![0]).toBeInstanceOf(Foo);
+            assert.ok(Array.isArray(bar.foo));
+            assert.strictEqual(bar.foo!.length, 1);
+            assert.ok(bar.foo![0] instanceof Foo);
           });
         });
       });
       describe("Inject and InjectAll", () => {
         test("should fail", () => {
-          expect(
+          assert.throws(
             () =>
               class Test {
                 @Inject("token")
                 set val(value: unknown) {}
               },
-          ).toThrow(InvalidDecoratorError);
+            InvalidDecoratorError,
+          );
         });
         describe("field", () => {
           test("should inject an instance into the class field", () => {
@@ -472,9 +475,9 @@ describe("Dymexjs_DI", () => {
               testA!: TestA;
             }
             const testB = new TestB();
-            expect(testB).toBeInstanceOf(TestB);
-            expect(testB.testA).toBeInstanceOf(TestA);
-            expect(testB.testA.prop).toBe("testA");
+            assert.ok(testB instanceof TestB);
+            assert.ok(testB.testA instanceof TestA);
+            assert.strictEqual(testB.testA.prop, "testA");
           });
           test("should injectAll registered instances into the class field", () => {
             class TestA {
@@ -489,13 +492,13 @@ describe("Dymexjs_DI", () => {
             }
 
             const testB = new TestB();
-            expect(testB).toBeInstanceOf(TestB);
-            expect(testB.testA).toBeInstanceOf(Array);
-            expect(testB.testA.length).toBe(2);
-            expect(testB.testA[0]).toBeInstanceOf(TestA);
-            expect(testB.testA[0].prop).toBe("testA");
-            expect(testB.testA[1]).toBeInstanceOf(TestA);
-            expect(testB.testA[1].prop).toBe("testA");
+            assert.ok(testB instanceof TestB);
+            assert.ok(testB.testA instanceof Array);
+            assert.strictEqual(testB.testA.length, 2);
+            assert.ok(testB.testA[0] instanceof TestA);
+            assert.strictEqual(testB.testA[0].prop, "testA");
+            assert.ok(testB.testA[1] instanceof TestA);
+            assert.strictEqual(testB.testA[1].prop, "testA");
           });
         });
         describe("accessor", () => {
@@ -510,9 +513,9 @@ describe("Dymexjs_DI", () => {
               accessor testA!: TestA;
             }
             const testB = new TestB();
-            expect(testB).toBeInstanceOf(TestB);
-            expect(testB.testA).toBeInstanceOf(TestA);
-            expect(testB.testA.prop).toBe("testA");
+            assert.ok(testB instanceof TestB);
+            assert.ok(testB.testA instanceof TestA);
+            assert.strictEqual(testB.testA.prop, "testA");
           });
           test("should injectAll registered instances into the class accessor", () => {
             class TestA {
@@ -528,13 +531,13 @@ describe("Dymexjs_DI", () => {
             }
 
             const testB = new TestB();
-            expect(testB).toBeInstanceOf(TestB);
-            expect(testB.testA).toBeInstanceOf(Array);
-            expect(testB.testA).toHaveLength(2);
-            expect(testB.testA[0]).toBeInstanceOf(TestA);
-            expect(testB.testA[0].prop).toBe("testA");
-            expect(testB.testA[1]).toBeInstanceOf(TestA);
-            expect(testB.testA[1].prop).toBe("testA");
+            assert.ok(testB instanceof TestB);
+            assert.ok(testB.testA instanceof Array);
+            assert.strictEqual(testB.testA.length, 2);
+            assert.ok(testB.testA[0] instanceof TestA);
+            assert.strictEqual(testB.testA[0].prop, "testA");
+            assert.ok(testB.testA[1] instanceof TestA);
+            assert.strictEqual(testB.testA[1].prop, "testA");
           });
         });
         describe("method", () => {
@@ -550,8 +553,8 @@ describe("Dymexjs_DI", () => {
               }
             }
             const testB = container.resolve(TestB);
-            expect(testB).toBeInstanceOf(TestB);
-            expect(testB.doSomething()).toBe("testA");
+            assert.ok(testB instanceof TestB);
+            assert.strictEqual(testB.doSomething(), "testA");
           });
 
           test("should inject all registered instances into the method of the class", () => {
@@ -568,10 +571,10 @@ describe("Dymexjs_DI", () => {
               }
             }
             const testB = container.resolve(TestB);
-            expect(testB).toBeInstanceOf(TestB);
-            expect(testB.doSomething()).toBeInstanceOf(Array);
-            expect(testB.doSomething()).toHaveLength(2);
-            expect(testB.doSomething()[0].prop).toBe("testA");
+            assert.ok(testB instanceof TestB);
+            assert.ok(testB.doSomething() instanceof Array);
+            assert.strictEqual(testB.doSomething().length, 2);
+            assert.strictEqual(testB.doSomething()[0].prop, "testA");
           });
         });
         describe("getter", () => {
@@ -588,10 +591,10 @@ describe("Dymexjs_DI", () => {
               }
             }
             const testB = container.resolve(TestB);
-            expect(testB).toBeInstanceOf(TestB);
-            expect(testB.propTestA).toBeUndefined();
-            expect(testB.testA).toBeInstanceOf(TestA);
-            expect(testB.testA.prop).toBe("testA");
+            assert.ok(testB instanceof TestB);
+            assert.strictEqual(testB.propTestA, undefined);
+            assert.ok(testB.testA instanceof TestA);
+            assert.strictEqual(testB.testA.prop, "testA");
           });
           test("should inject all registered instances into the getter of the class", () => {
             class TestA {
@@ -608,11 +611,11 @@ describe("Dymexjs_DI", () => {
               }
             }
             const testB = container.resolve(TestB);
-            expect(testB).toBeInstanceOf(TestB);
-            expect(testB.propTestA).toBeUndefined();
-            expect(testB.testA).toBeInstanceOf(Array);
-            expect(testB.testA).toHaveLength(2);
-            expect(testB.testA[0].prop).toBe("testA");
+            assert.ok(testB instanceof TestB);
+            assert.strictEqual(testB.propTestA, undefined);
+            assert.ok(testB.testA instanceof Array);
+            assert.strictEqual(testB.testA.length, 2);
+            assert.strictEqual(testB.testA[0].prop, "testA");
           });
         });
       });
@@ -623,8 +626,8 @@ describe("Dymexjs_DI", () => {
           constructor(public a: TestA) {}
         }
         const test = container.resolve<TestB>(TestB);
-        expect(test).toBeInstanceOf(TestB);
-        expect(test.a).toBeInstanceOf(TestA);
+        assert.ok(test instanceof TestB);
+        assert.ok(test.a instanceof TestA);
       });
     });
     describe("Interface Decorators", () => {
@@ -644,11 +647,11 @@ describe("Dymexjs_DI", () => {
           constructor(public serviceA: SA) {}
         }
         const b = container.resolve<SB>(SB);
-        expect(b).toBeInstanceOf(ServiceB);
-        expect(b.serviceA).toBeInstanceOf(ServiceA);
+        assert.ok(b instanceof ServiceB);
+        assert.ok(b.serviceA instanceof ServiceA);
         const a = container.resolve<SA>(SA);
-        expect(a).toBeInstanceOf(ServiceA);
-        expect(b.serviceA).toBe(a);
+        assert.ok(a instanceof ServiceA);
+        assert.strictEqual(b.serviceA, a);
       });
       test("should create an target and inject transient", () => {
         // eslint-disable-next-line @typescript-eslint/no-empty-object-type
@@ -666,12 +669,12 @@ describe("Dymexjs_DI", () => {
           constructor(public serviceA: SA) {}
         }
         const b = container.resolve<SB>(SB);
-        expect(b).toBeInstanceOf(ServiceB);
-        expect(b.serviceA).toBeInstanceOf(ServiceA);
+        assert.ok(b instanceof ServiceB);
+        assert.ok(b.serviceA instanceof ServiceA);
         const a = container.resolve<SA>(SA);
-        expect(a).toBeInstanceOf(ServiceA);
-        expect(b.serviceA).not.toBe(a);
-        expect(b.serviceA).toEqual(a);
+        assert.ok(a instanceof ServiceA);
+        assert.notStrictEqual(b.serviceA, a);
+        assert.deepStrictEqual(b.serviceA, a);
       });
       test("should create transients", () => {
         // eslint-disable-next-line @typescript-eslint/no-empty-object-type
@@ -688,15 +691,15 @@ describe("Dymexjs_DI", () => {
           constructor(public serviceA: SA) {}
         }
         const b = container.resolve<SB>(SB);
-        expect(b).toBeInstanceOf(ServiceB);
-        expect(b.serviceA).toBeInstanceOf(ServiceA);
+        assert.ok(b instanceof ServiceB);
+        assert.ok(b.serviceA instanceof ServiceA);
         const a = container.resolve<SA>(SA);
-        expect(a).toBeInstanceOf(ServiceA);
-        expect(b.serviceA).not.toBe(a);
-        expect(b.serviceA).toEqual(a);
+        assert.ok(a instanceof ServiceA);
+        assert.notStrictEqual(b.serviceA, a);
+        assert.deepStrictEqual(b.serviceA, a);
         const b2 = container.resolve<SB>(SB);
-        expect(b).not.toBe(b2);
-        expect(b).toEqual(b2);
+        assert.notStrictEqual(b, b2);
+        assert.deepStrictEqual(b, b2);
       });
       test("should create scoped", () => {
         // eslint-disable-next-line @typescript-eslint/no-empty-object-type
@@ -714,13 +717,13 @@ describe("Dymexjs_DI", () => {
         }
         const scope = container.createScope();
         const b = container.resolve<SB>(SB, scope);
-        expect(b).toBeInstanceOf(ServiceB);
-        expect(b.serviceA).toBeInstanceOf(ServiceA);
+        assert.ok(b instanceof ServiceB);
+        assert.ok(b.serviceA instanceof ServiceA);
         const a = container.resolve<SA>(SA, scope);
-        expect(a).toBeInstanceOf(ServiceA);
-        expect(b.serviceA).toBe(a);
-        expect(b.serviceA).toEqual(a);
-        expect(() => container.resolve<SB>(SB)).toThrow(UndefinedScopeError);
+        assert.ok(a instanceof ServiceA);
+        assert.strictEqual(b.serviceA, a);
+        assert.equal(b.serviceA, a);
+        assert.throws(() => container.resolve<SB>(SB), UndefinedScopeError);
       });
     });
   });
