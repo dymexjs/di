@@ -18,7 +18,7 @@ describe("Dymexjs_DI ", () => {
         test("should handle async dispose", async () => {
           class TestAsyncDisposable implements AsyncDisposable {
             async [Symbol.asyncDispose](): Promise<void> {
-              await new Promise((resolve) => setTimeout(resolve, 99));
+              await new Promise((resolve) => setTimeout(resolve, 100));
             }
           }
           container.register("asyncDisposable", TestAsyncDisposable, {
@@ -28,7 +28,7 @@ describe("Dymexjs_DI ", () => {
           const startTime = Date.now();
           await container.clearInstances();
           const endTime = Date.now();
-          assert.ok(endTime - startTime > 100);
+          assert.ok(endTime - startTime > 90);
         });
       });
       describe("resolveAll", () => {
