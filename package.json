@@ -19,7 +19,7 @@
     "build": "npx tsc -p tsconfig.json",
     "lint": "eslint",
     "test": "globstar -- node --import tsx --test \"tests/**/*.test.ts\"",
-    "test:coverage": "globstar -- node --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage/lcov.info --import tsx --test \"tests/**/*.test.ts\"",
+    "test:coverage": "globstar -- node --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=lcov.info --import tsx --test \"tests/**/*.test.ts\"",
     "test:watch": "globstar -- node --import tsx --test --watch \"tests/**/*.test.ts\"",
     "format": "prettier --config .prettierrc \"src/**/*.ts\" \"tests/**/*.ts\" --write",
     "prepare": "npm run build",
