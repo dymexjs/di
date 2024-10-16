@@ -1,8 +1,9 @@
-import { beforeEach, describe, expect, jest, test } from "@jest/globals";
+import { beforeEach, describe, test } from "node:test";
 import { container } from "../../src/container";
 import { UndefinedScopeError } from "../../src/exceptions/UndefinedScopeError";
 import { Lifetime } from "../../src/types/registration.interface";
 import { STATIC_INJECTION_LIFETIME } from "../../src/constants";
+import * as assert from "node:assert/strict";
 
 describe("Dymexjs_DI ", () => {
   beforeEach(async () => container.reset());
@@ -14,16 +15,16 @@ describe("Dymexjs_DI ", () => {
           const value = [new Test()];
           container.register("array", { useValue: value });
           const result = await container.resolveAsync<Test[]>("array");
-          expect(result).toBeInstanceOf(Array);
-          expect(result).toHaveLength(1);
-          expect(result[0]).toBeInstanceOf(Test);
-          expect(result).toBe(value);
+          assert.ok(result instanceof Array);
+          assert.strictEqual(result.length, 1);
+          assert.ok(result[0] instanceof Test);
+          assert.strictEqual(result, value);
         });
         test("should register and resolve value async", async () => {
           const testValue = "test";
           container.register("test", { useValue: testValue });
           const value = await container.resolveAsync("test");
-          expect(value).toBe(testValue);
+          assert.strictEqual(value, testValue);
         });
       });
       describe("Factory provider", () => {
@@ -35,9 +36,9 @@ describe("Dymexjs_DI ", () => {
               Promise.resolve([await cont.resolve(Test)]),
           });
           const result = await container.resolveAsync<Array<Test>>("array");
-          expect(result).toBeInstanceOf(Array);
-          expect(result).toHaveLength(1);
-          expect(result[0]).toBeInstanceOf(Test);
+          assert.ok(result instanceof Array);
+          assert.strictEqual(result.length, 1);
+          assert.ok(result[0] instanceof Test);
         });
         test("should register and resolve a factory", async () => {
           class TestClass {
@@ -48,8 +49,8 @@ describe("Dymexjs_DI ", () => {
           }
           container.register("test", { useFactory: () => new TestClass() });
           const value = await container.resolveAsync<TestClass>("test");
-          expect(value).toBeInstanceOf(TestClass);
-          expect(value.propertyFactory).toBe("test");
+          assert.ok(value instanceof TestClass);
+          assert.strictEqual(value.propertyFactory, "test");
         });
         test("should handle async factory providers", async () => {
           const asyncFactory = async () => {
@@ -59,37 +60,37 @@ describe("Dymexjs_DI ", () => {
           };
           container.register("asyncToken", { useFactory: asyncFactory });
           const resolved = await container.resolveAsync("asyncToken");
-          expect(resolved).toEqual({ key: "asyncValue" });
+          assert.deepStrictEqual(resolved, { key: "asyncValue" });
         });
         test("register and resolve a factory value", async () => {
           container.register("test", { useFactory: (cont) => cont });
           const value = await container.resolveAsync("test");
-          expect(value).toBe(container);
+          assert.strictEqual(value, container);
         });
 
-        test("executes a registered factory each time resolve is called", async () => {
-          const factoryMock = jest.fn();
+        test("executes a registered factory each time resolve is called", async (t) => {
+          const factoryMock = t.mock.fn();
           container.register("Test", { useFactory: factoryMock });
 
           await container.resolveAsync("Test");
           await container.resolveAsync("Test");
 
-          expect(factoryMock.mock.calls.length).toBe(2);
+          assert.strictEqual(factoryMock.mock.callCount(), 2);
         });
 
-        test("resolves to factory result each time resolve is called", async () => {
-          const factoryMock = jest.fn();
+        test("resolves to factory result each time resolve is called", async (t) => {
+          const factoryMock = t.mock.fn();
           container.register("Test", { useFactory: factoryMock });
           const value1 = 1;
           const value2 = 2;
 
-          factoryMock.mockReturnValue(value1);
+          factoryMock.mock.mockImplementationOnce(() => value1 as never);
           const result1 = await container.resolveAsync("Test");
-          factoryMock.mockReturnValue(value2);
+          factoryMock.mock.mockImplementationOnce(() => value2 as never);
           const result2 = await container.resolveAsync("Test");
 
-          expect(result1).toBe(value1);
-          expect(result2).toBe(value2);
+          assert.strictEqual(result1, value1);
+          assert.strictEqual(result2, value2);
         });
       });
       describe("Class Provider", () => {
@@ -99,8 +100,8 @@ describe("Dymexjs_DI ", () => {
           }
           container.register("test", { useClass: TestClass });
           const value = await container.resolveAsync<TestClass>("test");
-          expect(value).toBeInstanceOf(TestClass);
-          expect(value.propertyA).toBe("test");
+          assert.ok(value instanceof TestClass);
+          assert.strictEqual(value.propertyA, "test");
         });
         test("should register and resolve class with class token", async () => {
           class TestClass {
@@ -108,8 +109,8 @@ describe("Dymexjs_DI ", () => {
           }
           container.register(TestClass, { useClass: TestClass });
           const value = await container.resolveAsync(TestClass);
-          expect(value).toBeInstanceOf(TestClass);
-          expect(value.propertyA).toBe("test");
+          assert.ok(value instanceof TestClass);
+          assert.strictEqual(value.propertyA, "test");
         });
         test("should register and resolve class with class token and provider", async () => {
           class TestClass {
@@ -117,8 +118,8 @@ describe("Dymexjs_DI ", () => {
           }
           container.register(TestClass, TestClass);
           const value = await container.resolveAsync(TestClass);
-          expect(value).toBeInstanceOf(TestClass);
-          expect(value.propertyA).toBe("test");
+          assert.ok(value instanceof TestClass);
+          assert.strictEqual(value.propertyA, "test");
         });
         test("should register and resolve singleton", async () => {
           class TestClass {
@@ -128,12 +129,12 @@ describe("Dymexjs_DI ", () => {
             lifetime: Lifetime.Singleton,
           });
           const value = await container.resolveAsync(TestClass);
-          expect(value).toBeInstanceOf(TestClass);
-          expect(value.propertyA).toBe("test");
+          assert.ok(value instanceof TestClass);
+          assert.strictEqual(value.propertyA, "test");
           value.propertyA = "test2";
           const value2 = await container.resolveAsync(TestClass);
-          expect(value2).toBeInstanceOf(TestClass);
-          expect(value2.propertyA).toBe("test2");
+          assert.ok(value2 instanceof TestClass);
+          assert.strictEqual(value2.propertyA, "test2");
         });
         test("should register and resolve transient", async () => {
           class TestClass {
@@ -143,12 +144,12 @@ describe("Dymexjs_DI ", () => {
             lifetime: Lifetime.Transient,
           });
           const value = await container.resolveAsync(TestClass);
-          expect(value).toBeInstanceOf(TestClass);
-          expect(value.propertyA).toBe("test");
+          assert.ok(value instanceof TestClass);
+          assert.strictEqual(value.propertyA, "test");
           value.propertyA = "test2";
           const value2 = await container.resolveAsync(TestClass);
-          expect(value2).toBeInstanceOf(TestClass);
-          expect(value2.propertyA).toBe("test");
+          assert.ok(value2 instanceof TestClass);
+          assert.strictEqual(value2.propertyA, "test");
         });
 
         test("should throw an error when trying to instanciate a scoped object without a scope", async () => {
@@ -158,7 +159,8 @@ describe("Dymexjs_DI ", () => {
             { useClass: TestClass },
             { lifetime: Lifetime.Scoped },
           );
-          expect(container.resolveAsync<TestClass>("test")).rejects.toThrow(
+          assert.rejects(
+            container.resolveAsync<TestClass>("test"),
             UndefinedScopeError,
           );
         });
@@ -167,7 +169,7 @@ describe("Dymexjs_DI ", () => {
         test("should register type TokenProvider", async () => {
           container.register("test", { useValue: "test" });
           container.registerType("test2", "test");
-          expect(container.resolveAsync("test2")).resolves.toBe("test");
+          assert.strictEqual(await container.resolveAsync("test2"), "test");
         });
       });
       describe("Constructor Provider", () => {
@@ -177,18 +179,18 @@ describe("Dymexjs_DI ", () => {
             public static [STATIC_INJECTION_LIFETIME] = Lifetime.Singleton;
           }
           const value = await container.resolveAsync(TestClass);
-          expect(value).toBeInstanceOf(TestClass);
-          expect(value.propertyA).toBe("test");
+          assert.ok(value instanceof TestClass);
+          assert.strictEqual(value.propertyA, "test");
           value.propertyA = "test2";
         });
         test("should return a transient when constructor not registered", async () => {
           class Test {}
           const test1 = await container.resolveAsync(Test);
           const test2 = await container.resolveAsync(Test);
-          expect(test1).toBeInstanceOf(Test);
-          expect(test2).toBeInstanceOf(Test);
-          expect(test1).toEqual(test2);
-          expect(test1).not.toBe(test2);
+          assert.ok(test1 instanceof Test);
+          assert.ok(test2 instanceof Test);
+          assert.deepStrictEqual(test1, test2);
+          assert.notStrictEqual(test1, test2);
         });
       });
     });
