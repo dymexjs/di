@@ -49,4 +49,5 @@ Thumbs.db
 *.wmv
 
 .vscode
-coverage/
+./coverage/*
+lcov.info
