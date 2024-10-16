@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test } from "@jest/globals";
+import { beforeEach, describe, test } from "node:test";
 import { container } from "../../src/container";
 import {
   STATIC_INJECTIONS,
@@ -6,6 +6,7 @@ import {
 } from "../../src/constants";
 import { Lifetime } from "../../src/types/registration.interface";
 import { StaticInjectable } from "../../src/types/static-inject.interface";
+import * as assert from "node:assert/strict";
 
 describe("Dymexjs_DI", () => {
   beforeEach(async () => await container.reset());
@@ -26,15 +27,15 @@ describe("Dymexjs_DI", () => {
         );
         const test2 = container.resolve(TestClass2);
         const test = container.resolve<TestClass>("test");
-        expect(test2).toBeInstanceOf(TestClass2);
-        expect(test2.test).toBeInstanceOf(TestClass);
-        expect(test2.test.propertyA).toBe("test");
-        expect(test2.test).toBe(test);
+        assert.ok(test2 instanceof TestClass2);
+        assert.ok(test2.test instanceof TestClass);
+        assert.strictEqual(test2.test.propertyA, "test");
+        assert.strictEqual(test2.test, test);
         test.propertyA = "test2";
         const test3 = container.resolve<TestClass>("test");
-        expect(test3).toBeInstanceOf(TestClass);
-        expect(test3.propertyA).toBe("test2");
-        expect(test2.test).toBe(test3);
+        assert.ok(test3 instanceof TestClass);
+        assert.strictEqual(test3.propertyA, "test2");
+        assert.strictEqual(test2.test, test3);
       });
       test("should register singleton from STATIC_INJECTION_LIFETIME", () => {
         class TestClass {
@@ -48,15 +49,15 @@ describe("Dymexjs_DI", () => {
         container.register("test", { useClass: TestClass });
         const test2 = container.resolve(TestClass2);
         const test = container.resolve<TestClass>("test");
-        expect(test2).toBeInstanceOf(TestClass2);
-        expect(test2.test).toBeInstanceOf(TestClass);
-        expect(test2.test.propertyA).toBe("test");
-        expect(test2.test).toBe(test);
+        assert.ok(test2 instanceof TestClass2);
+        assert.ok(test2.test instanceof TestClass);
+        assert.strictEqual(test2.test.propertyA, "test");
+        assert.strictEqual(test2.test, test);
         test.propertyA = "test2";
         const test3 = container.resolve<TestClass>("test");
-        expect(test3).toBeInstanceOf(TestClass);
-        expect(test3.propertyA).toBe("test2");
-        expect(test2.test).toBe(test3);
+        assert.ok(test3 instanceof TestClass);
+        assert.strictEqual(test3.propertyA, "test2");
+        assert.strictEqual(test2.test, test3);
       });
       test("should register singleton from impements StaticInjectable", () => {
         class TestClass implements StaticInjectable<typeof TestClass> {
@@ -70,15 +71,15 @@ describe("Dymexjs_DI", () => {
         container.register("test", { useClass: TestClass });
         const test2 = container.resolve(TestClass2);
         const test = container.resolve<TestClass>("test");
-        expect(test2).toBeInstanceOf(TestClass2);
-        expect(test2.test).toBeInstanceOf(TestClass);
-        expect(test2.test.propertyA).toBe("test");
-        expect(test2.test).toBe(test);
+        assert.ok(test2 instanceof TestClass2);
+        assert.ok(test2.test instanceof TestClass);
+        assert.strictEqual(test2.test.propertyA, "test");
+        assert.strictEqual(test2.test, test);
         test.propertyA = "test2";
         const test3 = container.resolve<TestClass>("test");
-        expect(test3).toBeInstanceOf(TestClass);
-        expect(test3.propertyA).toBe("test2");
-        expect(test2.test).toBe(test3);
+        assert.ok(test3 instanceof TestClass);
+        assert.strictEqual(test3.propertyA, "test2");
+        assert.strictEqual(test2.test, test3);
       });
     });
   });

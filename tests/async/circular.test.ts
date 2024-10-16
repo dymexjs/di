@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test } from "@jest/globals";
+import { beforeEach, describe, test } from "node:test";
 import { container } from "../../src/container";
 import { StaticInjectable } from "../../src/types/static-inject.interface";
 import {
@@ -8,6 +8,7 @@ import {
 import { Lifetime } from "../../src/types/registration.interface";
 import { IContainer } from "../../src/types/container.interface";
 import { createInterfaceId, Singleton, Transient } from "../../src/decorators";
+import * as assert from "node:assert/strict";
 
 describe("Dymexjs_DI ", () => {
   beforeEach(async () => await container.reset());
@@ -68,15 +69,15 @@ describe("Dymexjs_DI ", () => {
         container.register("factoryTest2", { useFactory: factoryTest2 });
         const test2 = await container.resolveAsync(TestClass2);
         const test = await container.resolveAsync(TestClass);
-        expect(test2).toBeInstanceOf(TestClass2);
-        expect(test).toBeInstanceOf(TestClass);
-        expect(test2.test).toBeInstanceOf(TestClass);
+        assert.ok(test2 instanceof TestClass2);
+        assert.ok(test instanceof TestClass);
+        assert.ok(test2.test instanceof TestClass);
         const t = test.test2.test;
-        expect(t).toBeInstanceOf(TestClass);
-        expect(test2.test).toBe(test);
+        assert.ok(t instanceof TestClass);
+        assert.strictEqual(test2.test, test);
         //This needs to be toEqual because where comparing the generated proxy, and toEqual will make a deep equal assertion
-        expect(test.test2).toEqual(test2);
-        expect(test.test2.test.propertyA).toBe("test");
+        assert.deepStrictEqual(test.test2, test2);
+        assert.strictEqual(test.test2.test.propertyA, "test");
       });
       test("circular dependency resolution complex case", async () => {
         container.register("serviceA", { useClass: ServiceA });
@@ -96,59 +97,59 @@ describe("Dymexjs_DI ", () => {
         const serviceC = await container.resolveAsync<ServiceC>("serviceC");
         const serviceD = await container.resolveAsync<ServiceD>("serviceD");
 
-        expect(serviceA).toBeInstanceOf(ServiceA);
-        expect(serviceA.serviceB).toBeInstanceOf(ServiceB);
-        expect(serviceA.serviceB.serviceA).toBeInstanceOf(ServiceA);
-        expect(serviceA.serviceB.serviceD).toBeInstanceOf(ServiceD);
-        expect(serviceA.serviceC).toBeInstanceOf(ServiceC);
-        expect(serviceA.serviceC.serviceB).toBeInstanceOf(ServiceB);
-        expect(serviceA.serviceC.serviceD).toBeInstanceOf(ServiceD);
-        expect(serviceB).toBeInstanceOf(ServiceB);
-        expect(serviceB.serviceA).toBeInstanceOf(ServiceA);
-        expect(serviceB.serviceA.serviceB).toBeInstanceOf(ServiceB);
-        expect(serviceB.serviceA.serviceC).toBeInstanceOf(ServiceC);
-        expect(serviceB.serviceD).toBeInstanceOf(ServiceD);
-        expect(serviceB.serviceD.serviceA).toBeInstanceOf(ServiceA);
-        expect(serviceB.serviceD.serviceC).toBeInstanceOf(ServiceC);
-        expect(serviceC).toBeInstanceOf(ServiceC);
-        expect(serviceC.serviceB).toBeInstanceOf(ServiceB);
-        expect(serviceC.serviceB.serviceA).toBeInstanceOf(ServiceA);
-        expect(serviceC.serviceB.serviceD).toBeInstanceOf(ServiceD);
-        expect(serviceC.serviceD).toBeInstanceOf(ServiceD);
-        expect(serviceC.serviceD.serviceA).toBeInstanceOf(ServiceA);
-        expect(serviceC.serviceD.serviceC).toBeInstanceOf(ServiceC);
-        expect(serviceD).toBeInstanceOf(ServiceD);
-        expect(serviceD.serviceA).toBeInstanceOf(ServiceA);
-        expect(serviceD.serviceA.serviceB).toBeInstanceOf(ServiceB);
-        expect(serviceD.serviceA.serviceC).toBeInstanceOf(ServiceC);
-        expect(serviceD.serviceC).toBeInstanceOf(ServiceC);
-        expect(serviceD.serviceC.serviceB).toBeInstanceOf(ServiceB);
-        expect(serviceD.serviceC.serviceD).toBeInstanceOf(ServiceD);
+        assert.ok(serviceA instanceof ServiceA);
+        assert.ok(serviceA.serviceB instanceof ServiceB);
+        assert.ok(serviceA.serviceB.serviceA instanceof ServiceA);
+        assert.ok(serviceA.serviceB.serviceD instanceof ServiceD);
+        assert.ok(serviceA.serviceC instanceof ServiceC);
+        assert.ok(serviceA.serviceC.serviceB instanceof ServiceB);
+        assert.ok(serviceA.serviceC.serviceD instanceof ServiceD);
+        assert.ok(serviceB instanceof ServiceB);
+        assert.ok(serviceB.serviceA instanceof ServiceA);
+        assert.ok(serviceB.serviceA.serviceB instanceof ServiceB);
+        assert.ok(serviceB.serviceA.serviceC instanceof ServiceC);
+        assert.ok(serviceB.serviceD instanceof ServiceD);
+        assert.ok(serviceB.serviceD.serviceA instanceof ServiceA);
+        assert.ok(serviceB.serviceD.serviceC instanceof ServiceC);
+        assert.ok(serviceC instanceof ServiceC);
+        assert.ok(serviceC.serviceB instanceof ServiceB);
+        assert.ok(serviceC.serviceB.serviceA instanceof ServiceA);
+        assert.ok(serviceC.serviceB.serviceD instanceof ServiceD);
+        assert.ok(serviceC.serviceD instanceof ServiceD);
+        assert.ok(serviceC.serviceD.serviceA instanceof ServiceA);
+        assert.ok(serviceC.serviceD.serviceC instanceof ServiceC);
+        assert.ok(serviceD instanceof ServiceD);
+        assert.ok(serviceD.serviceA instanceof ServiceA);
+        assert.ok(serviceD.serviceA.serviceB instanceof ServiceB);
+        assert.ok(serviceD.serviceA.serviceC instanceof ServiceC);
+        assert.ok(serviceD.serviceC instanceof ServiceC);
+        assert.ok(serviceD.serviceC.serviceB instanceof ServiceB);
+        assert.ok(serviceD.serviceC.serviceD instanceof ServiceD);
 
-        expect(serviceA.serviceB).toBe(serviceB); //Instance
-        expect(serviceA.serviceB.serviceA).toEqual(serviceA); //Proxy
-        expect(serviceA.serviceB.serviceD).toBe(serviceD); //Instance
-        expect(serviceA.serviceC).toBe(serviceC); //Instance
-        expect(serviceA.serviceC.serviceB).toEqual(serviceB); //Proxy
-        expect(serviceA.serviceC.serviceD).toEqual(serviceD); //Proxy
-        expect(serviceB.serviceA).toEqual(serviceA); //Proxy
-        expect(serviceB.serviceA.serviceB).toBe(serviceB); //Instance
-        expect(serviceB.serviceA.serviceC).toBe(serviceC); //Instance
-        expect(serviceB.serviceD).toBe(serviceD); //Instance
-        expect(serviceB.serviceD.serviceA).toEqual(serviceA); //Proxy
-        expect(serviceB.serviceD.serviceC).toBe(serviceC); //Instance
-        expect(serviceC.serviceB).toEqual(serviceB); //Proxy
-        expect(serviceC.serviceB.serviceA).toEqual(serviceA); //Proxy
-        expect(serviceC.serviceB.serviceD).toBe(serviceD); //Instance
-        expect(serviceC.serviceD).toEqual(serviceD); //Proxy
-        expect(serviceC.serviceD.serviceA).toEqual(serviceA); //Proxy
-        expect(serviceC.serviceD.serviceC).toBe(serviceC); //Instance
-        expect(serviceD.serviceA).toEqual(serviceA); //Proxy
-        expect(serviceD.serviceA.serviceB).toBe(serviceB); //Proxy
-        expect(serviceD.serviceA.serviceC).toBe(serviceC); //Proxy
-        expect(serviceD.serviceC).toBe(serviceC); //Instance
-        expect(serviceD.serviceC.serviceB).toEqual(serviceB); //Proxy
-        expect(serviceD.serviceC.serviceD).toEqual(serviceD); //Proxy
+        assert.strictEqual(serviceA.serviceB, serviceB); //Instance
+        assert.deepStrictEqual(serviceA.serviceB.serviceA, serviceA); //Proxy
+        assert.strictEqual(serviceA.serviceB.serviceD, serviceD); //Instance
+        assert.strictEqual(serviceA.serviceC, serviceC); //Instance
+        assert.deepStrictEqual(serviceA.serviceC.serviceB, serviceB); //Proxy
+        assert.deepStrictEqual(serviceA.serviceC.serviceD, serviceD); //Proxy
+        assert.deepStrictEqual(serviceB.serviceA, serviceA); //Proxy
+        assert.strictEqual(serviceB.serviceA.serviceB, serviceB); //Instance
+        assert.strictEqual(serviceB.serviceA.serviceC, serviceC); //Instance
+        assert.strictEqual(serviceB.serviceD, serviceD); //Instance
+        assert.deepStrictEqual(serviceB.serviceD.serviceA, serviceA); //Proxy
+        assert.strictEqual(serviceB.serviceD.serviceC, serviceC); //Instance
+        assert.deepStrictEqual(serviceC.serviceB, serviceB); //Proxy
+        assert.deepStrictEqual(serviceC.serviceB.serviceA, serviceA); //Proxy
+        assert.strictEqual(serviceC.serviceB.serviceD, serviceD); //Instance
+        assert.deepStrictEqual(serviceC.serviceD, serviceD); //Proxy
+        assert.deepStrictEqual(serviceC.serviceD.serviceA, serviceA); //Proxy
+        assert.strictEqual(serviceC.serviceD.serviceC, serviceC); //Instance
+        assert.deepStrictEqual(serviceD.serviceA, serviceA); //Proxy
+        assert.strictEqual(serviceD.serviceA.serviceB, serviceB); //Proxy
+        assert.strictEqual(serviceD.serviceA.serviceC, serviceC); //Proxy
+        assert.strictEqual(serviceD.serviceC, serviceC); //Instance
+        assert.deepStrictEqual(serviceD.serviceC.serviceB, serviceB); //Proxy
+        assert.deepStrictEqual(serviceD.serviceC.serviceD, serviceD); //Proxy
       });
     });
     describe("Decorators", () => {
@@ -166,13 +167,13 @@ describe("Dymexjs_DI ", () => {
 
           const test = await container.resolveAsync<TestClass>("test");
           const test2 = await container.resolveAsync<TestClass2>("test2");
-          expect(test).toBeInstanceOf(TestClass);
-          expect(test2).toBeInstanceOf(TestClass2);
-          expect(test.test2).toBeInstanceOf(TestClass2);
-          expect(test2.test).toBeInstanceOf(TestClass);
-          expect(test.test2).toBe(test2);
+          assert.ok(test instanceof TestClass);
+          assert.ok(test2 instanceof TestClass2);
+          assert.ok(test.test2 instanceof TestClass2);
+          assert.ok(test2.test instanceof TestClass);
+          assert.strictEqual(test.test2, test2);
           //This needs to be toEqual because where comparing the generated proxy, and toEqual will make a deep equal assertion
-          expect(test2.test).toEqual(test);
+          assert.deepStrictEqual(test2.test, test);
         });
         test("circular dependency complex case", async () => {
           @Singleton("serviceA", ["serviceB", "serviceC"])
@@ -215,59 +216,59 @@ describe("Dymexjs_DI ", () => {
           const serviceC = await container.resolveAsync<ServiceC>("serviceC");
           const serviceD = await container.resolveAsync<ServiceD>("serviceD");
 
-          expect(serviceA).toBeInstanceOf(ServiceA);
-          expect(serviceA.serviceB).toBeInstanceOf(ServiceB);
-          expect(serviceA.serviceB.serviceA).toBeInstanceOf(ServiceA);
-          expect(serviceA.serviceB.serviceD).toBeInstanceOf(ServiceD);
-          expect(serviceA.serviceC).toBeInstanceOf(ServiceC);
-          expect(serviceA.serviceC.serviceB).toBeInstanceOf(ServiceB);
-          expect(serviceA.serviceC.serviceD).toBeInstanceOf(ServiceD);
-          expect(serviceB).toBeInstanceOf(ServiceB);
-          expect(serviceB.serviceA).toBeInstanceOf(ServiceA);
-          expect(serviceB.serviceA.serviceB).toBeInstanceOf(ServiceB);
-          expect(serviceB.serviceA.serviceC).toBeInstanceOf(ServiceC);
-          expect(serviceB.serviceD).toBeInstanceOf(ServiceD);
-          expect(serviceB.serviceD.serviceA).toBeInstanceOf(ServiceA);
-          expect(serviceB.serviceD.serviceC).toBeInstanceOf(ServiceC);
-          expect(serviceC).toBeInstanceOf(ServiceC);
-          expect(serviceC.serviceB).toBeInstanceOf(ServiceB);
-          expect(serviceC.serviceB.serviceA).toBeInstanceOf(ServiceA);
-          expect(serviceC.serviceB.serviceD).toBeInstanceOf(ServiceD);
-          expect(serviceC.serviceD).toBeInstanceOf(ServiceD);
-          expect(serviceC.serviceD.serviceA).toBeInstanceOf(ServiceA);
-          expect(serviceC.serviceD.serviceC).toBeInstanceOf(ServiceC);
-          expect(serviceD).toBeInstanceOf(ServiceD);
-          expect(serviceD.serviceA).toBeInstanceOf(ServiceA);
-          expect(serviceD.serviceA.serviceB).toBeInstanceOf(ServiceB);
-          expect(serviceD.serviceA.serviceC).toBeInstanceOf(ServiceC);
-          expect(serviceD.serviceC).toBeInstanceOf(ServiceC);
-          expect(serviceD.serviceC.serviceB).toBeInstanceOf(ServiceB);
-          expect(serviceD.serviceC.serviceD).toBeInstanceOf(ServiceD);
+          assert.ok(serviceA instanceof ServiceA);
+          assert.ok(serviceA.serviceB instanceof ServiceB);
+          assert.ok(serviceA.serviceB.serviceA instanceof ServiceA);
+          assert.ok(serviceA.serviceB.serviceD instanceof ServiceD);
+          assert.ok(serviceA.serviceC instanceof ServiceC);
+          assert.ok(serviceA.serviceC.serviceB instanceof ServiceB);
+          assert.ok(serviceA.serviceC.serviceD instanceof ServiceD);
+          assert.ok(serviceB instanceof ServiceB);
+          assert.ok(serviceB.serviceA instanceof ServiceA);
+          assert.ok(serviceB.serviceA.serviceB instanceof ServiceB);
+          assert.ok(serviceB.serviceA.serviceC instanceof ServiceC);
+          assert.ok(serviceB.serviceD instanceof ServiceD);
+          assert.ok(serviceB.serviceD.serviceA instanceof ServiceA);
+          assert.ok(serviceB.serviceD.serviceC instanceof ServiceC);
+          assert.ok(serviceC instanceof ServiceC);
+          assert.ok(serviceC.serviceB instanceof ServiceB);
+          assert.ok(serviceC.serviceB.serviceA instanceof ServiceA);
+          assert.ok(serviceC.serviceB.serviceD instanceof ServiceD);
+          assert.ok(serviceC.serviceD instanceof ServiceD);
+          assert.ok(serviceC.serviceD.serviceA instanceof ServiceA);
+          assert.ok(serviceC.serviceD.serviceC instanceof ServiceC);
+          assert.ok(serviceD instanceof ServiceD);
+          assert.ok(serviceD.serviceA instanceof ServiceA);
+          assert.ok(serviceD.serviceA.serviceB instanceof ServiceB);
+          assert.ok(serviceD.serviceA.serviceC instanceof ServiceC);
+          assert.ok(serviceD.serviceC instanceof ServiceC);
+          assert.ok(serviceD.serviceC.serviceB instanceof ServiceB);
+          assert.ok(serviceD.serviceC.serviceD instanceof ServiceD);
 
-          expect(serviceA.serviceB).toBe(serviceB); //Instance
-          expect(serviceA.serviceB.serviceA).toEqual(serviceA); //Proxy
-          expect(serviceA.serviceB.serviceD).toBe(serviceD); //Instance
-          expect(serviceA.serviceC).toBe(serviceC); //Instance
-          expect(serviceA.serviceC.serviceB).toEqual(serviceB); //Proxy
-          expect(serviceA.serviceC.serviceD).toEqual(serviceD); //Proxy
-          expect(serviceB.serviceA).toEqual(serviceA); //Proxy
-          expect(serviceB.serviceA.serviceB).toBe(serviceB); //Instance
-          expect(serviceB.serviceA.serviceC).toBe(serviceC); //Instance
-          expect(serviceB.serviceD).toBe(serviceD); //Instance
-          expect(serviceB.serviceD.serviceA).toEqual(serviceA); //Proxy
-          expect(serviceB.serviceD.serviceC).toBe(serviceC); //Instance
-          expect(serviceC.serviceB).toEqual(serviceB); //Proxy
-          expect(serviceC.serviceB.serviceA).toEqual(serviceA); //Proxy
-          expect(serviceC.serviceB.serviceD).toBe(serviceD); //Instance
-          expect(serviceC.serviceD).toEqual(serviceD); //Proxy
-          expect(serviceC.serviceD.serviceA).toEqual(serviceA); //Proxy
-          expect(serviceC.serviceD.serviceC).toBe(serviceC); //Instance
-          expect(serviceD.serviceA).toEqual(serviceA); //Proxy
-          expect(serviceD.serviceA.serviceB).toBe(serviceB); //Proxy
-          expect(serviceD.serviceA.serviceC).toBe(serviceC); //Proxy
-          expect(serviceD.serviceC).toBe(serviceC); //Instance
-          expect(serviceD.serviceC.serviceB).toEqual(serviceB); //Proxy
-          expect(serviceD.serviceC.serviceD).toEqual(serviceD); //Proxy
+          assert.strictEqual(serviceA.serviceB, serviceB); //Instance
+          assert.deepStrictEqual(serviceA.serviceB.serviceA, serviceA); //Proxy
+          assert.strictEqual(serviceA.serviceB.serviceD, serviceD); //Instance
+          assert.strictEqual(serviceA.serviceC, serviceC); //Instance
+          assert.deepStrictEqual(serviceA.serviceC.serviceB, serviceB); //Proxy
+          assert.deepStrictEqual(serviceA.serviceC.serviceD, serviceD); //Proxy
+          assert.deepStrictEqual(serviceB.serviceA, serviceA); //Proxy
+          assert.strictEqual(serviceB.serviceA.serviceB, serviceB); //Instance
+          assert.strictEqual(serviceB.serviceA.serviceC, serviceC); //Instance
+          assert.strictEqual(serviceB.serviceD, serviceD); //Instance
+          assert.deepStrictEqual(serviceB.serviceD.serviceA, serviceA); //Proxy
+          assert.strictEqual(serviceB.serviceD.serviceC, serviceC); //Instance
+          assert.deepStrictEqual(serviceC.serviceB, serviceB); //Proxy
+          assert.deepStrictEqual(serviceC.serviceB.serviceA, serviceA); //Proxy
+          assert.strictEqual(serviceC.serviceB.serviceD, serviceD); //Instance
+          assert.deepStrictEqual(serviceC.serviceD, serviceD); //Proxy
+          assert.deepStrictEqual(serviceC.serviceD.serviceA, serviceA); //Proxy
+          assert.strictEqual(serviceC.serviceD.serviceC, serviceC); //Instance
+          assert.deepStrictEqual(serviceD.serviceA, serviceA); //Proxy
+          assert.strictEqual(serviceD.serviceA.serviceB, serviceB); //Proxy
+          assert.strictEqual(serviceD.serviceA.serviceC, serviceC); //Proxy
+          assert.strictEqual(serviceD.serviceC, serviceC); //Instance
+          assert.deepStrictEqual(serviceD.serviceC.serviceB, serviceB); //Proxy
+          assert.deepStrictEqual(serviceD.serviceC.serviceD, serviceD); //Proxy
         });
         test("Lazily created proxy allows iterating over keys of the original service", async () => {
           @Transient(["TestB"])
@@ -284,12 +285,12 @@ describe("Dymexjs_DI ", () => {
           }
           const a = await container.resolveAsync(TestA);
           const b = await container.resolveAsync(TestB);
-          expect(a).toBeInstanceOf(TestA);
-          expect(b).toBeInstanceOf(TestB);
-          expect(Object.keys(a)).toStrictEqual(["b"]);
-          expect(Object.keys(b)).toStrictEqual(["a", "name", "prop"]);
-          expect(Object.getOwnPropertyNames(a)).toStrictEqual(["b"]);
-          expect(Object.getOwnPropertyNames(b)).toStrictEqual([
+          assert.ok(a instanceof TestA);
+          assert.ok(b instanceof TestB);
+          assert.deepStrictEqual(Object.keys(a), ["b"]);
+          assert.deepStrictEqual(Object.keys(b).sort(), ["a", "name", "prop"]);
+          assert.deepStrictEqual(Object.getOwnPropertyNames(a), ["b"]);
+          assert.deepStrictEqual(Object.getOwnPropertyNames(b).sort(), [
             "a",
             "name",
             "prop",
@@ -319,13 +320,13 @@ describe("Dymexjs_DI ", () => {
           }
           const test2 = await container.resolveAsync<TC2>(TC2);
           const test = await container.resolveAsync<TestClass>(TC);
-          expect(test2).toBeInstanceOf(TestClass2);
-          expect(test).toBeInstanceOf(TestClass);
-          expect(test2.test).toBeInstanceOf(TestClass);
-          expect(test.test2).toBeInstanceOf(TestClass2);
-          expect(test2.test).toBe(test);
+          assert.ok(test2 instanceof TestClass2);
+          assert.ok(test instanceof TestClass);
+          assert.ok(test2.test instanceof TestClass);
+          assert.ok(test.test2 instanceof TestClass2);
+          assert.strictEqual(test2.test, test);
           //This needs to be toEqual because where comparing the generated proxy, and toEqual will make a deep equal assertion
-          expect(test.test2).toEqual(test2);
+          assert.deepStrictEqual(test.test2, test2);
         });
         test("Lazy creation with proxies allow circular dependencies using interfaces", async () => {
           interface ITestA {
@@ -351,10 +352,10 @@ describe("Dymexjs_DI ", () => {
 
           const a = await container.resolveAsync<TestA>(ITestA);
           const b = await container.resolveAsync<TestB>(ITestB);
-          expect(a).toBeInstanceOf(TestA);
-          expect(a.b).toBeInstanceOf(TestB);
-          expect(b.a).toBeInstanceOf(TestA);
-          expect(a.b.name).toBe("testB");
+          assert.ok(a instanceof TestA);
+          assert.ok(a.b instanceof TestB);
+          assert.ok(b.a instanceof TestA);
+          assert.strictEqual(a.b.name, "testB");
         });
         test("circular dependency complex case", async () => {
           interface SA {
@@ -417,59 +418,59 @@ describe("Dymexjs_DI ", () => {
           const serviceC = await container.resolveAsync(ServiceC);
           const serviceD = await container.resolveAsync(ServiceD);
 
-          expect(serviceA).toBeInstanceOf(ServiceA);
-          expect(serviceA.serviceB).toBeInstanceOf(ServiceB);
-          expect(serviceA.serviceB.serviceA).toBeInstanceOf(ServiceA);
-          expect(serviceA.serviceB.serviceD).toBeInstanceOf(ServiceD);
-          expect(serviceA.serviceC).toBeInstanceOf(ServiceC);
-          expect(serviceA.serviceC.serviceB).toBeInstanceOf(ServiceB);
-          expect(serviceA.serviceC.serviceD).toBeInstanceOf(ServiceD);
-          expect(serviceB).toBeInstanceOf(ServiceB);
-          expect(serviceB.serviceA).toBeInstanceOf(ServiceA);
-          expect(serviceB.serviceA.serviceB).toBeInstanceOf(ServiceB);
-          expect(serviceB.serviceA.serviceC).toBeInstanceOf(ServiceC);
-          expect(serviceB.serviceD).toBeInstanceOf(ServiceD);
-          expect(serviceB.serviceD.serviceA).toBeInstanceOf(ServiceA);
-          expect(serviceB.serviceD.serviceC).toBeInstanceOf(ServiceC);
-          expect(serviceC).toBeInstanceOf(ServiceC);
-          expect(serviceC.serviceB).toBeInstanceOf(ServiceB);
-          expect(serviceC.serviceB.serviceA).toBeInstanceOf(ServiceA);
-          expect(serviceC.serviceB.serviceD).toBeInstanceOf(ServiceD);
-          expect(serviceC.serviceD).toBeInstanceOf(ServiceD);
-          expect(serviceC.serviceD.serviceA).toBeInstanceOf(ServiceA);
-          expect(serviceC.serviceD.serviceC).toBeInstanceOf(ServiceC);
-          expect(serviceD).toBeInstanceOf(ServiceD);
-          expect(serviceD.serviceA).toBeInstanceOf(ServiceA);
-          expect(serviceD.serviceA.serviceB).toBeInstanceOf(ServiceB);
-          expect(serviceD.serviceA.serviceC).toBeInstanceOf(ServiceC);
-          expect(serviceD.serviceC).toBeInstanceOf(ServiceC);
-          expect(serviceD.serviceC.serviceB).toBeInstanceOf(ServiceB);
-          expect(serviceD.serviceC.serviceD).toBeInstanceOf(ServiceD);
+          assert.ok(serviceA instanceof ServiceA);
+          assert.ok(serviceA.serviceB instanceof ServiceB);
+          assert.ok(serviceA.serviceB.serviceA instanceof ServiceA);
+          assert.ok(serviceA.serviceB.serviceD instanceof ServiceD);
+          assert.ok(serviceA.serviceC instanceof ServiceC);
+          assert.ok(serviceA.serviceC.serviceB instanceof ServiceB);
+          assert.ok(serviceA.serviceC.serviceD instanceof ServiceD);
+          assert.ok(serviceB instanceof ServiceB);
+          assert.ok(serviceB.serviceA instanceof ServiceA);
+          assert.ok(serviceB.serviceA.serviceB instanceof ServiceB);
+          assert.ok(serviceB.serviceA.serviceC instanceof ServiceC);
+          assert.ok(serviceB.serviceD instanceof ServiceD);
+          assert.ok(serviceB.serviceD.serviceA instanceof ServiceA);
+          assert.ok(serviceB.serviceD.serviceC instanceof ServiceC);
+          assert.ok(serviceC instanceof ServiceC);
+          assert.ok(serviceC.serviceB instanceof ServiceB);
+          assert.ok(serviceC.serviceB.serviceA instanceof ServiceA);
+          assert.ok(serviceC.serviceB.serviceD instanceof ServiceD);
+          assert.ok(serviceC.serviceD instanceof ServiceD);
+          assert.ok(serviceC.serviceD.serviceA instanceof ServiceA);
+          assert.ok(serviceC.serviceD.serviceC instanceof ServiceC);
+          assert.ok(serviceD instanceof ServiceD);
+          assert.ok(serviceD.serviceA instanceof ServiceA);
+          assert.ok(serviceD.serviceA.serviceB instanceof ServiceB);
+          assert.ok(serviceD.serviceA.serviceC instanceof ServiceC);
+          assert.ok(serviceD.serviceC instanceof ServiceC);
+          assert.ok(serviceD.serviceC.serviceB instanceof ServiceB);
+          assert.ok(serviceD.serviceC.serviceD instanceof ServiceD);
 
-          expect(serviceA.serviceB).toBe(serviceB); //Instance
-          expect(serviceA.serviceB.serviceA).toEqual(serviceA); //Proxy
-          expect(serviceA.serviceB.serviceD).toBe(serviceD); //Instance
-          expect(serviceA.serviceC).toBe(serviceC); //Instance
-          expect(serviceA.serviceC.serviceB).toEqual(serviceB); //Proxy
-          expect(serviceA.serviceC.serviceD).toEqual(serviceD); //Proxy
-          expect(serviceB.serviceA).toEqual(serviceA); //Proxy
-          expect(serviceB.serviceA.serviceB).toBe(serviceB); //Instance
-          expect(serviceB.serviceA.serviceC).toBe(serviceC); //Instance
-          expect(serviceB.serviceD).toBe(serviceD); //Instance
-          expect(serviceB.serviceD.serviceA).toEqual(serviceA); //Proxy
-          expect(serviceB.serviceD.serviceC).toBe(serviceC); //Instance
-          expect(serviceC.serviceB).toEqual(serviceB); //Proxy
-          expect(serviceC.serviceB.serviceA).toEqual(serviceA); //Proxy
-          expect(serviceC.serviceB.serviceD).toBe(serviceD); //Instance
-          expect(serviceC.serviceD).toEqual(serviceD); //Proxy
-          expect(serviceC.serviceD.serviceA).toEqual(serviceA); //Proxy
-          expect(serviceC.serviceD.serviceC).toBe(serviceC); //Instance
-          expect(serviceD.serviceA).toEqual(serviceA); //Proxy
-          expect(serviceD.serviceA.serviceB).toBe(serviceB); //Proxy
-          expect(serviceD.serviceA.serviceC).toBe(serviceC); //Proxy
-          expect(serviceD.serviceC).toBe(serviceC); //Instance
-          expect(serviceD.serviceC.serviceB).toEqual(serviceB); //Proxy
-          expect(serviceD.serviceC.serviceD).toEqual(serviceD); //Proxy
+          assert.strictEqual(serviceA.serviceB, serviceB); //Instance
+          assert.deepStrictEqual(serviceA.serviceB.serviceA, serviceA); //Proxy
+          assert.strictEqual(serviceA.serviceB.serviceD, serviceD); //Instance
+          assert.strictEqual(serviceA.serviceC, serviceC); //Instance
+          assert.deepStrictEqual(serviceA.serviceC.serviceB, serviceB); //Proxy
+          assert.deepStrictEqual(serviceA.serviceC.serviceD, serviceD); //Proxy
+          assert.deepStrictEqual(serviceB.serviceA, serviceA); //Proxy
+          assert.strictEqual(serviceB.serviceA.serviceB, serviceB); //Instance
+          assert.strictEqual(serviceB.serviceA.serviceC, serviceC); //Instance
+          assert.strictEqual(serviceB.serviceD, serviceD); //Instance
+          assert.deepStrictEqual(serviceB.serviceD.serviceA, serviceA); //Proxy
+          assert.strictEqual(serviceB.serviceD.serviceC, serviceC); //Instance
+          assert.deepStrictEqual(serviceC.serviceB, serviceB); //Proxy
+          assert.deepStrictEqual(serviceC.serviceB.serviceA, serviceA); //Proxy
+          assert.strictEqual(serviceC.serviceB.serviceD, serviceD); //Instance
+          assert.deepStrictEqual(serviceC.serviceD, serviceD); //Proxy
+          assert.deepStrictEqual(serviceC.serviceD.serviceA, serviceA); //Proxy
+          assert.strictEqual(serviceC.serviceD.serviceC, serviceC); //Instance
+          assert.deepStrictEqual(serviceD.serviceA, serviceA); //Proxy
+          assert.strictEqual(serviceD.serviceA.serviceB, serviceB); //Proxy
+          assert.strictEqual(serviceD.serviceA.serviceC, serviceC); //Proxy
+          assert.strictEqual(serviceD.serviceC, serviceC); //Instance
+          assert.deepStrictEqual(serviceD.serviceC.serviceB, serviceB); //Proxy
+          assert.deepStrictEqual(serviceD.serviceC.serviceD, serviceD); //Proxy
         });
       });
     });

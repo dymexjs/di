@@ -1,4 +1,4 @@
-import { describe, expect, test } from "@jest/globals";
+import { describe, test } from "node:test";
 import {
   getProviderType,
   isProvider,
@@ -12,99 +12,107 @@ import { isConstructorType } from "../src/types/constructor.type";
 import { isTokenProvider } from "../src/types/providers/token-provider";
 import { container } from "../src/container";
 import { TokenRegistrationCycleError } from "../src/exceptions/TokenRegistrationCycleError";
+import * as assert from "node:assert/strict";
 
 describe("Provider", () => {
   describe("Invalid provider", () => {
     test("isProvider", () => {
-      expect(isProvider("test")).toBe(false);
+      assert.strictEqual(isProvider("test"), false);
     });
     test("getProviderType", () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      expect(() => getProviderType("test" as any)).toThrow(
-        "Invalid provider type: test",
+      assert.throws(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        () => getProviderType("test" as any),
+        /Invalid provider type: test/,
       );
     });
   });
   describe("ValueProvider", () => {
     test("isProvider", () => {
-      expect(isProvider({ useValue: "test" })).toBe(true);
+      assert.ok(isProvider({ useValue: "test" }));
     });
     test("getProviderType", () => {
-      expect(getProviderType({ useValue: "test" })).toBe(
+      assert.strictEqual(
+        getProviderType({ useValue: "test" }),
         ProvidersType.ValueProvider,
       );
     });
     test("isValueProvider true", () => {
-      expect(isValueProvider({ useValue: "test" })).toBe(true);
+      assert.ok(isValueProvider({ useValue: "test" }));
     });
     test("isValueProvider false", () => {
-      expect(isValueProvider({} as Provider<unknown>)).toBe(false);
+      assert.strictEqual(isValueProvider({} as Provider<unknown>), false);
     });
   });
   describe("ClassProvider", () => {
     class TestClass {}
     test("isProvider", () => {
-      expect(isProvider({ useClass: TestClass })).toBe(true);
+      assert.ok(isProvider({ useClass: TestClass }));
     });
     test("getProviderType", () => {
-      expect(getProviderType({ useClass: TestClass })).toBe(
+      assert.strictEqual(
+        getProviderType({ useClass: TestClass }),
         ProvidersType.ClassProvider,
       );
     });
     test("isClassProvider true", () => {
-      expect(isClassProvider({ useClass: TestClass })).toBe(true);
+      assert.ok(isClassProvider({ useClass: TestClass }));
     });
     test("isClassProvider false", () => {
-      expect(isClassProvider({} as Provider<unknown>)).toBe(false);
+      assert.strictEqual(isClassProvider({} as Provider<unknown>), false);
     });
   });
   describe("Factory provider", () => {
     test("isProvider", () => {
-      expect(isProvider({ useFactory: () => {} })).toBe(true);
+      assert.strictEqual(isProvider({ useFactory: () => {} }), true);
     });
     test("getProviderType", () => {
-      expect(getProviderType({ useFactory: () => {} })).toBe(
+      assert.strictEqual(
+        getProviderType({ useFactory: () => {} }),
         ProvidersType.FactoryProvider,
       );
     });
     test("isFactoryProvider true", () => {
-      expect(isFactoryProvider({ useFactory: () => {} })).toBe(true);
+      assert.strictEqual(isFactoryProvider({ useFactory: () => {} }), true);
     });
     test("isFactoryProvider false", () => {
-      expect(isFactoryProvider({} as Provider<unknown>)).toBe(false);
+      assert.strictEqual(isFactoryProvider({} as Provider<unknown>), false);
     });
   });
   describe("constructor provider", () => {
     test("isConstructorToken", () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      expect(isConstructorType((() => true) as any)).toBe(true);
+      assert.strictEqual(isConstructorType((() => true) as any), true);
     });
     test("getProviderType", () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      expect(getProviderType((() => true) as any)).toBe(
+      assert.strictEqual(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        getProviderType((() => true) as any),
         ProvidersType.ConstructorProvider,
       );
     });
   });
   describe("Token provider", () => {
     test("isProvider", () => {
-      expect(isProvider({ useToken: "test" })).toBe(true);
+      assert.strictEqual(isProvider({ useToken: "test" }), true);
     });
     test("getProviderType", () => {
-      expect(getProviderType({ useToken: "test" })).toBe(
+      assert.strictEqual(
+        getProviderType({ useToken: "test" }),
         ProvidersType.TokenProvider,
       );
     });
     test("isTokenProvider true", () => {
-      expect(isTokenProvider({ useToken: "test" })).toBe(true);
+      assert.strictEqual(isTokenProvider({ useToken: "test" }), true);
     });
     test("isTokenProvider false", () => {
-      expect(isTokenProvider({} as Provider<unknown>)).toBe(false);
+      assert.strictEqual(isTokenProvider({} as Provider<unknown>), false);
     });
     test("should throw circular token registration", async () => {
       await container.reset();
       container.register("test", { useToken: "test2" });
-      expect(() => container.register("test2", { useToken: "test" })).toThrow(
+      assert.throws(
+        () => container.register("test2", { useToken: "test" }),
         TokenRegistrationCycleError,
       );
     });
