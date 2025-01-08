@@ -11,10 +11,11 @@ describe("Dymexjs_DI ", () => {
     describe("Provider", () => {
       describe("ValueProvider", () => {
         test("should allow array to be registered", () => {
+          // eslint-disable-next-line @typescript-eslint/no-extraneous-class
           class Test {}
           const value = [new Test()];
           container.register("array", { useValue: value });
-          const result = container.resolve<Test[]>("array");
+          const result = container.resolve<Array<Test>>("array");
           assert.ok(result instanceof Array);
           assert.strictEqual(result.length, 1);
           assert.ok(result[0] instanceof Test);
@@ -29,6 +30,7 @@ describe("Dymexjs_DI ", () => {
       });
       describe("Factory provider", () => {
         test("should allow to register an array", () => {
+          // eslint-disable-next-line @typescript-eslint/no-extraneous-class
           class Test {}
           container.register<Test>(Test, { useClass: Test });
           container.register<Array<Test>>("array", {
@@ -141,16 +143,10 @@ describe("Dymexjs_DI ", () => {
         });
 
         test("should throw an error when trying to instanciate a scoped object without a scope", () => {
+          // eslint-disable-next-line @typescript-eslint/no-extraneous-class
           class TestClass {}
-          container.register(
-            "test",
-            { useClass: TestClass },
-            { lifetime: Lifetime.Scoped },
-          );
-          assert.throws(
-            () => container.resolve<TestClass>("test"),
-            UndefinedScopeError,
-          );
+          container.register("test", { useClass: TestClass }, { lifetime: Lifetime.Scoped });
+          assert.throws(() => container.resolve<TestClass>("test"), UndefinedScopeError);
         });
       });
       describe("Token Provider", () => {
@@ -172,6 +168,7 @@ describe("Dymexjs_DI ", () => {
           value.propertyA = "test2";
         });
         test("should return a transient when constructor not registered", () => {
+          // eslint-disable-next-line @typescript-eslint/no-extraneous-class
           class Test {}
           const test1 = container.resolve(Test);
           const test2 = container.resolve(Test);

@@ -1,11 +1,6 @@
 import { beforeEach, describe, test } from "node:test";
 import { InvalidDecoratorError } from "../src/exceptions/InvalidDecoratorError";
-import {
-  AutoInjectable,
-  Scoped,
-  Singleton,
-  Transient,
-} from "../src/decorators";
+import { AutoInjectable, Scoped, Singleton, Transient } from "../src/decorators";
 import { ServiceMap } from "../src/service-map";
 import { Registration } from "../src/types/registration.interface";
 import { container } from "../src/container";
@@ -21,7 +16,7 @@ describe("Dymexjs_DI ", () => {
             class Test {
               //@ts-expect-error  This should throw because the decorator is invalid here
               @Singleton("test")
-              prop: number = 1;
+              prop = 1;
             },
           InvalidDecoratorError,
         );
@@ -32,7 +27,7 @@ describe("Dymexjs_DI ", () => {
             class Test {
               //@ts-expect-error  This should throw because the decorator is invalid here
               @Transient("test")
-              prop: number = 1;
+              prop = 1;
             },
           InvalidDecoratorError,
         );
@@ -43,7 +38,7 @@ describe("Dymexjs_DI ", () => {
             class Test {
               //@ts-expect-error  This should throw because the decorator is invalid here
               @Scoped("test")
-              prop: number = 1;
+              prop = 1;
             },
           InvalidDecoratorError,
         );
@@ -54,7 +49,7 @@ describe("Dymexjs_DI ", () => {
             class Test {
               //@ts-expect-error  This should throw because the decorator is invalid here
               @AutoInjectable()
-              prop: number = 1;
+              prop = 1;
             },
           InvalidDecoratorError,
         );
@@ -97,10 +92,7 @@ describe("Dymexjs_DI ", () => {
         });
         test("should setAll registrations to one key an return them", () => {
           serviceMap.setAll("anyKey", [registration, registration2]);
-          assert.deepEqual(serviceMap.getAll("anyKey"), [
-            registration,
-            registration2,
-          ]);
+          assert.deepEqual(serviceMap.getAll("anyKey"), [registration, registration2]);
           assert.strictEqual(serviceMap.getAll("anyKey").length, 2);
           assert.strictEqual(serviceMap.getAll("anyKey")[0].providerType, 0);
           assert.strictEqual(serviceMap.getAll("anyKey")[1].providerType, 1);
@@ -187,16 +179,10 @@ describe("Dymexjs_DI ", () => {
         assert.strictEqual(container.resolve("anyToken"), 4);
       });
       test("registerType should throw when tokenProvider to not found", () => {
-        assert.throws(
-          () => container.registerType("anyKey", { useToken: "anyToken" }),
-          TokenNotFoundError,
-        );
+        assert.throws(() => container.registerType("anyKey", { useToken: "anyToken" }), TokenNotFoundError);
       });
       test("removeRegistration should throw when token not found", () => {
-        assert.rejects(
-          container.removeRegistration("anyKey"),
-          TokenNotFoundError,
-        );
+        assert.rejects(container.removeRegistration("anyKey"), TokenNotFoundError);
       });
     });
     describe("README", () => {

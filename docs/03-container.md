@@ -49,16 +49,16 @@ let secret = container.resolve(JWT_SECRET);
 // secret = "my secure secret"
 ```
 
-The `InterfaceId` is a special object to allow for the registration of interfaces, and must be create with `createInterfaceId()`
+The `InterfaceId` is a special object to allow for the registration of interfaces, and must be create with `getInterfaceToken()`
 
 ```typescript
 interface SA {}
-const SA = createInterfaceId<SA>("SA"); // the const variable and the interface should have the same name
+const SA = getInterfaceToken<SA>("SA"); // the const variable and the interface should have the same name
 
 interface SB {
   readonly serviceA: SA;
 }
-const SB = createInterfaceId<SB>("SB");
+const SB = getInterfaceToken<SB>("SB");
 
 @Singleton(SA)
 class ServiceA {}

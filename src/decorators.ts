@@ -1,21 +1,21 @@
-import { container } from "./container";
-import { InvalidDecoratorError } from "./exceptions/InvalidDecoratorError";
-import { ScopeContext } from "./scope-context";
-import { ConstructorType } from "./types/constructor.type";
-import { InterfaceId, UnwrapDecoratorArgs } from "./types/decorators.type";
-import { InjectionToken } from "./types/injection-token.type";
-import { ProvidersType } from "./types/providers/provider.type";
-import { Lifetime, Registration } from "./types/registration.interface";
+import { container } from "./container.ts";
+import { InvalidDecoratorError } from "./exceptions/index.ts";
+import { ScopeContext } from "./scope-context.ts";
+import type { ConstructorType } from "./types/constructor.type.ts";
+import type { InterfaceId, UnwrapDecoratorArgs } from "./types/decorators.type.ts";
+import type { InjectionToken } from "./types/injection-token.type.ts";
+import { ProvidersType } from "./types/providers/provider.type.ts";
+import { Lifetime, Registration } from "./types/registration.interface.ts";
 
-const getRandomString = () => Math.random().toString(36).substring(2, 15);
+//const getRandomString = () => Math.random().toString(36).substring(2, 15);
 
 /**
  * Creates a runtime identifier of an interface used for dependency injection.
  *
  * Every call to this function produces unique identifier, you can't call this method twice for the same Type!
  */
-export const createInterfaceId = <T>(id: string): InterfaceId<T> =>
-  `${id}-${getRandomString()}` as InterfaceId<T>;
+export const getInterfaceToken = <T>(id: string): InterfaceId<T> =>
+  `${id}_interface` /*`${id}-${getRandomString()}`*/ as InterfaceId<T>;
 
 /**
  * Decorator that registers a class as a singleton in the container.
@@ -24,16 +24,18 @@ export const createInterfaceId = <T>(id: string): InterfaceId<T> =>
  * @param dependencies Optional array of dependencies to inject into the class.
  * @returns A class decorator that registers the class as a singleton in the container.
  */
+
+export function Singleton(dependencies?: Array<InjectionToken>): ClassDecorator;
+export function Singleton(id: InjectionToken, dependencies?: Array<InjectionToken>): ClassDecorator;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function Singleton<TDependencies extends Array<InjectionToken>, I = any>(
-  id?: TDependencies extends Array<InterfaceId>
-    ? InjectionToken
-    : [...TDependencies] | InjectionToken,
+  id?: TDependencies extends Array<InterfaceId> ? InjectionToken : [...TDependencies] | InjectionToken,
   dependencies?: [...TDependencies],
 ): ClassDecorator {
-  return function <
-    T extends { new (...args: UnwrapDecoratorArgs<TDependencies>): I },
-  >(target: T, context: ClassDecoratorContext) {
+  return function <T extends new (...args: UnwrapDecoratorArgs<TDependencies>) => I>(
+    target: T,
+    context: ClassDecoratorContext,
+  ) {
     if (context.kind === "class") {
       let token: InjectionToken<I> = target;
       if (Array.isArray(id)) {
@@ -44,10 +46,7 @@ export function Singleton<TDependencies extends Array<InjectionToken>, I = any>(
         token = id as unknown as InjectionToken<I>;
       }
       // Register the class as a singleton in the container
-      container.registerRegistration(
-        target,
-        createRegistration(target, Lifetime.Singleton, dependencies ?? []),
-      );
+      container.registerRegistration(target, createRegistration(target, Lifetime.Singleton, dependencies ?? []));
       // If the registration token is different from the class itself, register the token as an alias
       // eslint-disable-next-line security/detect-possible-timing-attacks
       if (token !== target) {
@@ -66,16 +65,17 @@ export function Singleton<TDependencies extends Array<InjectionToken>, I = any>(
  * @param dependencies Optional array of dependencies to inject into the class.
  * @returns A class decorator that registers the class as a transient in the container.
  */
+export function Transient(dependencies?: Array<InjectionToken>): ClassDecorator;
+export function Transient(id: InjectionToken, dependencies?: Array<InjectionToken>): ClassDecorator;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function Transient<TDependencies extends Array<InjectionToken>, I = any>(
-  id?: TDependencies extends Array<InterfaceId>
-    ? InjectionToken
-    : [...TDependencies] | InjectionToken,
+  id?: TDependencies extends Array<InterfaceId> ? InjectionToken : [...TDependencies] | InjectionToken,
   dependencies?: [...TDependencies],
 ): ClassDecorator {
-  return function <
-    T extends { new (...args: UnwrapDecoratorArgs<TDependencies>): I },
-  >(target: T, context: ClassDecoratorContext) {
+  return function <T extends new (...args: UnwrapDecoratorArgs<TDependencies>) => I>(
+    target: T,
+    context: ClassDecoratorContext,
+  ) {
     if (context.kind === "class") {
       let token: InjectionToken<I> = target;
       if (Array.isArray(id)) {
@@ -86,10 +86,7 @@ export function Transient<TDependencies extends Array<InjectionToken>, I = any>(
         token = id as unknown as InjectionToken<I>;
       }
       // Register the class as a transient in the container
-      container.registerRegistration(
-        target,
-        createRegistration(target, Lifetime.Transient, dependencies ?? []),
-      );
+      container.registerRegistration(target, createRegistration(target, Lifetime.Transient, dependencies ?? []));
       // If the registration token is different from the class itself, register the token as an alias
       // eslint-disable-next-line security/detect-possible-timing-attacks
       if (token !== target) {
@@ -108,16 +105,17 @@ export function Transient<TDependencies extends Array<InjectionToken>, I = any>(
  * @param dependencies Optional array of dependencies to inject into the class.
  * @returns A class decorator that registers the class as a scoped in the container.
  */
+export function Scoped(dependencies?: Array<InjectionToken>): ClassDecorator;
+export function Scoped(id: InjectionToken, dependencies?: Array<InjectionToken>): ClassDecorator;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function Scoped<TDependencies extends Array<InjectionToken>, I = any>(
-  id?: TDependencies extends Array<InterfaceId>
-    ? InjectionToken
-    : [...TDependencies] | InjectionToken,
+  id?: TDependencies extends Array<InterfaceId> ? InjectionToken : [...TDependencies] | InjectionToken,
   dependencies?: [...TDependencies],
 ): ClassDecorator {
-  return function <
-    T extends { new (...args: UnwrapDecoratorArgs<TDependencies>): I },
-  >(target: T, context: ClassDecoratorContext) {
+  return function <T extends new (...args: UnwrapDecoratorArgs<TDependencies>) => I>(
+    target: T,
+    context: ClassDecoratorContext,
+  ) {
     if (context.kind === "class") {
       let token: InjectionToken<I> = target;
       if (Array.isArray(id)) {
@@ -128,10 +126,7 @@ export function Scoped<TDependencies extends Array<InjectionToken>, I = any>(
         token = id as unknown as InjectionToken<I>;
       }
       // Register the class as a scoped in the container
-      container.registerRegistration(
-        target,
-        createRegistration(target, Lifetime.Scoped, dependencies ?? []),
-      );
+      container.registerRegistration(target, createRegistration(target, Lifetime.Scoped, dependencies ?? []));
       // If the registration token is different from the class itself, register the token as an alias
       // eslint-disable-next-line security/detect-possible-timing-attacks
       if (token !== target) {
@@ -157,10 +152,10 @@ function createRegistration<T extends ConstructorType<any>>(
   };
 }
 
-type IAutoInjectableOptions = {
+interface IAutoInjectableOptions {
   all?: Array<InjectionToken | InterfaceId>;
   scope?: ScopeContext;
-};
+}
 
 /**
  * Class decorator that registers a class with the container and injects its dependencies.
@@ -183,7 +178,7 @@ export function AutoInjectable<
    */
   return function <
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    T extends { new (...args: UnwrapDecoratorArgs<TDependencies> | any): I },
+    T extends new (...args: UnwrapDecoratorArgs<TDependencies> | any) => I,
   >(target: T, context: ClassDecoratorContext) {
     if (context.kind === "class") {
       /**
@@ -206,9 +201,7 @@ export function AutoInjectable<
           super(
             ...args.concat(
               (dependencies ?? []).map((a) =>
-                options.all?.includes(a)
-                  ? container.resolveAll(a, options.scope)
-                  : container.resolve(a, options.scope),
+                options.all?.includes(a) ? container.resolveAll(a, options.scope) : container.resolve(a, options.scope),
               ),
             ),
           );
@@ -248,14 +241,10 @@ export function Inject(token: InjectionToken | Array<InjectionToken>) {
     switch (context.kind) {
       case "field":
         return function () {
-          return Array.isArray(token)
-            ? token.map((t) => container.resolve(t))
-            : container.resolve(token);
+          return Array.isArray(token) ? token.map((t) => container.resolve(t)) : container.resolve(token);
         };
       case "accessor": {
-        const instance = Array.isArray(token)
-          ? token.map((t) => container.resolve(t))
-          : container.resolve(token);
+        const instance = Array.isArray(token) ? token.map((t) => container.resolve(t)) : container.resolve(token);
         return {
           get() {
             return instance;
@@ -265,17 +254,13 @@ export function Inject(token: InjectionToken | Array<InjectionToken>) {
       case "method":
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return function (this: any, ...args: Array<any>) {
-          const instances = Array.isArray(token)
-            ? token.map((t) => container.resolve(t))
-            : [container.resolve(token)];
+          const instances = Array.isArray(token) ? token.map((t) => container.resolve(t)) : [container.resolve(token)];
           const argsConcat = args.concat(instances);
           return value.apply(this, argsConcat);
         };
       case "getter":
         return function () {
-          return Array.isArray(token)
-            ? token.map((t) => container.resolve(t))
-            : container.resolve(token);
+          return Array.isArray(token) ? token.map((t) => container.resolve(t)) : container.resolve(token);
         };
       default:
         throw new InvalidDecoratorError(
@@ -310,14 +295,10 @@ export function InjectAll(token: InjectionToken | Array<InjectionToken>) {
     switch (context.kind) {
       case "field":
         return function () {
-          return Array.isArray(token)
-            ? token.map((t) => container.resolveAll(t))
-            : container.resolveAll(token);
+          return Array.isArray(token) ? token.map((t) => container.resolveAll(t)) : container.resolveAll(token);
         };
       case "accessor": {
-        const instance = Array.isArray(token)
-          ? token.map((t) => container.resolveAll(t))
-          : container.resolveAll(token);
+        const instance = Array.isArray(token) ? token.map((t) => container.resolveAll(t)) : container.resolveAll(token);
         return {
           get() {
             return instance;
@@ -338,9 +319,7 @@ export function InjectAll(token: InjectionToken | Array<InjectionToken>) {
         };
       case "getter":
         return function () {
-          return Array.isArray(token)
-            ? token.map((t) => container.resolveAll(t))
-            : container.resolveAll(token);
+          return Array.isArray(token) ? token.map((t) => container.resolveAll(t)) : container.resolveAll(token);
         };
       default:
         throw new InvalidDecoratorError(

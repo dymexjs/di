@@ -61,12 +61,14 @@ describe("Dymexjs_DI ", () => {
     describe("Decorators", () => {
       test("empty singleton", () => {
         @Singleton()
+        // eslint-disable-next-line @typescript-eslint/no-extraneous-class
         class TestClass {}
         const instance1 = container.resolve(TestClass);
         assert.ok(instance1 instanceof TestClass);
       });
       test("with registration token", () => {
         @Singleton("serviceA") //With token to register
+        // eslint-disable-next-line @typescript-eslint/no-extraneous-class
         class ServiceA {}
         @Singleton(["serviceA"]) //With an array of dependencies to resolve when creating the instance
         class ServiceB {
@@ -78,6 +80,7 @@ describe("Dymexjs_DI ", () => {
       });
       test("empty token with dependencies", () => {
         @Singleton()
+        // eslint-disable-next-line @typescript-eslint/no-extraneous-class
         class ServiceA {}
         @Singleton([ServiceA]) //With an array of dependencies to resolve when creating the instance
         class ServiceB {
@@ -89,11 +92,13 @@ describe("Dymexjs_DI ", () => {
       });
       test("empty scoped without scope", () => {
         @Scoped()
+        // eslint-disable-next-line @typescript-eslint/no-extraneous-class
         class TestClass {}
         assert.throws(() => container.resolve(TestClass), UndefinedScopeError);
       });
       test("empty scoped with scope", () => {
         @Scoped()
+        // eslint-disable-next-line @typescript-eslint/no-extraneous-class
         class TestClass {}
         const scope = container.createScope();
         const instance1 = container.resolve(TestClass, scope);

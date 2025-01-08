@@ -18,6 +18,7 @@ describe("Dymexjs_DI ", () => {
       describe("direct resolve", () => {
         test("should resolve directly in constructor param", () => {
           @Singleton()
+          // eslint-disable-next-line @typescript-eslint/no-extraneous-class
           class Test {}
           @Singleton()
           class Test2 {
@@ -33,10 +34,7 @@ describe("Dymexjs_DI ", () => {
       });
       describe("resolveAll", () => {
         test("fails to resolveAll unregistered dependency by name sync", () => {
-          assert.throws(
-            () => container.resolveAll("NotRegistered"),
-            TokenNotFoundError,
-          );
+          assert.throws(() => container.resolveAll("NotRegistered"), TokenNotFoundError);
         });
         test("resolves an array of transient instances bound to a single interface", () => {
           interface FooInterface {
@@ -65,6 +63,7 @@ describe("Dymexjs_DI ", () => {
         });
 
         test("resolves all transient instances when not registered", () => {
+          // eslint-disable-next-line @typescript-eslint/no-extraneous-class
           class Foo {}
 
           const foo1 = container.resolveAll(Foo);
@@ -101,14 +100,12 @@ describe("Dymexjs_DI ", () => {
           container.register("test", Test, { lifetime: Lifetime.Scoped });
           const childContainer = container.createChildContainer();
           const scope = childContainer.createScope();
-          assert.strictEqual(
-            childContainer.resolve<Test>("test", scope).propertyA,
-            "test",
-          );
+          assert.strictEqual(childContainer.resolve<Test>("test", scope).propertyA, "test");
         });
         test("child container resolves even when parent doesn't have registration", () => {
           // eslint-disable-next-line @typescript-eslint/no-empty-object-type
           interface IFoo {}
+          // eslint-disable-next-line @typescript-eslint/no-extraneous-class
           class Foo implements IFoo {}
           const childContainer = container.createChildContainer();
           childContainer.register("IFoo", { useClass: Foo });
@@ -117,6 +114,7 @@ describe("Dymexjs_DI ", () => {
         test("child container resolves using parent's registration when child container doesn't have registration", () => {
           // eslint-disable-next-line @typescript-eslint/no-empty-object-type
           interface IFoo {}
+          // eslint-disable-next-line @typescript-eslint/no-extraneous-class
           class Foo implements IFoo {}
           container.register("IFoo", { useClass: Foo });
           const childContainer = container.createChildContainer();
@@ -125,6 +123,7 @@ describe("Dymexjs_DI ", () => {
         test("child container resolves all even when parent doesn't have registration", () => {
           // eslint-disable-next-line @typescript-eslint/no-empty-object-type
           interface IFoo {}
+          // eslint-disable-next-line @typescript-eslint/no-extraneous-class
           class Foo implements IFoo {}
           const childContainer = container.createChildContainer();
           childContainer.register("IFoo", { useClass: Foo });
@@ -137,6 +136,7 @@ describe("Dymexjs_DI ", () => {
         test("child container resolves all using parent's registration when child container doesn't have registration", () => {
           // eslint-disable-next-line @typescript-eslint/no-empty-object-type
           interface IFoo {}
+          // eslint-disable-next-line @typescript-eslint/no-extraneous-class
           class Foo implements IFoo {}
           container.register("IFoo", { useClass: Foo });
           const childContainer = container.createChildContainer();
@@ -147,6 +147,7 @@ describe("Dymexjs_DI ", () => {
         });
         test("should not create a new instance of requested singleton service", () => {
           @Singleton()
+          // eslint-disable-next-line @typescript-eslint/no-extraneous-class
           class Bar {}
 
           const bar1 = container.resolve(Bar);
@@ -162,7 +163,9 @@ describe("Dymexjs_DI ", () => {
       });
       describe("registerType", () => {
         test("registerType() allows for classes to be swapped", () => {
+          // eslint-disable-next-line @typescript-eslint/no-extraneous-class
           class Bar {}
+          // eslint-disable-next-line @typescript-eslint/no-extraneous-class
           class Foo {}
           container.registerType(Bar, Foo);
 
@@ -170,6 +173,7 @@ describe("Dymexjs_DI ", () => {
         });
 
         test("registerType() allows for names to be registered for a given type", () => {
+          // eslint-disable-next-line @typescript-eslint/no-extraneous-class
           class Bar {}
           container.registerType("CoolName", Bar);
 
@@ -177,20 +181,14 @@ describe("Dymexjs_DI ", () => {
         });
 
         test("registerType() doesn't allow tokens to point to themselves", () => {
-          assert.throws(
-            () => container.registerType("Bar", "Bar"),
-            TokenRegistrationCycleError,
-          );
+          assert.throws(() => container.registerType("Bar", "Bar"), TokenRegistrationCycleError);
         });
 
         test("registerType() doesn't allow registration cycles", () => {
           container.registerType("Bar", "Foo");
           container.registerType("Foo", "FooBar");
 
-          assert.throws(
-            () => container.registerType("FooBar", "Bar"),
-            TokenRegistrationCycleError,
-          );
+          assert.throws(() => container.registerType("FooBar", "Bar"), TokenRegistrationCycleError);
         });
       });
     });
