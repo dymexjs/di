@@ -1,8 +1,24 @@
 {
-  "projectName": "@dymexjs/di",
-  "projectOwner": "n3okill",
-  "files": ["README.md"],
+  "projectName": "di",
+  "projectOwner": "dymexjs",
+  "files": [
+    "README.md"
+  ],
   "imageSize": 50,
   "repoType": "github",
-  "repoHost": "https://github.com"
+  "repoHost": "https://github.com",
+  "commitType": "docs",
+  "commitConvention": "angular",
+  "contributorsPerLine": 7,
+  "contributors": [
+    {
+      "login": "n3okill",
+      "name": "João Parreira",
+      "avatar_url": "https://avatars.githubusercontent.com/u/1280607?v=4",
+      "profile": "http://www.faroisdeportugal.com",
+      "contributions": [
+        "maintenance"
+      ]
+    }
+  ]
 }

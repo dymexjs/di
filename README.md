@@ -183,6 +183,13 @@ Licensed under the [MIT License](./LICENSE)
 <!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
 <!-- prettier-ignore-start -->
 <!-- markdownlint-disable -->
+<table>
+  <tbody>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="http://www.faroisdeportugal.com"><img src="https://avatars.githubusercontent.com/u/1280607?v=4?s=50" width="50px;" alt="João Parreira"/><br /><sub><b>João Parreira</b></sub></a><br /><a href="#maintenance-n3okill" title="Maintenance">🚧</a></td>
+    </tr>
+  </tbody>
+</table>
 
 <!-- markdownlint-restore -->
 <!-- prettier-ignore-end -->
