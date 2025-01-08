@@ -1,0 +1,14 @@
+name: All Contributors
+
+on:
+  push:
+    branches:
+      - main
+
+permissions: write-all
+
+jobs:
+  contributors:
+    uses: dymexjs/reusable_workflows/.github/workflows/all-contributors.yml@main
+    secrets:
+      github-token: ${{ secrets.GITHUB_TOKEN }}
