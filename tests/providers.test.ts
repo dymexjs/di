@@ -1,10 +1,5 @@
 import { describe, test } from "node:test";
-import {
-  getProviderType,
-  isProvider,
-  Provider,
-  ProvidersType,
-} from "../src/types/providers/provider.type";
+import { getProviderType, isProvider, Provider, ProvidersType } from "../src/types/providers/provider.type";
 import { isValueProvider } from "../src/types/providers/value-provider";
 import { isClassProvider } from "../src/types/providers/class-provider";
 import { isFactoryProvider } from "../src/types/providers/factory-provider";
@@ -32,10 +27,7 @@ describe("Provider", () => {
       assert.ok(isProvider({ useValue: "test" }));
     });
     test("getProviderType", () => {
-      assert.strictEqual(
-        getProviderType({ useValue: "test" }),
-        ProvidersType.ValueProvider,
-      );
+      assert.strictEqual(getProviderType({ useValue: "test" }), ProvidersType.ValueProvider);
     });
     test("isValueProvider true", () => {
       assert.ok(isValueProvider({ useValue: "test" }));
@@ -45,15 +37,13 @@ describe("Provider", () => {
     });
   });
   describe("ClassProvider", () => {
+    // eslint-disable-next-line @typescript-eslint/no-extraneous-class
     class TestClass {}
     test("isProvider", () => {
       assert.ok(isProvider({ useClass: TestClass }));
     });
     test("getProviderType", () => {
-      assert.strictEqual(
-        getProviderType({ useClass: TestClass }),
-        ProvidersType.ClassProvider,
-      );
+      assert.strictEqual(getProviderType({ useClass: TestClass }), ProvidersType.ClassProvider);
     });
     test("isClassProvider true", () => {
       assert.ok(isClassProvider({ useClass: TestClass }));
@@ -64,15 +54,15 @@ describe("Provider", () => {
   });
   describe("Factory provider", () => {
     test("isProvider", () => {
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
       assert.strictEqual(isProvider({ useFactory: () => {} }), true);
     });
     test("getProviderType", () => {
-      assert.strictEqual(
-        getProviderType({ useFactory: () => {} }),
-        ProvidersType.FactoryProvider,
-      );
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
+      assert.strictEqual(getProviderType({ useFactory: () => {} }), ProvidersType.FactoryProvider);
     });
     test("isFactoryProvider true", () => {
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
       assert.strictEqual(isFactoryProvider({ useFactory: () => {} }), true);
     });
     test("isFactoryProvider false", () => {
@@ -97,10 +87,7 @@ describe("Provider", () => {
       assert.strictEqual(isProvider({ useToken: "test" }), true);
     });
     test("getProviderType", () => {
-      assert.strictEqual(
-        getProviderType({ useToken: "test" }),
-        ProvidersType.TokenProvider,
-      );
+      assert.strictEqual(getProviderType({ useToken: "test" }), ProvidersType.TokenProvider);
     });
     test("isTokenProvider true", () => {
       assert.strictEqual(isTokenProvider({ useToken: "test" }), true);
@@ -111,10 +98,7 @@ describe("Provider", () => {
     test("should throw circular token registration", async () => {
       await container.reset();
       container.register("test", { useToken: "test2" });
-      assert.throws(
-        () => container.register("test2", { useToken: "test" }),
-        TokenRegistrationCycleError,
-      );
+      assert.throws(() => container.register("test2", { useToken: "test" }), TokenRegistrationCycleError);
     });
   });
 });

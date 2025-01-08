@@ -1,12 +1,6 @@
 import { beforeEach, describe, test } from "node:test";
 import { container } from "../../src/container";
-import {
-  AutoInjectable,
-  createInterfaceId,
-  Scoped,
-  Singleton,
-  Transient,
-} from "../../src/decorators";
+import { AutoInjectable, getInterfaceToken, Scoped, Singleton, Transient } from "../../src/decorators";
 import { UndefinedScopeError } from "../../src/exceptions/UndefinedScopeError";
 import * as assert from "node:assert/strict";
 
@@ -17,6 +11,7 @@ describe("Dymexjs_DI", () => {
       describe("Singleton", () => {
         test("should work with @Singleton decorator", async () => {
           @Singleton()
+          // eslint-disable-next-line @typescript-eslint/no-extraneous-class
           class TestClass {}
           const instance1 = await container.resolveAsync(TestClass);
           const instance2 = await container.resolveAsync(TestClass);
@@ -24,6 +19,7 @@ describe("Dymexjs_DI", () => {
         });
         test("should create an target and inject singleton", async () => {
           @Singleton("serviceA")
+          // eslint-disable-next-line @typescript-eslint/no-extraneous-class
           class ServiceA {}
           @Singleton(["serviceA"])
           class ServiceB {
@@ -38,8 +34,10 @@ describe("Dymexjs_DI", () => {
         });
         test("should redirect the registration", async () => {
           @Singleton()
+          // eslint-disable-next-line @typescript-eslint/no-extraneous-class
           class Test {}
 
+          // eslint-disable-next-line @typescript-eslint/no-extraneous-class
           class TestMock {}
 
           @Transient([Test])
@@ -54,6 +52,7 @@ describe("Dymexjs_DI", () => {
       describe("Transient", () => {
         test("should work with @Transient decorator", async () => {
           @Transient()
+          // eslint-disable-next-line @typescript-eslint/no-extraneous-class
           class TestClass {}
           const instance1 = await container.resolveAsync(TestClass);
           const instance2 = await container.resolveAsync(TestClass);
@@ -61,6 +60,7 @@ describe("Dymexjs_DI", () => {
         });
         test("should create an target and inject transient", async () => {
           @Transient()
+          // eslint-disable-next-line @typescript-eslint/no-extraneous-class
           class ServiceA {}
           @Singleton([ServiceA])
           class ServiceB {
@@ -76,6 +76,7 @@ describe("Dymexjs_DI", () => {
         });
         test("should create transients", async () => {
           @Transient()
+          // eslint-disable-next-line @typescript-eslint/no-extraneous-class
           class ServiceA {}
           @Transient([ServiceA])
           class ServiceB {
@@ -96,6 +97,7 @@ describe("Dymexjs_DI", () => {
       describe("Scoped", () => {
         test("should work with @Scoped decorator", async () => {
           @Scoped()
+          // eslint-disable-next-line @typescript-eslint/no-extraneous-class
           class TestClass {}
           const scope = container.createScope();
           const instance1 = await container.resolveAsync(TestClass, scope);
@@ -104,6 +106,7 @@ describe("Dymexjs_DI", () => {
         });
         test("should create scoped", async () => {
           @Scoped()
+          // eslint-disable-next-line @typescript-eslint/no-extraneous-class
           class ServiceA {}
           @Scoped([ServiceA])
           class ServiceB {
@@ -116,15 +119,13 @@ describe("Dymexjs_DI", () => {
           const a = await container.resolveAsync(ServiceA, scope);
           assert.ok(a instanceof ServiceA);
           assert.strictEqual(b.serviceA, a);
-          assert.rejects(
-            container.resolveAsync<ServiceB>(ServiceB),
-            UndefinedScopeError,
-          );
+          assert.rejects(container.resolveAsync<ServiceB>(ServiceB), UndefinedScopeError);
         });
       });
       describe("AutoInjectable", () => {
         describe("resolveWithArgs", () => {
           test("should resolve an instance with extra args", async () => {
+            // eslint-disable-next-line @typescript-eslint/no-extraneous-class
             class TestA {}
             @AutoInjectable([TestA])
             class TestB {
@@ -134,16 +135,14 @@ describe("Dymexjs_DI", () => {
                 public a?: TestA,
               ) {}
             }
-            const testB = await container.resolveWithArgsAsync(TestB, [
-              "test",
-              1,
-            ]);
+            const testB = await container.resolveWithArgsAsync(TestB, ["test", 1]);
             assert.ok(testB instanceof TestB);
             assert.strictEqual(testB.hello, "test");
             assert.strictEqual(testB.num, 1);
             assert.ok(testB.a instanceof TestA);
           });
           test("@AutoInjectable allows for parameters to be specified manually", async () => {
+            // eslint-disable-next-line @typescript-eslint/no-extraneous-class
             class Bar {}
             @AutoInjectable([Bar])
             class Foo {
@@ -156,7 +155,9 @@ describe("Dymexjs_DI", () => {
             assert.strictEqual(myFoo.myBar, myBar);
           });
           test("@AutoInjectable injects parameters beyond those specified manually", async () => {
+            // eslint-disable-next-line @typescript-eslint/no-extraneous-class
             class Bar {}
+            // eslint-disable-next-line @typescript-eslint/no-extraneous-class
             class FooBar {}
             @AutoInjectable([Bar])
             class Foo {
@@ -173,7 +174,9 @@ describe("Dymexjs_DI", () => {
             assert.ok(myFoo.myBar instanceof Bar);
           });
           test("@AutoInjectable works when the @AutoInjectable is a polymorphic ancestor", async () => {
+            // eslint-disable-next-line @typescript-eslint/no-extraneous-class
             class Foo {
+              // eslint-disable-next-line @typescript-eslint/no-useless-constructor, @typescript-eslint/no-empty-function
               constructor() {}
             }
 
@@ -183,6 +186,7 @@ describe("Dymexjs_DI", () => {
             }
 
             class Child extends Ancestor {
+              // eslint-disable-next-line @typescript-eslint/no-useless-constructor
               constructor() {
                 super();
               }
@@ -195,7 +199,9 @@ describe("Dymexjs_DI", () => {
           test("@AutoInjectable classes keep behavior from their ancestor's constructors", async () => {
             const a = 5;
             const b = 4;
+            // eslint-disable-next-line @typescript-eslint/no-extraneous-class
             class Foo {
+              // eslint-disable-next-line @typescript-eslint/no-useless-constructor, @typescript-eslint/no-empty-function
               constructor() {}
             }
 
@@ -223,6 +229,7 @@ describe("Dymexjs_DI", () => {
             assert.ok(instance.myFoo instanceof Foo);
           });
           test("@AutoInjectable classes resolve their @Transient dependencies", async () => {
+            // eslint-disable-next-line @typescript-eslint/no-extraneous-class
             class Foo {}
             @Transient([Foo])
             class Bar {
@@ -235,9 +242,10 @@ describe("Dymexjs_DI", () => {
 
             const myFooBar = await container.resolveWithArgsAsync(FooBar);
 
-            assert.ok(myFooBar.myBar!.myFoo instanceof Foo);
+            assert.ok(myFooBar.myBar?.myFoo instanceof Foo);
           });
           test("@AutoInjectable works with @Singleton", async () => {
+            // eslint-disable-next-line @typescript-eslint/no-extraneous-class
             class Bar {}
 
             @Singleton([Bar])
@@ -266,31 +274,33 @@ describe("Dymexjs_DI", () => {
 
             @AutoInjectable(["Bar"], { all: ["Bar"] })
             class Foo {
-              constructor(public bar?: Bar[]) {}
+              constructor(public bar?: Array<Bar>) {}
             }
 
             const foo = await container.resolveWithArgsAsync(Foo);
             assert.ok(Array.isArray(foo.bar));
-            assert.strictEqual(foo.bar!.length, 1);
-            assert.ok(foo.bar![0] instanceof FooBar);
+            assert.strictEqual(foo.bar?.length, 1);
+            assert.ok(foo.bar[0] instanceof FooBar);
           });
 
           test("@AutoInjectable resolves multiple transient dependencies", async () => {
+            // eslint-disable-next-line @typescript-eslint/no-extraneous-class
             class Foo {}
 
             @AutoInjectable([Foo], { all: [Foo] })
             class Bar {
-              constructor(public foo?: Foo[]) {}
+              constructor(public foo?: Array<Foo>) {}
             }
 
             const bar = await container.resolveWithArgsAsync(Bar);
             assert.ok(Array.isArray(bar.foo));
-            assert.strictEqual(bar.foo!.length, 1);
-            assert.ok(bar.foo![0] instanceof Foo);
+            assert.strictEqual(bar.foo?.length, 1);
+            assert.ok(bar.foo[0] instanceof Foo);
           });
         });
       });
       test("should create instance of object not in container", async () => {
+        // eslint-disable-next-line @typescript-eslint/no-extraneous-class
         class TestA {}
         @Singleton([TestA])
         class TestB {
@@ -305,13 +315,14 @@ describe("Dymexjs_DI", () => {
       test("should create an target and inject singleton", async () => {
         // eslint-disable-next-line @typescript-eslint/no-empty-object-type
         interface SA {}
-        const SA = createInterfaceId<SA>("SA");
+        const SA = getInterfaceToken<SA>("SA");
         interface SB {
           readonly serviceA: SA;
         }
-        const SB = createInterfaceId<SB>("SB");
+        const SB = getInterfaceToken<SB>("SB");
 
         @Singleton(SA)
+        // eslint-disable-next-line @typescript-eslint/no-extraneous-class
         class ServiceA {}
         @Singleton(SB, [SA])
         class ServiceB {
@@ -327,13 +338,14 @@ describe("Dymexjs_DI", () => {
       test("should create an target and inject transient", async () => {
         // eslint-disable-next-line @typescript-eslint/no-empty-object-type
         interface SA {}
-        const SA = createInterfaceId<SA>("SA");
+        const SA = getInterfaceToken<SA>("SA");
         interface SB {
           readonly serviceA: SA;
         }
-        const SB = createInterfaceId<SB>("SB");
+        const SB = getInterfaceToken<SB>("SB");
 
         @Transient(SA)
+        // eslint-disable-next-line @typescript-eslint/no-extraneous-class
         class ServiceA {}
         @Singleton(SB, [SA])
         class ServiceB {
@@ -350,12 +362,13 @@ describe("Dymexjs_DI", () => {
       test("should create transients", async () => {
         // eslint-disable-next-line @typescript-eslint/no-empty-object-type
         interface SA {}
-        const SA = createInterfaceId<SA>("SA");
+        const SA = getInterfaceToken<SA>("SA");
         interface SB {
           readonly serviceA: SA;
         }
-        const SB = createInterfaceId<SB>("SB");
+        const SB = getInterfaceToken<SB>("SB");
         @Transient(SA)
+        // eslint-disable-next-line @typescript-eslint/no-extraneous-class
         class ServiceA {}
         @Transient(SB, [SA])
         class ServiceB {
@@ -375,12 +388,13 @@ describe("Dymexjs_DI", () => {
       test("should create scoped", async () => {
         // eslint-disable-next-line @typescript-eslint/no-empty-object-type
         interface SA {}
-        const SA = createInterfaceId<SA>("SA");
+        const SA = getInterfaceToken<SA>("SA");
         interface SB {
           readonly serviceA: SA;
         }
-        const SB = createInterfaceId<SB>("SB");
+        const SB = getInterfaceToken<SB>("SB");
         @Scoped(SA)
+        // eslint-disable-next-line @typescript-eslint/no-extraneous-class
         class ServiceA {}
         @Scoped(SB, [SA])
         class ServiceB {

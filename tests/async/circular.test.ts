@@ -1,13 +1,10 @@
 import { beforeEach, describe, test } from "node:test";
 import { container } from "../../src/container";
 import { StaticInjectable } from "../../src/types/static-inject.interface";
-import {
-  STATIC_INJECTIONS,
-  STATIC_INJECTION_LIFETIME,
-} from "../../src/constants";
+import { STATIC_INJECTIONS, STATIC_INJECTION_LIFETIME } from "../../src/constants";
 import { Lifetime } from "../../src/types/registration.interface";
 import { IContainer } from "../../src/types/container.interface";
-import { createInterfaceId, Singleton, Transient } from "../../src/decorators";
+import { getInterfaceToken, Singleton, Transient } from "../../src/decorators";
 import * as assert from "node:assert/strict";
 
 describe("Dymexjs_DI ", () => {
@@ -290,11 +287,7 @@ describe("Dymexjs_DI ", () => {
           assert.deepStrictEqual(Object.keys(a), ["b"]);
           assert.deepStrictEqual(Object.keys(b).sort(), ["a", "name", "prop"]);
           assert.deepStrictEqual(Object.getOwnPropertyNames(a), ["b"]);
-          assert.deepStrictEqual(Object.getOwnPropertyNames(b).sort(), [
-            "a",
-            "name",
-            "prop",
-          ]);
+          assert.deepStrictEqual(Object.getOwnPropertyNames(b).sort(), ["a", "name", "prop"]);
         });
       });
       describe("Interface", () => {
@@ -303,11 +296,11 @@ describe("Dymexjs_DI ", () => {
             readonly propertyA: string;
             readonly test2: TC2;
           }
-          const TC = createInterfaceId<TC>("TC");
+          const TC = getInterfaceToken<TC>("TC");
           interface TC2 {
             readonly test: TC;
           }
-          const TC2 = createInterfaceId<TC2>("TC2");
+          const TC2 = getInterfaceToken<TC2>("TC2");
 
           @Singleton(TC, [TC2])
           class TestClass implements TC {
@@ -335,8 +328,8 @@ describe("Dymexjs_DI ", () => {
           interface ITestB {
             name: string;
           }
-          const ITestA = createInterfaceId("Ia03");
-          const ITestB = createInterfaceId("Ib03");
+          const ITestA = getInterfaceToken("Ia03");
+          const ITestB = getInterfaceToken("Ib03");
 
           @Transient(ITestA, [ITestB])
           class TestA implements ITestA {
@@ -362,22 +355,22 @@ describe("Dymexjs_DI ", () => {
             readonly serviceB: SB;
             readonly serviceC: SC;
           }
-          const SA = createInterfaceId<SA>("SA");
+          const SA = getInterfaceToken<SA>("SA");
           interface SB {
             readonly serviceA: SA;
             readonly serviceD: SD;
           }
-          const SB = createInterfaceId<SB>("SB");
+          const SB = getInterfaceToken<SB>("SB");
           interface SC {
             readonly serviceB: SB;
             readonly serviceD: SD;
           }
-          const SC = createInterfaceId<SC>("SC");
+          const SC = getInterfaceToken<SC>("SC");
           interface SD {
             readonly serviceA: SA;
             readonly serviceC: SC;
           }
-          const SD = createInterfaceId<SD>("SD");
+          const SD = getInterfaceToken<SD>("SD");
           @Singleton(SA, [SB, SC])
           class ServiceA {
             constructor(

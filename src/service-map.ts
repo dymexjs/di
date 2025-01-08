@@ -1,10 +1,8 @@
-import { isAsyncDisposable, isDisposable } from "./helpers";
-import { InjectionToken } from "./types/injection-token.type";
-import { Registration } from "./types/registration.interface";
+import { isAsyncDisposable, isDisposable } from "./helpers.ts";
+import type { InjectionToken } from "./types/injection-token.type.ts";
+import type { Registration } from "./types/registration.interface.ts";
 
-export class ServiceMap<K extends InjectionToken, V extends Registration>
-  implements AsyncDisposable
-{
+export class ServiceMap<K extends InjectionToken, V extends Registration> implements AsyncDisposable {
   readonly #_services = new Map<K, Array<V>>();
 
   public ensuresKey(key: K) {
@@ -14,6 +12,7 @@ export class ServiceMap<K extends InjectionToken, V extends Registration>
   }
   public getAll(key: K): Array<V> {
     this.ensuresKey(key);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     return this.#_services.get(key)!;
   }
   public entries(): IterableIterator<[K, Array<V>]> {
@@ -26,13 +25,14 @@ export class ServiceMap<K extends InjectionToken, V extends Registration>
 
   public get(key: K): V {
     this.ensuresKey(key);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const value = this.#_services.get(key)!;
     return value[value.length - 1];
   }
 
   public set(key: K, value: V): void {
     this.ensuresKey(key);
-    this.#_services.get(key)!.push(value);
+    this.#_services.get(key)?.push(value);
   }
 
   public setAll(key: K, value: Array<V>): void {
@@ -41,7 +41,7 @@ export class ServiceMap<K extends InjectionToken, V extends Registration>
 
   public has(key: K): boolean {
     this.ensuresKey(key);
-    return this.#_services.get(key)!.length > 0;
+    return (this.#_services.get(key)?.length ?? 0) > 0;
   }
   public clear() {
     this.#_services.clear();
@@ -54,8 +54,8 @@ export class ServiceMap<K extends InjectionToken, V extends Registration>
     } else if (isDisposable(registration.instance)) {
       registration.instance[Symbol.dispose]();
     }
-    const index = this.#_services.get(key)!.indexOf(registration);
-    this.#_services.get(key)!.splice(index, 1);
+    const index = this.#_services.get(key)?.indexOf(registration) as number;
+    this.#_services.get(key)?.splice(index, 1);
   }
 
   async [Symbol.asyncDispose]() {
@@ -66,9 +66,7 @@ export class ServiceMap<K extends InjectionToken, V extends Registration>
         .forEach((r) => {
           promises.push(r.instance[Symbol.asyncDispose]());
         });
-      values
-        .filter((r) => isDisposable(r.instance))
-        .forEach((r) => r.instance[Symbol.dispose]());
+      values.filter((r) => isDisposable(r.instance)).forEach((r) => r.instance[Symbol.dispose]());
     }
     await Promise.allSettled(promises);
     this.#_services.clear();

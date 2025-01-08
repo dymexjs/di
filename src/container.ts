@@ -1,43 +1,30 @@
-import { TokenNotFoundError } from "./exceptions/TokenNotFoundError";
-import { ScopeContext } from "./scope-context";
-import { ValueProvider } from "./types/providers/value-provider";
+import { ScopeContext } from "./scope-context.ts";
+import { Lifetime, type Registration, type RegistrationOptions } from "./types/registration.interface.ts";
+import { type InjectionToken, isNormalToken } from "./types/injection-token.type.ts";
+import { type ConstructorType, isConstructorType } from "./types/constructor.type.ts";
+import type { IContainer } from "./types/container.interface.ts";
+import { STATIC_INJECTIONS, STATIC_INJECTION_LIFETIME } from "./constants.ts";
+import { ServiceMap } from "./service-map.ts";
+import { isAsyncDisposable, isDisposable } from "./helpers.ts";
+import type { StaticInjectable } from "./types/static-inject.interface.ts";
+import { TokenNotFoundError, TokenRegistrationCycleError, UndefinedScopeError } from "./exceptions/index.ts";
 import {
-  ClassProvider,
-  isClassProvider,
-} from "./types/providers/class-provider";
-import {
-  FactoryFunction,
-  FactoryProvider,
-} from "./types/providers/factory-provider";
-import {
+  type ClassProvider,
+  type FactoryFunction,
+  type FactoryProvider,
   getProviderType,
+  isClassProvider,
   isProvider,
-  Provider,
-  ProvidersType,
-} from "./types/providers/provider.type";
-import {
-  Lifetime,
-  Registration,
-  RegistrationOptions,
-} from "./types/registration.interface";
-import { InjectionToken, isNormalToken } from "./types/injection-token.type";
-import { ConstructorType, isConstructorType } from "./types/constructor.type";
-import { IContainer } from "./types/container.interface";
-import { STATIC_INJECTIONS, STATIC_INJECTION_LIFETIME } from "./constants";
-import { UndefinedScopeError } from "./exceptions/UndefinedScopeError";
-import {
   isTokenProvider,
-  TokenProvider,
-} from "./types/providers/token-provider";
-import { TokenRegistrationCycleError } from "./exceptions/TokenRegistrationCycleError";
-import { ServiceMap } from "./service-map";
-import { isAsyncDisposable, isDisposable } from "./helpers";
-import { StaticInjectable } from "./types/static-inject.interface";
+  type Provider,
+  ProvidersType,
+  type TokenProvider,
+  type ValueProvider,
+} from "./types/providers/index.ts";
 
 export class Container implements IContainer {
-  readonly #_services: ServiceMap<InjectionToken, Registration> =
-    new ServiceMap();
-  readonly #_scopes: Set<ScopeContext> = new Set();
+  readonly #_services = new ServiceMap<InjectionToken, Registration>();
+  readonly #_scopes = new Set<ScopeContext>();
   readonly #_resolutionStack = new Map<InjectionToken, unknown>();
   #_childContainer?: IContainer;
 
@@ -67,17 +54,13 @@ export class Container implements IContainer {
    * cleared.
    */
   async clearInstances(): Promise<void> {
-    const promises = [] as Promise<void>[];
+    const promises = [] as Array<Promise<void>>;
 
     for (const registrations of this.#_services.values()) {
-      for (const registration of registrations.filter(
-        (x) => x.providerType !== ProvidersType.ValueProvider,
-      )) {
+      for (const registration of registrations.filter((x) => x.providerType !== ProvidersType.ValueProvider)) {
         if (registration.instance) {
           if (isAsyncDisposable(registration.instance)) {
-            promises.push(
-              registration.instance[Symbol.asyncDispose]() as Promise<void>,
-            );
+            promises.push(registration.instance[Symbol.asyncDispose]() as Promise<void>);
           }
           if (isDisposable(registration.instance)) {
             registration.instance[Symbol.dispose]();
@@ -146,43 +129,33 @@ export class Container implements IContainer {
     provider: Provider<T> | ConstructorType<T>,
     options?: RegistrationOptions,
   ): IContainer {
-    const opt: RegistrationOptions = options ?? {
-      lifetime: Lifetime.Transient,
+    const opt: RegistrationOptions = {
+      lifetime: options?.lifetime ?? Lifetime.Transient,
     };
 
-    const service: Provider<T> = isProvider(provider)
-      ? provider
-      : { useClass: provider };
+    const service: Provider<T> = isProvider(provider) ? provider : { useClass: provider };
 
     if (isTokenProvider(service)) {
       this.inspectCircularTokenProvider(token, service);
     }
 
-    let injections = [];
+    let injections = options?.injections ?? [];
 
     if (isClassProvider(service)) {
       if (
         typeof options === "undefined" &&
         // eslint-disable-next-line security/detect-object-injection
-        typeof ((service as ClassProvider<T>).useClass as StaticInjectable)[
-          STATIC_INJECTION_LIFETIME
-        ] !== "undefined"
+        typeof ((service as ClassProvider<T>).useClass as StaticInjectable)[STATIC_INJECTION_LIFETIME] !== "undefined"
       ) {
         // eslint-disable-next-line security/detect-object-injection
-        opt.lifetime = (
-          (service as ClassProvider<T>).useClass as StaticInjectable
-        )[STATIC_INJECTION_LIFETIME];
+        opt.lifetime = ((service as ClassProvider<T>).useClass as StaticInjectable)[STATIC_INJECTION_LIFETIME];
       }
       if (
         // eslint-disable-next-line security/detect-object-injection
-        typeof ((service as ClassProvider<T>).useClass as StaticInjectable)[
-          STATIC_INJECTIONS
-        ] !== "undefined"
+        typeof ((service as ClassProvider<T>).useClass as StaticInjectable)[STATIC_INJECTIONS] !== "undefined"
       ) {
         // eslint-disable-next-line security/detect-object-injection
-        injections = (
-          (service as ClassProvider<T>).useClass as StaticInjectable
-        )[STATIC_INJECTIONS];
+        injections = ((service as ClassProvider<T>).useClass as StaticInjectable)[STATIC_INJECTIONS];
       }
     }
 
@@ -201,10 +174,7 @@ export class Container implements IContainer {
    * @param factory The factory function to register.
    * @returns The container used for the registration.
    */
-  registerFactory<T>(
-    token: InjectionToken<T>,
-    factory: FactoryFunction<T>,
-  ): IContainer {
+  registerFactory<T>(token: InjectionToken<T>, factory: FactoryFunction<T>): IContainer {
     return this.register(token, { useFactory: factory });
   }
 
@@ -232,10 +202,7 @@ export class Container implements IContainer {
    * @param registration The registration object
    * @return The container used for the registration
    */
-  registerRegistration(
-    token: InjectionToken,
-    registration: Registration,
-  ): IContainer {
+  registerRegistration(token: InjectionToken, registration: Registration): IContainer {
     this.#_services.set(token, registration);
     return this;
   }
@@ -244,38 +211,45 @@ export class Container implements IContainer {
    * Registers a class as a scoped in the container.
    * @param token The token to register the class with.
    * @param target The class to register.
+   * @param injections An array of tokens to inject into the class constructor.
    * @returns The container used for the registration.
    */
   registerScoped<T>(
     token: InjectionToken<T>,
     target: ConstructorType<T> | ClassProvider<T>,
+    injections: Array<InjectionToken> = [],
   ): IContainer {
-    return this.register(token, target, { lifetime: Lifetime.Scoped });
+    return this.register(token, target, { lifetime: Lifetime.Scoped, injections });
   }
 
   /**
    * Registers a class as a singleton in the container.
    * @param token The token to register the class with.
    * @param target The class to register.
+   * @param injections An array of tokens to inject into the class constructor.
    * @returns The container used for the registration.
    */
   registerSingleton<T>(
     token: InjectionToken<T>,
     target: ConstructorType<T> | ClassProvider<T>,
+    injections: Array<InjectionToken> = [],
   ): IContainer {
-    return this.register(token, target, { lifetime: Lifetime.Singleton });
+    return this.register(token, target, { lifetime: Lifetime.Singleton, injections });
   }
+
   /**
    * Registers a class as a transient in the container.
    * @param token The token to register the class with.
    * @param target The class to register.
+   * @param injections An array of tokens to inject into the class constructor.
    * @returns The container used for the registration.
    */
   registerTransient<T>(
     token: InjectionToken<T>,
     target: ConstructorType<T> | ClassProvider<T>,
+    injections: Array<InjectionToken> = [],
   ): IContainer {
-    return this.register(token, target, { lifetime: Lifetime.Transient });
+    return this.register(token, target, { lifetime: Lifetime.Transient, injections });
   }
 
   /**
@@ -284,10 +258,7 @@ export class Container implements IContainer {
    * @param to The token to where the from token will redirect to
    * @return The container used for the registration
    */
-  registerType<T>(
-    from: InjectionToken,
-    to: InjectionToken<T> | TokenProvider<T>,
-  ): IContainer {
+  registerType<T>(from: InjectionToken, to: InjectionToken<T> | TokenProvider<T>): IContainer {
     // If 'to' is a TokenProvider, we need to check if the token it's pointing to exists
     if (isTokenProvider(to as TokenProvider<T>)) {
       // If the token doesn't exist, throw an error
@@ -339,9 +310,7 @@ export class Container implements IContainer {
     }
 
     // Remove all registrations that match the predicate
-    for (const registration of this.#_services
-      .getAll(token)
-      .filter((x) => predicate(x))) {
+    for (const registration of this.#_services.getAll(token).filter((x) => predicate(x))) {
       await this.#_services.delete(token, registration);
     }
 
@@ -359,9 +328,7 @@ export class Container implements IContainer {
   async reset(): Promise<void> {
     // Dispose all scopes
     // We use Promise.allSettled instead of Promise.all to ensure that all scopes are disposed of, even if one of them throws an error
-    await Promise.allSettled(
-      Array.from(this.#_scopes).map((s) => this.disposeScope(s)),
-    );
+    await Promise.allSettled(Array.from(this.#_scopes).map((s) => this.disposeScope(s)));
 
     // Dispose all registrations
     // We use the [Symbol.asyncDispose] method to ensure that all registrations are disposed of, even if one of them throws an error
@@ -403,8 +370,12 @@ export class Container implements IContainer {
       }
 
       // If the token is registered, get the registration and resolve it
-      const registration = this.getRegistration(token)!;
-      return this.resolveRegistration(token, registration, scope);
+      const registration = this.getRegistration(token);
+      if (registration) {
+        return this.resolveRegistration(token, registration, scope);
+      } else {
+        throw new TokenNotFoundError(token);
+      }
     } finally {
       // Remove the token from the resolution stack
       this.#_resolutionStack.delete(token);
@@ -431,9 +402,7 @@ export class Container implements IContainer {
 
     // If the token is registered, get all registrations and resolve them
     const registrations = this.getAllRegistrations(token);
-    return registrations.map((registration) =>
-      this.resolveRegistration(token, registration, scope),
-    );
+    return registrations.map((registration) => this.resolveRegistration(token, registration, scope));
   }
 
   /**
@@ -444,10 +413,7 @@ export class Container implements IContainer {
    * @param scope Optional scope to resolve the token in.
    * @returns A promise that resolves with an array of resolved instances.
    */
-  async resolveAllAsync<T>(
-    token: InjectionToken,
-    scope?: ScopeContext,
-  ): Promise<Array<T>> {
+  async resolveAllAsync<T>(token: InjectionToken, scope?: ScopeContext): Promise<Array<T>> {
     if (!this.hasRegistration(token)) {
       if (isConstructorType(token)) {
         // If the token is a constructor, we can resolve it as a constructor
@@ -462,9 +428,7 @@ export class Container implements IContainer {
     const result = [];
     for (const registration of registrations) {
       // Resolve each registration asynchronously
-      result.push(
-        await this.resolveRegistrationAsync<T>(token, registration, scope),
-      );
+      result.push(await this.resolveRegistrationAsync<T>(token, registration, scope));
     }
     // Return the array of resolved instances
     return result;
@@ -480,10 +444,7 @@ export class Container implements IContainer {
    * @param scope Optional scope to resolve the token in.
    * @returns A promise that resolves with an instance of the type.
    */
-  async resolveAsync<T>(
-    token: InjectionToken,
-    scope?: ScopeContext,
-  ): Promise<T> {
+  async resolveAsync<T>(token: InjectionToken, scope?: ScopeContext): Promise<T> {
     // Check if the token is already being resolved (i.e. a circular dependency is detected)
     if (this.#_resolutionStack.has(token)) {
       //Circular dependency detected, return a proxy
@@ -505,8 +466,12 @@ export class Container implements IContainer {
       }
 
       // If the token is registered, get the registration and resolve it
-      const registration = this.getRegistration(token)!;
-      return await this.resolveRegistrationAsync(token, registration, scope);
+      const registration = this.getRegistration(token);
+      if (registration) {
+        return await this.resolveRegistrationAsync(token, registration, scope);
+      } else {
+        throw new TokenNotFoundError(token);
+      }
     } finally {
       // Remove the token from the resolution stack
       this.#_resolutionStack.delete(token);
@@ -522,11 +487,7 @@ export class Container implements IContainer {
    * @param scope Optional scope to resolve the token in.
    * @returns An instance of the type.
    */
-  resolveWithArgs<T>(
-    token: InjectionToken,
-    args: Array<unknown> = [],
-    scope?: ScopeContext,
-  ): T {
+  resolveWithArgs<T>(token: InjectionToken, args: Array<unknown> = [], scope?: ScopeContext): T {
     // If the token is not registered, throw an error
     if (!this.hasRegistration(token)) {
       if (isConstructorType(token)) {
@@ -537,12 +498,9 @@ export class Container implements IContainer {
     }
 
     // If the token is registered, get the registration and resolve it
-    const registration = this.getRegistration(token)!;
+    const registration = this.getRegistration(token) as Registration<T>;
     const resolvedArgs = this.createArgs(registration, scope);
-    return this.createInstance<T>(
-      (registration.provider as ClassProvider<T>).useClass,
-      args.concat(resolvedArgs),
-    );
+    return this.createInstance<T>((registration.provider as ClassProvider<T>).useClass, args.concat(resolvedArgs));
   }
 
   /**
@@ -554,11 +512,7 @@ export class Container implements IContainer {
    * @param scope Optional scope to resolve the token in.
    * @returns A promise that resolves with an instance of the type.
    */
-  async resolveWithArgsAsync<T>(
-    token: InjectionToken,
-    args: Array<unknown> = [],
-    scope?: ScopeContext,
-  ): Promise<T> {
+  async resolveWithArgsAsync<T>(token: InjectionToken, args: Array<unknown> = [], scope?: ScopeContext): Promise<T> {
     // If the token is not registered, throw an error
     if (!this.hasRegistration(token)) {
       if (isConstructorType(token)) {
@@ -569,13 +523,10 @@ export class Container implements IContainer {
     }
 
     // If the token is registered, get the registration and resolve it
-    const registration = this.getRegistration(token)!;
+    const registration = this.getRegistration(token) as Registration<T>;
     const resolvedArgs = await this.createArgsAsync(registration, scope);
     // Create an instance of the class with the resolved arguments and the arguments passed by the user
-    return this.createInstance<T>(
-      (registration.provider as ClassProvider<T>).useClass,
-      args.concat(resolvedArgs),
-    );
+    return this.createInstance<T>((registration.provider as ClassProvider<T>).useClass, args.concat(resolvedArgs));
   }
 
   //#endregion Resolve
@@ -587,10 +538,7 @@ export class Container implements IContainer {
    * @param scope Optional scope to resolve the tokens in.
    * @returns An array of arguments to pass to the constructor.
    */
-  private createArgs(
-    registration: Registration,
-    scope?: ScopeContext,
-  ): Array<unknown> {
+  private createArgs(registration: Registration, scope?: ScopeContext): Array<unknown> {
     return registration.injections.map((token) => this.resolve(token, scope));
   }
 
@@ -601,10 +549,7 @@ export class Container implements IContainer {
    * @param scope Optional scope to resolve the tokens in.
    * @returns A promise that resolves with an array of arguments to pass to the constructor.
    */
-  private async createArgsAsync(
-    registration: Registration,
-    scope?: ScopeContext,
-  ): Promise<Array<unknown>> {
+  private async createArgsAsync(registration: Registration, scope?: ScopeContext): Promise<Array<unknown>> {
     // Create an array to store the resolved arguments
     const args: Array<unknown> = [];
     // Iterate over the tokens in the registration's `injections` property
@@ -622,10 +567,7 @@ export class Container implements IContainer {
    * @param args The arguments to pass to the constructor.
    * @returns The created instance.
    */
-  private createInstance<T>(
-    implementation: ConstructorType<T>,
-    args: Array<unknown> = [],
-  ): T {
+  private createInstance<T>(implementation: ConstructorType<T>, args: Array<unknown> = []): T {
     // Create the instance using the specified implementation and arguments
     const instance: T = Reflect.construct(implementation, args);
     // Return the created instance
@@ -666,11 +608,7 @@ export class Container implements IContainer {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return (...args: Array<any>) => {
         // We need to maintain this condition to avoid an infinite loop when trying to resolve the await that calls the then() from the promise
-        if (
-          method === "get" &&
-          args[1] === "then" &&
-          typeof args[0].then === "undefined"
-        ) {
+        if (method === "get" && args[1] === "then" && typeof args[0].then === "undefined") {
           return proxy;
         }
         // Call the resolvedObject function to resolve the token from the container
@@ -683,17 +621,11 @@ export class Container implements IContainer {
       };
     };
     // Create the proxy handler for each method and property
-    (
-      Object.getOwnPropertyNames(Reflect) as Array<keyof ProxyHandler<never>>
-    ).forEach((method) => {
+    (Object.getOwnPropertyNames(Reflect) as Array<keyof ProxyHandler<never>>).forEach((method) => {
       // eslint-disable-next-line security/detect-object-injection
       handler[method] = action(method);
     });
-    (
-      Object.getOwnPropertySymbols(Reflect) as unknown as Array<
-        keyof ProxyHandler<never>
-      >
-    ).forEach((method) => {
+    (Object.getOwnPropertySymbols(Reflect) as unknown as Array<keyof ProxyHandler<never>>).forEach((method) => {
       // eslint-disable-next-line security/detect-object-injection
       handler[method] = action(method);
     });
@@ -709,9 +641,7 @@ export class Container implements IContainer {
    * @param token The token to get the registrations for.
    * @returns An array of registrations.
    */
-  private getAllRegistrations<T>(
-    token: InjectionToken<T>,
-  ): Array<Registration> {
+  private getAllRegistrations<T>(token: InjectionToken<T>): Array<Registration> {
     /**
      * If the token is registered in the current container, return the registrations.
      */
@@ -741,7 +671,7 @@ export class Container implements IContainer {
     /**
      * If the token is registered in the current container, return the registration.
      */
-    if (this.#_services.get(token)) {
+    if (this.#_services.has(token)) {
       return this.#_services.get(token);
     }
 
@@ -795,18 +725,13 @@ export class Container implements IContainer {
    * @param token The token to start the search from.
    * @param provider The provider of the token.
    */
-  private inspectCircularTokenProvider<T>(
-    token: InjectionToken<T>,
-    provider: TokenProvider<T>,
-  ): void {
+  private inspectCircularTokenProvider<T>(token: InjectionToken<T>, provider: TokenProvider<T>): void {
     const seenTokens = new Set<InjectionToken>([token]);
     let tokenProvider: TokenProvider<T> | null = provider;
     while (tokenProvider !== null) {
       const current = tokenProvider.useToken;
       if (seenTokens.has(current)) {
-        throw new TokenRegistrationCycleError(
-          [token, ...Array.from(seenTokens)].concat(current),
-        );
+        throw new TokenRegistrationCycleError([token, ...Array.from(seenTokens)].concat(current));
       }
       seenTokens.add(current);
       const registation = this.getRegistration(current);
@@ -824,15 +749,11 @@ export class Container implements IContainer {
    * @param scope Optional scope to resolve the token in.
    * @returns The resolved instance.
    */
-  private resolveConstructor<T>(
-    token: ConstructorType<T>,
-    scope?: ScopeContext,
-  ): T {
+  private resolveConstructor<T>(token: ConstructorType<T>, scope?: ScopeContext): T {
     //Get the lifetime of the token. If not specified, the lifetime is Transient.
     const lifetime: Lifetime =
       // eslint-disable-next-line security/detect-object-injection, @typescript-eslint/no-explicit-any
-      (token as StaticInjectable<any>)[STATIC_INJECTION_LIFETIME] ??
-      Lifetime.Transient;
+      (token as StaticInjectable<any>)[STATIC_INJECTION_LIFETIME] ?? Lifetime.Transient;
     const injections =
       // eslint-disable-next-line security/detect-object-injection, @typescript-eslint/no-explicit-any
       (token as StaticInjectable<any>)[STATIC_INJECTIONS] ?? [];
@@ -858,6 +779,7 @@ export class Container implements IContainer {
 
     //If the lifetime is singleton, store the instance in the registration.
     if (lifetime === Lifetime.Singleton) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       this.getRegistration(token)!.instance = instance;
     }
     return instance;
@@ -869,21 +791,14 @@ export class Container implements IContainer {
    * @param scope Optional scope to resolve the token in.
    * @returns The resolved instance.
    */
-  private async resolveConstructorAsync<T>(
-    token: ConstructorType<T>,
-    scope?: ScopeContext,
-  ): Promise<T> {
+  private async resolveConstructorAsync<T>(token: ConstructorType<T>, scope?: ScopeContext): Promise<T> {
     // Get the lifetime of the token. If not specified, the lifetime is Transient.
     const lifetime: Lifetime =
       // eslint-disable-next-line security/detect-object-injection
-      (token as StaticInjectable)[STATIC_INJECTION_LIFETIME] ??
-      Lifetime.Transient;
+      (token as StaticInjectable)[STATIC_INJECTION_LIFETIME] ?? Lifetime.Transient;
     // eslint-disable-next-line security/detect-object-injection
     const injections = (token as StaticInjectable)[STATIC_INJECTIONS] ?? [];
-    const args = await this.createArgsAsync(
-      { injections } as Registration,
-      scope,
-    );
+    const args = await this.createArgsAsync({ injections } as Registration, scope);
 
     const instance = this.createInstance(token, args);
 
@@ -905,6 +820,7 @@ export class Container implements IContainer {
 
     // If the lifetime is singleton, store the instance in the registration.
     if (lifetime == Lifetime.Singleton) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       this.getRegistration(token)!.instance = instance;
     }
     return instance;
@@ -917,11 +833,7 @@ export class Container implements IContainer {
    * @param scope Optional scope to resolve the token in.
    * @returns The resolved instance.
    */
-  private resolveClassProvider<T>(
-    registration: Registration,
-    token: InjectionToken,
-    scope?: ScopeContext,
-  ): T {
+  private resolveClassProvider<T>(registration: Registration, token: InjectionToken, scope?: ScopeContext): T {
     // If the lifetime is scoped, store the instance in the scope.
     if (registration.options.lifetime === Lifetime.Scoped) {
       if (typeof scope === "undefined") {
@@ -940,7 +852,7 @@ export class Container implements IContainer {
           ),
         });
       }
-      return scope.services.get(token)!.instance;
+      return scope.services.get(token).instance;
     }
     // If the lifetime is singleton, store the instance in the registration.
     if (registration.options.lifetime === Lifetime.Singleton) {
@@ -991,7 +903,7 @@ export class Container implements IContainer {
           ),
         });
       }
-      return scope.services.get(token)!.instance;
+      return scope.services.get(token).instance;
     }
     // If the lifetime is singleton, store the instance in the registration.
     if (registration.options.lifetime === Lifetime.Singleton) {
@@ -1026,9 +938,7 @@ export class Container implements IContainer {
    * @param registration The registration to resolve.
    * @returns The resolved instance.
    */
-  private async resolveFactoryProviderAsync<T>(
-    registration: Registration,
-  ): Promise<T> {
+  private async resolveFactoryProviderAsync<T>(registration: Registration): Promise<T> {
     // The factory provider is resolved by calling its useFactory method with the container as an argument.
     // The useFactory method should return a promise that resolves to the instance.
     return (registration.provider as FactoryProvider<T>).useFactory(this);
@@ -1041,16 +951,12 @@ export class Container implements IContainer {
    * @param scope The scope to resolve the registration in.
    * @returns The resolved instance.
    */
-  private resolveRegistration<T>(
-    token: InjectionToken,
-    registration: Registration<T>,
-    scope?: ScopeContext,
-  ): T {
+  private resolveRegistration<T>(token: InjectionToken, registration?: Registration<T>, scope?: ScopeContext): T {
     /**
      * If the registration is a class provider or a constructor provider, resolve it to an instance.
      * Otherwise, resolve it to an instance using the factory provider or the value provider.
      */
-    switch (registration.providerType) {
+    switch (registration?.providerType) {
       case ProvidersType.ClassProvider:
       case ProvidersType.ConstructorProvider:
         return this.resolveClassProvider(registration, token, scope);
@@ -1059,14 +965,9 @@ export class Container implements IContainer {
       case ProvidersType.ValueProvider:
         return this.resolveValueProvider(registration);
       case ProvidersType.TokenProvider:
-        return this.resolve(
-          (registration.provider as TokenProvider<T>).useToken,
-          scope,
-        );
+        return this.resolve((registration.provider as TokenProvider<T>).useToken, scope);
       default:
-        throw new Error(
-          `Invalid registration type: "${registration.providerType}"`,
-        );
+        throw new Error(`Invalid registration type: "${registration?.providerType}"`);
     }
   }
 
@@ -1093,14 +994,9 @@ export class Container implements IContainer {
       case ProvidersType.ValueProvider:
         return this.resolveValueProvider(registration);
       case ProvidersType.TokenProvider:
-        return this.resolveAsync(
-          (registration.provider as TokenProvider<T>).useToken,
-          scope,
-        );
+        return this.resolveAsync((registration.provider as TokenProvider<T>).useToken, scope);
       default:
-        throw new Error(
-          `Invalid registration type: "${registration.providerType}"`,
-        );
+        throw new Error(`Invalid registration type: "${registration.providerType}"`);
     }
   }
 

@@ -33,10 +33,7 @@ describe("Dymexjs_DI ", () => {
       });
       describe("resolveAll", () => {
         test("fails to resolveAll unregistered dependency by name sync", () => {
-          assert.rejects(
-            container.resolveAllAsync("NotRegistered"),
-            TokenNotFoundError,
-          );
+          assert.rejects(container.resolveAllAsync("NotRegistered"), TokenNotFoundError);
         });
         test("resolves an array of transient instances bound to a single interface", async () => {
           interface FooInterface {
@@ -58,13 +55,13 @@ describe("Dymexjs_DI ", () => {
             useClass: FooTwo,
           });
 
-          const fooArray =
-            await container.resolveAllAsync<FooInterface>("FooInterface");
+          const fooArray = await container.resolveAllAsync<FooInterface>("FooInterface");
           assert.ok(Array.isArray(fooArray));
           assert.ok(fooArray[0] instanceof FooOne);
           assert.ok(fooArray[1] instanceof FooTwo);
         });
         test("resolves all transient instances when not registered", async () => {
+          // eslint-disable-next-line @typescript-eslint/no-extraneous-class
           class Foo {}
 
           const foo1 = await container.resolveAllAsync(Foo);
@@ -78,11 +75,12 @@ describe("Dymexjs_DI ", () => {
         });
         test("allows array dependencies to be resolved if a single instance is in the container", () => {
           @Transient()
+          // eslint-disable-next-line @typescript-eslint/no-extraneous-class
           class Foo {}
 
           @Transient()
           class Bar {
-            constructor(public foo: Foo[] = container.resolveAll(Foo)) {}
+            constructor(public foo: Array<Foo> = container.resolveAll(Foo)) {}
           }
 
           const bar = container.resolve(Bar);
@@ -130,34 +128,30 @@ describe("Dymexjs_DI ", () => {
           container.register("test", Test, { lifetime: Lifetime.Scoped });
           const childContainer = container.createChildContainer();
           const scope = childContainer.createScope();
-          assert.strictEqual(
-            (await childContainer.resolveAsync<Test>("test", scope)).propertyA,
-            "test",
-          );
+          assert.strictEqual((await childContainer.resolveAsync<Test>("test", scope)).propertyA, "test");
         });
         test("child container resolves even when parent doesn't have registration", async () => {
           // eslint-disable-next-line @typescript-eslint/no-empty-object-type
           interface IFoo {}
+          // eslint-disable-next-line @typescript-eslint/no-extraneous-class
           class Foo implements IFoo {}
           const childContainer = container.createChildContainer();
           childContainer.register("IFoo", { useClass: Foo });
-          assert.ok(
-            (await childContainer.resolveAsync<Foo>("IFoo")) instanceof Foo,
-          );
+          assert.ok((await childContainer.resolveAsync<Foo>("IFoo")) instanceof Foo);
         });
         test("child container resolves using parent's registration when child container doesn't have registration", async () => {
           // eslint-disable-next-line @typescript-eslint/no-empty-object-type
           interface IFoo {}
+          // eslint-disable-next-line @typescript-eslint/no-extraneous-class
           class Foo implements IFoo {}
           container.register("IFoo", { useClass: Foo });
           const childContainer = container.createChildContainer();
-          assert.ok(
-            (await childContainer.resolveAsync<Foo>("IFoo")) instanceof Foo,
-          );
+          assert.ok((await childContainer.resolveAsync<Foo>("IFoo")) instanceof Foo);
         });
         test("child container resolves all even when parent doesn't have registration", async () => {
           // eslint-disable-next-line @typescript-eslint/no-empty-object-type
           interface IFoo {}
+          // eslint-disable-next-line @typescript-eslint/no-extraneous-class
           class Foo implements IFoo {}
           const childContainer = container.createChildContainer();
           childContainer.register("IFoo", { useClass: Foo });
@@ -170,6 +164,7 @@ describe("Dymexjs_DI ", () => {
         test("child container resolves all using parent's registration when child container doesn't have registration", async () => {
           // eslint-disable-next-line @typescript-eslint/no-empty-object-type
           interface IFoo {}
+          // eslint-disable-next-line @typescript-eslint/no-extraneous-class
           class Foo implements IFoo {}
           container.register("IFoo", { useClass: Foo });
           const childContainer = container.createChildContainer();
@@ -180,6 +175,7 @@ describe("Dymexjs_DI ", () => {
         });
         test("should not create a new instance of requested singleton service", async () => {
           @Singleton()
+          // eslint-disable-next-line @typescript-eslint/no-extraneous-class
           class Bar {}
 
           const bar1 = await container.resolveAsync(Bar);
@@ -195,6 +191,7 @@ describe("Dymexjs_DI ", () => {
       });
       describe("removeRegistration", () => {
         test("should remove registration", async () => {
+          // eslint-disable-next-line @typescript-eslint/no-extraneous-class
           class Test {}
           container.register("test", Test, { lifetime: Lifetime.Singleton });
           container.register("test", Test, { lifetime: Lifetime.Transient });
@@ -204,25 +201,21 @@ describe("Dymexjs_DI ", () => {
           assert.ok(instances[0] instanceof Test);
           assert.ok(instances[1] instanceof Test);
           assert.notStrictEqual(instances[0], instances[1]);
-          await container.removeRegistration(
-            "test",
-            (reg) => reg.options.lifetime === Lifetime.Transient,
-          );
+          await container.removeRegistration("test", (reg) => reg.options.lifetime === Lifetime.Transient);
           const instances2 = container.resolveAll("test");
           assert.ok(instances2 instanceof Array);
           assert.strictEqual(instances2.length, 1);
           assert.ok(instances2[0] instanceof Test);
           assert.strictEqual(instances2[0], instances[0]);
-          await container.removeRegistration(
-            "test",
-            (reg) => reg.options.lifetime === Lifetime.Singleton,
-          );
+          await container.removeRegistration("test", (reg) => reg.options.lifetime === Lifetime.Singleton);
           assert.throws(() => container.resolveAll("test"), TokenNotFoundError);
         });
       });
       describe("registerType", () => {
         test("registerType() allows for classes to be swapped", async () => {
+          // eslint-disable-next-line @typescript-eslint/no-extraneous-class
           class Bar {}
+          // eslint-disable-next-line @typescript-eslint/no-extraneous-class
           class Foo {}
           container.registerType(Bar, Foo);
 
@@ -230,12 +223,11 @@ describe("Dymexjs_DI ", () => {
         });
 
         test("registerType() allows for names to be registered for a given type", async () => {
+          // eslint-disable-next-line @typescript-eslint/no-extraneous-class
           class Bar {}
           container.registerType("CoolName", Bar);
 
-          assert.ok(
-            (await container.resolveAsync<Bar>("CoolName")) instanceof Bar,
-          );
+          assert.ok((await container.resolveAsync<Bar>("CoolName")) instanceof Bar);
         });
       });
     });

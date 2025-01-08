@@ -52,6 +52,7 @@ describe("Dymexjs_DI", () => {
       });
       describe("other", () => {
         test("register constructor in scope", () => {
+          // eslint-disable-next-line @typescript-eslint/no-extraneous-class
           class Test {
             static [STATIC_INJECTION_LIFETIME] = Lifetime.Scoped;
           }
@@ -60,6 +61,7 @@ describe("Dymexjs_DI", () => {
           assert.ok(test instanceof Test);
         });
         test("throw register constructor without scope", () => {
+          // eslint-disable-next-line @typescript-eslint/no-extraneous-class
           class Test {
             static [STATIC_INJECTION_LIFETIME] = Lifetime.Scoped;
           }
@@ -67,6 +69,7 @@ describe("Dymexjs_DI", () => {
         });
         test("register constructor in scope with decorator", () => {
           @Scoped()
+          // eslint-disable-next-line @typescript-eslint/no-extraneous-class
           class Test {}
           const scope = container.createScope();
           const test = container.resolve(Test, scope);
@@ -74,6 +77,7 @@ describe("Dymexjs_DI", () => {
         });
         test("throw register constructor without scope with decorator", () => {
           @Scoped()
+          // eslint-disable-next-line @typescript-eslint/no-extraneous-class
           class Test {}
           assert.throws(() => container.resolve(Test), UndefinedScopeError);
         });
