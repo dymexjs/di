@@ -1,9 +1,6 @@
 import { beforeEach, describe, test } from "node:test";
 import { container } from "../../src/container";
-import {
-  STATIC_INJECTIONS,
-  STATIC_INJECTION_LIFETIME,
-} from "../../src/constants";
+import { STATIC_INJECTIONS, STATIC_INJECTION_LIFETIME } from "../../src/constants";
 import { Lifetime } from "../../src/types/registration.interface";
 import { StaticInjectable } from "../../src/types/static-inject.interface";
 import * as assert from "node:assert/strict";
@@ -20,11 +17,7 @@ describe("Dymexjs_DI", () => {
           constructor(public test: TestClass) {}
           public static [STATIC_INJECTIONS] = ["test"];
         }
-        container.register(
-          "test",
-          { useClass: TestClass },
-          { lifetime: Lifetime.Singleton },
-        );
+        container.register("test", { useClass: TestClass }, { lifetime: Lifetime.Singleton });
         const test2 = await container.resolveAsync(TestClass2);
         const test = await container.resolveAsync<TestClass>("test");
         assert.ok(test2 instanceof TestClass2);
