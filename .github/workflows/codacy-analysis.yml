@@ -2,8 +2,6 @@ name: Codacy Security Scan Utils
 
 on:
   pull_request:
-    branches:
-      - main
 
 jobs:
   codacy-security-scan-coverage-reporter:
