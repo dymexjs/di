@@ -190,7 +190,7 @@ Opening pull requests should be done using the github template, with enough info
 
 This guide is based on the [contributing.md](https://contributing.md/generator)!
 
-[@dymexjs Code of Conduct]: <https://github.com/dymexjs/di/blob/main/.github/CODE_OF_CONDUCT.md>
+[@dymexjs Code of Conduct]: <https://github.com/dymexjs/di/blob/main/CODE_OF_CONDUCT.md>
 [Issues]: <https://github.com/dymexjs/di/issues>
 [New Issue]: <https://github.com/dymexjs/di/issues/new>
-[Documentation]: ../README.md
+[Documentation]: ./README.md

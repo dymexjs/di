@@ -13,6 +13,7 @@ Dymexjs/DI performs [Constructor Injection](https://en.wikipedia.org/wiki/Depend
 - [Dymexjs/DI](#dymexjsdi)
   - [Instalation](#instalation)
   - [Basic Usage](#basic-usage)
+    - [Direct to container](#direct-to-container)
     - [Decorators](#decorators)
       - [Available Decorators](#available-decorators)
     - [Static Injection (without decorators)](#static-injection-without-decorators)
@@ -37,6 +38,34 @@ npm install --save @dymexjs/di
 ```
 
 ## Basic Usage
+
+### Direct to container
+
+```typescript
+import { container } from "@dymexjs/di";
+
+class TestService {
+  printMessage() {
+    return "I'm printting this message inside of TestService instance.";
+  }
+}
+
+class Test {
+  constructor(public testService: TestService) {}
+}
+
+container.registerSingleton(Test, Test, [TestService]);
+// or for ex: container.registerSingleton("test", Test, [TestService]);
+
+//and in another place after the registration
+const testInstance = container.resolve(Test);
+// or: const testInstance = container.resolve("test");
+
+console.log(testInstance.testService.printMessage());
+// logs "I'm printting this message inside of TestService instance."
+```
+
+More info here [Register](#register)
 
 ### Decorators
 
@@ -168,11 +197,11 @@ The detailed usage guide and API documentation for the project can be found in t
 
 ## Code of Conduct
 
-We expect everyone to abide by our [**Code of Conduct**](.github/CODE_OF_CONDUCT.md). Please read it.
+We expect everyone to abide by our [**Code of Conduct**](./CODE_OF_CONDUCT.md). Please read it.
 
 ## How to Contribute
 
-Check out our [**Contributing Guide**](.github/CONTRIBUTING.md) for information on contributing.
+Check out our [**Contributing Guide**](./CONTRIBUTING.md) for information on contributing.
 
 ## License 📝
 

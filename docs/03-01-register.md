@@ -21,7 +21,7 @@ By using the decorators [@Singleton](02-decorators.md##singleton), [@Transient](
 Helper to register a singleton class in the container
 
 ```typescript
-registerSingleton<T>(token: InjectionToken<T>, target: ConstructorType<T> | ClassProvider<T>): IContainer;
+registerSingleton<T>(token: InjectionToken<T>, target: ConstructorType<T> | ClassProvider<T>, injections?: Array<InjectionToken>): IContainer;
 ```
 
 ## registerTransient
@@ -29,7 +29,7 @@ registerSingleton<T>(token: InjectionToken<T>, target: ConstructorType<T> | Clas
 Heper to register a transient class in the container
 
 ```typescript
-registerTransient<T>(token: InjectionToken<T>, target: ConstructorType<T> | ClassProvider<T>): IContainer;
+registerTransient<T>(token: InjectionToken<T>, target: ConstructorType<T> | ClassProvider<T>, injections?: Array<InjectionToken>): IContainer;
 ```
 
 ## registerScoped
@@ -37,7 +37,7 @@ registerTransient<T>(token: InjectionToken<T>, target: ConstructorType<T> | Clas
 Helper to register a scoped class in the container
 
 ```typescript
-registerScoped<T>(token: InjectionToken<T>, target: ConstructorType<T> | ClassProvider<T>): IContainer;
+registerScoped<T>(token: InjectionToken<T>, target: ConstructorType<T> | ClassProvider<T>, injections?: Array<InjectionToken>): IContainer;
 ```
 
 ## registerFactory
