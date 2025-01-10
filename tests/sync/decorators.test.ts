@@ -1,9 +1,17 @@
 import { beforeEach, describe, test } from "node:test";
-import { container } from "../../src/container";
-import { AutoInjectable, getInterfaceToken, Inject, InjectAll, Scoped, Singleton, Transient } from "../../src";
-import { UndefinedScopeError } from "../../src/exceptions/UndefinedScopeError";
-import { InvalidDecoratorError } from "../../src/exceptions/InvalidDecoratorError";
 import * as assert from "node:assert/strict";
+import {
+  AutoInjectable,
+  container,
+  getInterfaceToken,
+  Inject,
+  InjectAll,
+  InvalidDecoratorError,
+  Scoped,
+  Singleton,
+  Transient,
+  UndefinedScopeError,
+} from "../../src";
 
 describe("Dymexjs_DI", () => {
   beforeEach(async () => await container.reset());

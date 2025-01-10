@@ -18,3 +18,5 @@ export type { InjectionToken } from "./types/injection-token.type.ts";
 export { Token } from "./types/injection-token.type.ts";
 export type { InterfaceId } from "./types/interface-token.type.ts";
 export { getInterfaceToken } from "./types/interface-token.type.ts";
+export type { IScopeContext } from "./scope-context.ts";
+export { ScopeContext } from "./scope-context.ts";

@@ -1,11 +1,7 @@
 import { beforeEach, describe, test } from "node:test";
-import { InvalidDecoratorError } from "../src/exceptions/InvalidDecoratorError";
-import { AutoInjectable, Scoped, Singleton, Transient } from "../src/decorators";
-import { ServiceMap } from "../src/service-map";
-import { Registration } from "../src/types/registration.interface";
-import { container } from "../src/container";
-import { TokenNotFoundError } from "../src/exceptions/TokenNotFoundError";
 import * as assert from "node:assert/strict";
+import { InvalidDecoratorError, Registration, container, TokenNotFoundError, Singleton } from "../src";
+import { ServiceMap } from "../src/service-map";
 
 describe("Dymexjs_DI ", () => {
   describe("Other", () => {

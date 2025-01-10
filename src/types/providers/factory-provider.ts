@@ -8,5 +8,10 @@ export interface FactoryProvider<T> {
 }
 
 export function isFactoryProvider<T>(provider: Provider<T>): provider is FactoryProvider<T> {
-  return "useFactory" in provider;
+  try {
+    return "useFactory" in provider;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (_) {
+    return false;
+  }
 }

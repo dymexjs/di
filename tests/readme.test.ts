@@ -1,12 +1,16 @@
 import { beforeEach, describe, test } from "node:test";
-import { container } from "../src/container";
-import { Scoped, Singleton } from "../src/decorators";
-import { StaticInjectable } from "../src/types/static-inject.interface";
-import { STATIC_INJECTION_LIFETIME, STATIC_INJECTIONS } from "../src/constants";
-import { Lifetime } from "../src/types/registration.interface";
-import { UndefinedScopeError } from "../src/exceptions/UndefinedScopeError";
-import { Token } from "../src/types/injection-token.type";
 import * as assert from "node:assert/strict";
+import {
+  container,
+  Singleton,
+  StaticInjectable,
+  STATIC_INJECTION_LIFETIME,
+  Lifetime,
+  STATIC_INJECTIONS,
+  Scoped,
+  UndefinedScopeError,
+  Token,
+} from "../src";
 
 describe("Dymexjs_DI ", () => {
   beforeEach(async () => await container.reset());
