@@ -1,6 +1,15 @@
 import { beforeEach, describe, test } from "node:test";
 import * as assert from "node:assert/strict";
-import { InvalidDecoratorError, Registration, container, TokenNotFoundError, Singleton } from "../src";
+import {
+  InvalidDecoratorError,
+  Registration,
+  container,
+  TokenNotFoundError,
+  Singleton,
+  Transient,
+  Scoped,
+  AutoInjectable,
+} from "../src";
 import { ServiceMap } from "../src/service-map";
 
 describe("Dymexjs_DI ", () => {
