@@ -61,9 +61,9 @@ interface SB {
 const SB = getInterfaceToken<SB>("SB");
 
 @Singleton(SA)
-class ServiceA {}
+class ServiceA implements SA {}
 @Singleton(SB, [SA])
-class ServiceB {
+class ServiceB implements SB {
   constructor(public serviceA: SA) {}
 }
 const b = container.resolve<SB>(SB);

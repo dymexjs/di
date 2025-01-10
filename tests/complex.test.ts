@@ -1,9 +1,6 @@
 import { beforeEach, describe, test } from "node:test";
-import { container } from "../src/container";
 import * as assert from "node:assert/strict";
-import { UndefinedScopeError } from "../src/exceptions/UndefinedScopeError";
-import { Scoped, Singleton, Transient } from "../src/decorators";
-import { TokenNotFoundError } from "../src/exceptions";
+import { container, Scoped, Singleton, TokenNotFoundError, Transient, UndefinedScopeError } from "../src";
 
 describe("Container Complex Scenarios", () => {
   beforeEach(async () => await container.reset());

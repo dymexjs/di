@@ -2,10 +2,7 @@ import type { Registration, RegistrationOptions } from "./registration.interface
 import type { InjectionToken } from "./injection-token.type.ts";
 import type { ConstructorType } from "./constructor.type.ts";
 import { ScopeContext } from "../scope-context.ts";
-import type { TokenProvider } from "./providers/token-provider.ts";
-import type { Provider } from "./providers/provider.type.ts";
-import type { FactoryFunction } from "./providers/factory-provider.ts";
-import type { ClassProvider } from "./providers/class-provider.ts";
+import type { ClassProvider, FactoryFunction, Provider, TokenProvider } from "./providers/index.ts";
 
 export interface IContainer extends AsyncDisposable {
   readonly scopes: Set<ScopeContext>;
