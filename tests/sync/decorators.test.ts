@@ -1,14 +1,6 @@
 import { beforeEach, describe, test } from "node:test";
 import { container } from "../../src/container";
-import {
-  AutoInjectable,
-  getInterfaceToken,
-  Inject,
-  InjectAll,
-  Scoped,
-  Singleton,
-  Transient,
-} from "../../src/decorators";
+import { AutoInjectable, getInterfaceToken, Inject, InjectAll, Scoped, Singleton, Transient } from "../../src";
 import { UndefinedScopeError } from "../../src/exceptions/UndefinedScopeError";
 import { InvalidDecoratorError } from "../../src/exceptions/InvalidDecoratorError";
 import * as assert from "node:assert/strict";
@@ -679,9 +671,9 @@ describe("Dymexjs_DI", () => {
 
         @Singleton(SA)
         // eslint-disable-next-line @typescript-eslint/no-extraneous-class
-        class ServiceA {}
+        class ServiceA implements SA {}
         @Singleton(SB, [SA])
-        class ServiceB {
+        class ServiceB implements SB {
           constructor(public serviceA: SA) {}
         }
         const b = container.resolve<SB>(SB);
@@ -702,9 +694,9 @@ describe("Dymexjs_DI", () => {
 
         @Transient(SA)
         // eslint-disable-next-line @typescript-eslint/no-extraneous-class
-        class ServiceA {}
+        class ServiceA implements SA {}
         @Singleton(SB, [SA])
-        class ServiceB {
+        class ServiceB implements SB {
           constructor(public serviceA: SA) {}
         }
         const b = container.resolve<SB>(SB);
@@ -725,9 +717,9 @@ describe("Dymexjs_DI", () => {
         const SB = getInterfaceToken<SB>("SB");
         @Transient(SA)
         // eslint-disable-next-line @typescript-eslint/no-extraneous-class
-        class ServiceA {}
+        class ServiceA implements SA {}
         @Transient(SB, [SA])
-        class ServiceB {
+        class ServiceB implements SB {
           constructor(public serviceA: SA) {}
         }
         const b = container.resolve<SB>(SB);
@@ -751,9 +743,9 @@ describe("Dymexjs_DI", () => {
         const SB = getInterfaceToken<SB>("SB");
         @Scoped(SA)
         // eslint-disable-next-line @typescript-eslint/no-extraneous-class
-        class ServiceA {}
+        class ServiceA implements SA {}
         @Scoped(SB, [SA])
-        class ServiceB {
+        class ServiceB implements SB {
           constructor(public serviceA: SA) {}
         }
         const scope = container.createScope();
@@ -765,6 +757,40 @@ describe("Dymexjs_DI", () => {
         assert.strictEqual(b.serviceA, a);
         assert.equal(b.serviceA, a);
         assert.throws(() => container.resolve<SB>(SB), UndefinedScopeError);
+      });
+      test("should create diferent keyed singletons", () => {
+        // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+        interface SA {}
+        const SA = getInterfaceToken<SA>("SA");
+        interface SB {
+          readonly serviceA: SA;
+        }
+        const SB = getInterfaceToken<SB>("SB");
+
+        //@Singleton(SA)
+        // eslint-disable-next-line @typescript-eslint/no-extraneous-class
+        class ServiceA implements SA {}
+        //@Singleton(SB, [SA])
+        class ServiceB implements SB {
+          constructor(public serviceA: SA) {}
+        }
+        container.registerSingleton("sa1", ServiceA);
+        container.registerSingleton("sa2", ServiceA);
+        container.registerSingleton("sb1", ServiceB, ["sa1"]);
+        container.registerSingleton("sb2", ServiceB, ["sa2"]);
+        const a1 = container.resolve<SA>("sa1");
+        const a2 = container.resolve<SA>("sa2");
+        assert.ok(a1 instanceof ServiceA);
+        assert.ok(a2 instanceof ServiceA);
+        assert.notStrictEqual(a1, a2);
+        const b1 = container.resolve<SB>("sb1");
+        const b2 = container.resolve<SB>("sb2");
+        assert.ok(b1 instanceof ServiceB);
+        assert.ok(b2 instanceof ServiceB);
+        assert.notStrictEqual(b1, b2);
+        assert.notStrictEqual(b1.serviceA, b2.serviceA);
+        assert.strictEqual(b1.serviceA, a1);
+        assert.strictEqual(b2.serviceA, a2);
       });
     });
   });

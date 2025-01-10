@@ -16,3 +16,8 @@ export type UnwrapDecoratorArgs<T extends Array<InterfaceId | InjectionToken>> =
           ? U
           : never;
 };
+
+/**
+ * Creates a runtime identifier of an interface used for dependency injection.
+ */
+export const getInterfaceToken = <T>(id: string): InterfaceId<T> => `${id}_interface` as InterfaceId<T>;

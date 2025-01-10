@@ -1,5 +1,5 @@
 import type { ConstructorType } from "./constructor.type.ts";
-import type { InterfaceId } from "./decorators.type.ts";
+import type { InterfaceId } from "./interface-token.type.ts";
 
 export class Token {
   constructor(public token?: string | symbol) {}
