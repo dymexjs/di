@@ -1,10 +1,6 @@
 import { beforeEach, describe, test } from "node:test";
-import { Container, container } from "../../src/container";
-import { TokenNotFoundError } from "../../src/exceptions/TokenNotFoundError";
-import { Lifetime } from "../../src/types/registration.interface";
-import { Singleton } from "../../src/decorators";
-import { TokenRegistrationCycleError } from "../../src/exceptions/TokenRegistrationCycleError";
 import * as assert from "node:assert/strict";
+import { Container, container, Lifetime, Singleton, TokenNotFoundError, TokenRegistrationCycleError } from "../../src";
 
 describe("Dymexjs_DI ", () => {
   beforeEach(async () => container.reset());

@@ -3,7 +3,9 @@ import { ServiceMap } from "./service-map.ts";
 import type { InjectionToken } from "./types/injection-token.type.ts";
 import type { Registration } from "./types/registration.interface.ts";
 
-export class ScopeContext implements AsyncDisposable {
+export type IScopeContext = AsyncDisposable;
+
+export class ScopeContext implements IScopeContext {
   public readonly services = new ServiceMap<InjectionToken, Registration>();
 
   async [Symbol.asyncDispose]() {

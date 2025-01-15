@@ -1,13 +1,16 @@
 import { describe, test } from "node:test";
-import { getProviderType, isProvider, Provider, ProvidersType } from "../src/types/providers/provider.type";
-import { isValueProvider } from "../src/types/providers/value-provider";
-import { isClassProvider } from "../src/types/providers/class-provider";
-import { isFactoryProvider } from "../src/types/providers/factory-provider";
-import { isConstructorType } from "../src/types/constructor.type";
-import { isTokenProvider } from "../src/types/providers/token-provider";
-import { container } from "../src/container";
-import { TokenRegistrationCycleError } from "../src/exceptions/TokenRegistrationCycleError";
 import * as assert from "node:assert/strict";
+import { Provider, container, TokenRegistrationCycleError } from "../src";
+import { isConstructorType } from "../src/types/constructor.type";
+import {
+  isProvider,
+  getProviderType,
+  ProvidersType,
+  isValueProvider,
+  isClassProvider,
+  isFactoryProvider,
+  isTokenProvider,
+} from "../src/types/providers";
 
 describe("Provider", () => {
   describe("Invalid provider", () => {

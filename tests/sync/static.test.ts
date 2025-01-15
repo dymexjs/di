@@ -1,9 +1,6 @@
 import { beforeEach, describe, test } from "node:test";
-import { container } from "../../src/container";
-import { STATIC_INJECTIONS, STATIC_INJECTION_LIFETIME } from "../../src/constants";
-import { Lifetime } from "../../src/types/registration.interface";
-import { StaticInjectable } from "../../src/types/static-inject.interface";
 import * as assert from "node:assert/strict";
+import { container, Lifetime, STATIC_INJECTION_LIFETIME, STATIC_INJECTIONS, StaticInjectable } from "../../src";
 
 describe("Dymexjs_DI", () => {
   beforeEach(async () => await container.reset());

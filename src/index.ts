@@ -1,8 +1,22 @@
+export * from "./exceptions/index.ts";
+export type {
+  ClassProvider,
+  FactoryFunction,
+  FactoryProvider,
+  Provider,
+  TokenProvider,
+  ValueProvider,
+} from "./types/providers/index.ts";
 export type { StaticInjectable } from "./types/static-inject.interface.ts";
 export type { IContainer } from "./types/container.interface.ts";
 export { container, Container } from "./container.ts";
-export * from "./decorators.ts";
+export { AutoInjectable, Inject, InjectAll, Scoped, Singleton, Transient } from "./decorators.ts";
 export * from "./constants.ts";
-export * from "./types/registration.interface.ts";
+export type { Registration, RegistrationOptions } from "./types/registration.interface.ts";
+export { Lifetime } from "./types/registration.interface.ts";
+export type { InjectionToken } from "./types/injection-token.type.ts";
 export { Token } from "./types/injection-token.type.ts";
-export * from "./exceptions/index.ts";
+export type { InterfaceId } from "./types/interface-token.type.ts";
+export { getInterfaceToken } from "./types/interface-token.type.ts";
+export type { IScopeContext } from "./scope-context.ts";
+export { ScopeContext } from "./scope-context.ts";
