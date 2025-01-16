@@ -2,6 +2,15 @@
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v1.0.7 - 2025-01-16
+
+### What's Changed 👀
+
+- chore: build configuration improvement @n3okill ([#13](https://github.com/$OWNER/$REPOSITORY/pull/13))
+- fix: codacy workflow config @n3okill ([#12](https://github.com/$OWNER/$REPOSITORY/pull/12))
+
+**Full Changelog**: https://github.com/dymexjs/di/compare/v1.0.6...v1.0.7
+
 ## v1.0.6 - 2025-01-10
 
 ### What's Changed 👀
