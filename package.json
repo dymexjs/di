@@ -27,14 +27,18 @@
     "url": "https://github.com/dymexjs/di/issues"
   },
   "scripts": {
-    "build": "pkgroll --clean-dist --sourcemap",
+    "build:cjs": "npx tsc -p tsconfig.cjs.json && echo {\"type\": \"commonjs\"} > dist/cjs/package.json",
+    "build:esm": "npx tsc -p tsconfig.esm.json && echo {\"type\": \"module\"} > dist/esm/package.json",
+    "build:types": "npx tsc -p tsconfig.types.json",
+    "build": "npm run clean && npm run build:cjs && npm run build:esm && npm run build:types",
+    "clean": "npx rimraf dist",
     "lint": "eslint",
-    "test": "globstar -- node --import tsx --test \"tests/**/*.test.ts\"",
-    "test:coverage": "globstar -- node --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=lcov.info --import tsx --test \"tests/**/*.test.ts\"",
-    "test:watch": "globstar -- node --import tsx --test --watch \"tests/**/*.test.ts\"",
+    "test": "globstar -- tsx --test \"tests/**/*.test.ts\"",
+    "test:coverage": "globstar -- tsx --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=lcov.info --test \"tests/**/*.test.ts\"",
+    "test:watch": "globstar -- tsx --test --watch \"tests/**/*.test.ts\"",
     "format": "prettier --config .prettierrc \"src/**/*.ts\" \"tests/**/*.ts\" --write",
     "prepare": "npm run build",
-    "preversion": "npm run lint && npm test",
+    "preversion": "npm run format && npm run lint && npm test",
     "version": "npm run format && git add -A .",
     "postversion": "git push && git push --tags"
   },
@@ -48,8 +52,8 @@
     "eslint-plugin-security": "^3.0.1",
     "globals": "^15.14.0",
     "globstar": "^1.0.0",
-    "pkgroll": "^2.6.1",
     "prettier": "3.3.3",
+    "rimraf": "^5.0.10",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
     "typescript-eslint": "^8.19.1"
