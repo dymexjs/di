@@ -2,7 +2,12 @@
 
 Dymexjs stands for DYnamic, Modular, EXtensible JavaScript/Typescript framework.
 
-[![Released under the MIT license.](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE) [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](code_of_conduct.md) [![Codacy Badge](https://app.codacy.com/project/badge/Grade/56ccd37ecb9e4e3fb7e2caa42627c19c)](https://app.codacy.com/gh/dymexjs/di/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade) [![Codacy Badge](https://app.codacy.com/project/badge/Coverage/56ccd37ecb9e4e3fb7e2caa42627c19c)](https://app.codacy.com/gh/dymexjs/di/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_coverage) [![PRs welcome!](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](.github/CONTRIBUTING.md) [![All Contributors](https://img.shields.io/github/all-contributors/dymexjs/di?color=ee8449&style=flat-square)](#contributors-)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/56ccd37ecb9e4e3fb7e2caa42627c19c)](https://app.codacy.com/gh/dymexjs/di/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
+[![Codacy Badge](https://app.codacy.com/project/badge/Coverage/56ccd37ecb9e4e3fb7e2caa42627c19c)](https://app.codacy.com/gh/dymexjs/di/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_coverage)
+[![Released under the MIT license.](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](./CODE_OF_CONDUCT.md)
+[![PRs welcome!](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](./CONTRIBUTING.md)
+[![All Contributors](https://img.shields.io/github/all-contributors/dymexjs/di?color=ee8449&style=flat-square)](#contributors-)
 
 A dependency injection library for Typescript/Javascript to help build well-structured code and easily testable applications.
 

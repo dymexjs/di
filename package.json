@@ -1,6 +1,6 @@
 {
   "name": "@dymexjs/di",
-  "version": "v1.0.7",
+  "version": "v1.0.6",
   "description": "Dymexjs DI system",
   "publishConfig": {
     "access": "public"
@@ -33,9 +33,9 @@
     "build": "npm run clean && npm run build:cjs && npm run build:esm && npm run build:types",
     "clean": "npx rimraf dist",
     "lint": "eslint",
-    "test": "globstar -- tsx --test \"tests/**/*.test.ts\"",
-    "test:coverage": "globstar -- tsx --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=lcov.info --test \"tests/**/*.test.ts\"",
-    "test:watch": "globstar -- tsx --test --watch \"tests/**/*.test.ts\"",
+    "test": "globcli -- tsx --test \"tests/**/*.test.ts\"",
+    "test:coverage": "globcli -- tsx --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=lcov.info --test \"tests/**/*.test.ts\"",
+    "test:watch": "globcli -- tsx --test --watch \"tests/**/*.test.ts\"",
     "format": "prettier --config .prettierrc \"src/**/*.ts\" \"tests/**/*.ts\" --write",
     "prepare": "npm run build",
     "preversion": "npm run format && npm run lint && npm test",
@@ -45,13 +45,12 @@
   "author": "João Parreira",
   "license": "ISC",
   "devDependencies": {
+    "@dymexjs/globcli": "^0.0.2",
     "@eslint/js": "^9.10.0",
     "@types/node": "^22.10.5",
     "eslint": "^9.17.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-security": "^3.0.1",
-    "globals": "^15.14.0",
-    "globstar": "^1.0.0",
     "prettier": "3.3.3",
     "rimraf": "^5.0.10",
     "tsx": "^4.19.2",

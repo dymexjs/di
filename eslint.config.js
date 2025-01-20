@@ -12,7 +12,6 @@ export default [
     ignores: ["dist"],
   },
   pluginJs.configs.recommended,
-  //...tseslint.configs.recommended,
   ...tseslint.configs.strict,
   ...tseslint.configs.stylistic,
   security.configs.recommended,
