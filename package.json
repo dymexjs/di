@@ -45,7 +45,7 @@
   "author": "João Parreira",
   "license": "ISC",
   "devDependencies": {
-    "@dymexjs/globcli": "^0.0.2",
+    "@dymexjs/globcli": "^0.0.4",
     "@eslint/js": "^9.10.0",
     "@types/node": "^22.10.5",
     "eslint": "^9.17.0",
