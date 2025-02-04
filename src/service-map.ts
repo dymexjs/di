@@ -2,7 +2,9 @@ import { isAsyncDisposable, isDisposable } from "./helpers.ts";
 import type { InjectionToken } from "./types/injection-token.type.ts";
 import type { Registration } from "./types/registration.interface.ts";
 
-export class ServiceMap<K extends InjectionToken, V extends Registration> implements AsyncDisposable {
+export class ServiceMap<K extends InjectionToken, V extends Registration>
+  implements AsyncDisposable
+{
   readonly #_services = new Map<K, Array<V>>();
 
   public ensuresKey(key: K) {
@@ -66,7 +68,9 @@ export class ServiceMap<K extends InjectionToken, V extends Registration> implem
         .forEach((r) => {
           promises.push(r.instance[Symbol.asyncDispose]());
         });
-      values.filter((r) => isDisposable(r.instance)).forEach((r) => r.instance[Symbol.dispose]());
+      values
+        .filter((r) => isDisposable(r.instance))
+        .forEach((r) => r.instance[Symbol.dispose]());
     }
     await Promise.allSettled(promises);
     this.#_services.clear();

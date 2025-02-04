@@ -1,6 +1,13 @@
 import { beforeEach, describe, test } from "node:test";
 import * as assert from "node:assert/strict";
-import { Container, container, Lifetime, Singleton, TokenNotFoundError, TokenRegistrationCycleError } from "../../src";
+import {
+  Container,
+  container,
+  Lifetime,
+  Singleton,
+  TokenNotFoundError,
+  TokenRegistrationCycleError,
+} from "../../src/index.ts";
 
 describe("Dymexjs_DI ", () => {
   beforeEach(async () => container.reset());
@@ -18,7 +25,10 @@ describe("Dymexjs_DI ", () => {
           class Test {}
           @Singleton()
           class Test2 {
-            constructor(public readonly test: Test = container.resolve(Test)) {}
+            public readonly test: Test;
+            constructor(test: Test = container.resolve(Test)) {
+              this.test = test;
+            }
           }
           const test2 = container.resolve(Test2);
           const test = container.resolve(Test);
@@ -30,7 +40,10 @@ describe("Dymexjs_DI ", () => {
       });
       describe("resolveAll", () => {
         test("fails to resolveAll unregistered dependency by name sync", () => {
-          assert.throws(() => container.resolveAll("NotRegistered"), TokenNotFoundError);
+          assert.throws(
+            () => container.resolveAll("NotRegistered"),
+            TokenNotFoundError,
+          );
         });
         test("resolves an array of transient instances bound to a single interface", () => {
           interface FooInterface {
@@ -96,7 +109,10 @@ describe("Dymexjs_DI ", () => {
           container.register("test", Test, { lifetime: Lifetime.Scoped });
           const childContainer = container.createChildContainer();
           const scope = childContainer.createScope();
-          assert.strictEqual(childContainer.resolve<Test>("test", scope).propertyA, "test");
+          assert.strictEqual(
+            childContainer.resolve<Test>("test", scope).propertyA,
+            "test",
+          );
         });
         test("child container resolves even when parent doesn't have registration", () => {
           // eslint-disable-next-line @typescript-eslint/no-empty-object-type
@@ -177,14 +193,20 @@ describe("Dymexjs_DI ", () => {
         });
 
         test("registerType() doesn't allow tokens to point to themselves", () => {
-          assert.throws(() => container.registerType("Bar", "Bar"), TokenRegistrationCycleError);
+          assert.throws(
+            () => container.registerType("Bar", "Bar"),
+            TokenRegistrationCycleError,
+          );
         });
 
         test("registerType() doesn't allow registration cycles", () => {
           container.registerType("Bar", "Foo");
           container.registerType("Foo", "FooBar");
 
-          assert.throws(() => container.registerType("FooBar", "Bar"), TokenRegistrationCycleError);
+          assert.throws(
+            () => container.registerType("FooBar", "Bar"),
+            TokenRegistrationCycleError,
+          );
         });
       });
     });

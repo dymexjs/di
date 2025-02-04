@@ -1,6 +1,12 @@
 import { beforeEach, describe, test } from "node:test";
 import * as assert from "node:assert/strict";
-import { container, Lifetime, STATIC_INJECTION_LIFETIME, UndefinedScopeError } from "../../src";
+import {
+  container,
+  getInterfaceToken,
+  Lifetime,
+  STATIC_INJECTION_LIFETIME,
+  UndefinedScopeError,
+} from "../../src/index.ts";
 
 describe("Dymexjs_DI ", () => {
   beforeEach(async () => container.reset());
@@ -30,9 +36,11 @@ describe("Dymexjs_DI ", () => {
           // eslint-disable-next-line @typescript-eslint/no-extraneous-class
           class Test {}
           container.register<Test>(Test, { useClass: Test });
-          container.register<Array<Test>>("array", {
-            useFactory: (cont): Array<Test> => [cont.resolve(Test)],
-          });
+          container.registerFactory<Array<Test>>(
+            "array",
+            (cont): Array<Test> => [cont.resolve(Test)],
+            [getInterfaceToken("IContainer")],
+          );
           const result = container.resolve<Array<Test>>("array");
           assert.ok(result instanceof Array);
           assert.strictEqual(result.length, 1);
@@ -51,7 +59,9 @@ describe("Dymexjs_DI ", () => {
           assert.strictEqual(value.propertyFactory, "test");
         });
         test("register and resolve a factory value", () => {
-          container.register("test", { useFactory: (cont) => cont });
+          container.registerFactory("test", (cont) => cont, [
+            getInterfaceToken("IContainer"),
+          ]);
           const value = container.resolve("test");
           assert.strictEqual(value, container);
         });
@@ -142,8 +152,15 @@ describe("Dymexjs_DI ", () => {
         test("should throw an error when trying to instanciate a scoped object without a scope", () => {
           // eslint-disable-next-line @typescript-eslint/no-extraneous-class
           class TestClass {}
-          container.register("test", { useClass: TestClass }, { lifetime: Lifetime.Scoped });
-          assert.throws(() => container.resolve<TestClass>("test"), UndefinedScopeError);
+          container.register(
+            "test",
+            { useClass: TestClass },
+            { lifetime: Lifetime.Scoped },
+          );
+          assert.throws(
+            () => container.resolve<TestClass>("test"),
+            UndefinedScopeError,
+          );
         });
       });
       describe("Token Provider", () => {

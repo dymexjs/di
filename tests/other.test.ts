@@ -9,8 +9,10 @@ import {
   Transient,
   Scoped,
   AutoInjectable,
-} from "../src";
-import { ServiceMap } from "../src/service-map";
+  Lifetime,
+} from "../src/index.ts";
+import { ServiceMap } from "../src/service-map.ts";
+import { ProvidersType } from "../src/types/providers/index.ts";
 
 describe("Dymexjs_DI ", () => {
   describe("Other", () => {
@@ -71,14 +73,14 @@ describe("Dymexjs_DI ", () => {
         const registration: Registration = {
           injections: [],
           provider: { useValue: "test" },
-          providerType: 0,
-          options: { lifetime: 0 },
+          providerType: ProvidersType.ValueProvider,
+          options: { lifetime: Lifetime.Transient },
         };
         const registration2: Registration = {
           injections: [],
           provider: { useValue: "test" },
-          providerType: 1,
-          options: { lifetime: 0 },
+          providerType: ProvidersType.ClassProvider,
+          options: { lifetime: Lifetime.Transient },
         };
 
         beforeEach(async () => serviceMap[Symbol.asyncDispose]);
@@ -91,16 +93,31 @@ describe("Dymexjs_DI ", () => {
           serviceMap.set("anyKey", registration);
           assert.ok(serviceMap.has("anyKey"));
           assert.strictEqual(serviceMap.get("anyKey"), registration);
-          assert.strictEqual(serviceMap.get("anyKey").providerType, 0);
+          assert.strictEqual(
+            serviceMap.get("anyKey").providerType,
+            ProvidersType.ValueProvider,
+          );
           serviceMap.set("anyKey", registration2);
-          assert.strictEqual(serviceMap.get("anyKey").providerType, 1);
+          assert.strictEqual(
+            serviceMap.get("anyKey").providerType,
+            ProvidersType.ClassProvider,
+          );
         });
         test("should setAll registrations to one key an return them", () => {
           serviceMap.setAll("anyKey", [registration, registration2]);
-          assert.deepEqual(serviceMap.getAll("anyKey"), [registration, registration2]);
+          assert.deepEqual(serviceMap.getAll("anyKey"), [
+            registration,
+            registration2,
+          ]);
           assert.strictEqual(serviceMap.getAll("anyKey").length, 2);
-          assert.strictEqual(serviceMap.getAll("anyKey")[0].providerType, 0);
-          assert.strictEqual(serviceMap.getAll("anyKey")[1].providerType, 1);
+          assert.strictEqual(
+            serviceMap.getAll("anyKey")[0].providerType,
+            ProvidersType.ValueProvider,
+          );
+          assert.strictEqual(
+            serviceMap.getAll("anyKey")[1].providerType,
+            ProvidersType.ClassProvider,
+          );
         });
         test("should list the entries of the map", () => {
           let countKeys = 0;
@@ -184,10 +201,16 @@ describe("Dymexjs_DI ", () => {
         assert.strictEqual(container.resolve("anyToken"), 4);
       });
       test("registerType should throw when tokenProvider to not found", () => {
-        assert.throws(() => container.registerType("anyKey", { useToken: "anyToken" }), TokenNotFoundError);
+        assert.throws(
+          () => container.registerType("anyKey", { useToken: "anyToken" }),
+          TokenNotFoundError,
+        );
       });
       test("removeRegistration should throw when token not found", () => {
-        assert.rejects(container.removeRegistration("anyKey"), TokenNotFoundError);
+        assert.rejects(
+          container.removeRegistration("anyKey"),
+          TokenNotFoundError,
+        );
       });
     });
     describe("README", () => {
@@ -200,7 +223,10 @@ describe("Dymexjs_DI ", () => {
 
         @Singleton([TestService])
         class Test {
-          constructor(public testService: TestService) {}
+          public testService: TestService;
+          constructor(testService: TestService) {
+            this.testService = testService;
+          }
         }
 
         const testInstance = container.resolve(Test);

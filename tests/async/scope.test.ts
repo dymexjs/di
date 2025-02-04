@@ -1,7 +1,13 @@
 import { beforeEach, describe, test } from "node:test";
 import * as assert from "node:assert/strict";
-import { container, Lifetime, Scoped, STATIC_INJECTION_LIFETIME, UndefinedScopeError } from "../../src";
-import { ScopeContext } from "../../src/scope-context";
+import {
+  container,
+  Lifetime,
+  Scoped,
+  STATIC_INJECTION_LIFETIME,
+  UndefinedScopeError,
+  ScopeContext,
+} from "../../src/index.ts";
 
 describe("Dymexjs_DI", () => {
   beforeEach(async () => await container.reset());
