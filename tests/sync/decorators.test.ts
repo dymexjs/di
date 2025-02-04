@@ -11,7 +11,7 @@ import {
   Singleton,
   Transient,
   UndefinedScopeError,
-} from "../../src";
+} from "../../src/index.ts";
 
 describe("Dymexjs_DI", () => {
   beforeEach(async () => await container.reset());
@@ -32,7 +32,10 @@ describe("Dymexjs_DI", () => {
           class ServiceA {}
           @Singleton(["serviceA"])
           class ServiceB {
-            constructor(public serviceA: ServiceA) {}
+            public serviceA: ServiceA;
+            constructor(serviceA: ServiceA) {
+              this.serviceA = serviceA;
+            }
           }
           const b = container.resolve<ServiceB>(ServiceB);
           assert.ok(b instanceof ServiceB);
@@ -51,11 +54,28 @@ describe("Dymexjs_DI", () => {
 
           @Transient([Test])
           class TestClass {
-            constructor(public readonly test: Test) {}
+            public readonly test: Test;
+            constructor(test: Test) {
+              this.test = test;
+            }
           }
           container.registerType(Test, TestMock);
           const test = container.resolve<TestClass>(TestClass);
           assert.ok(test.test instanceof TestMock);
+        });
+        test("register in another container", () => {
+          const childContainer = container.createChildContainer();
+          @Singleton(childContainer)
+          // eslint-disable-next-line @typescript-eslint/no-extraneous-class
+          class Test {}
+
+          const resolveChildContainer = childContainer.resolve(Test);
+
+          //Will automatically register the test class in parent container as a Transient
+          const resolveParent = container.resolve(Test);
+          assert.notStrictEqual(resolveChildContainer, resolveParent);
+          assert.ok(resolveChildContainer instanceof Test);
+          assert.ok(resolveParent instanceof Test);
         });
       });
       describe("Transient", () => {
@@ -73,7 +93,10 @@ describe("Dymexjs_DI", () => {
           class ServiceA {}
           @Singleton([ServiceA])
           class ServiceB {
-            constructor(public serviceA: ServiceA) {}
+            public serviceA: ServiceA;
+            constructor(serviceA: ServiceA) {
+              this.serviceA = serviceA;
+            }
           }
           const b = container.resolve<ServiceB>(ServiceB);
           assert.ok(b instanceof ServiceB);
@@ -89,7 +112,10 @@ describe("Dymexjs_DI", () => {
           class ServiceA {}
           @Transient([ServiceA])
           class ServiceB {
-            constructor(public serviceA: ServiceA) {}
+            public serviceA: ServiceA;
+            constructor(serviceA: ServiceA) {
+              this.serviceA = serviceA;
+            }
           }
           const b = container.resolve<ServiceB>(ServiceB);
           assert.ok(b instanceof ServiceB);
@@ -119,7 +145,10 @@ describe("Dymexjs_DI", () => {
           class ServiceA {}
           @Scoped([ServiceA])
           class ServiceB {
-            constructor(public serviceA: ServiceA) {}
+            public serviceA: ServiceA;
+            constructor(serviceA: ServiceA) {
+              this.serviceA = serviceA;
+            }
           }
           const scope = container.createScope();
           const b = container.resolve<ServiceB>(ServiceB, scope);
@@ -128,7 +157,10 @@ describe("Dymexjs_DI", () => {
           const a = container.resolve<ServiceA>(ServiceA, scope);
           assert.ok(a instanceof ServiceA);
           assert.strictEqual(b.serviceA, a);
-          assert.throws(() => container.resolve<ServiceB>(ServiceB), UndefinedScopeError);
+          assert.throws(
+            () => container.resolve<ServiceB>(ServiceB),
+            UndefinedScopeError,
+          );
         });
       });
       describe("AutoInjectable", () => {
@@ -138,10 +170,13 @@ describe("Dymexjs_DI", () => {
             class TestA {}
             @AutoInjectable([TestA])
             class TestB {
-              constructor(
-                public otherArg: string,
-                public a?: TestA,
-              ) {}
+              public otherArg: string;
+              public a?: TestA;
+
+              constructor(otherArg: string, a?: TestA) {
+                this.otherArg = otherArg;
+                this.a = a;
+              }
             }
             const testB = new TestB("test");
             assert.ok(testB instanceof TestB);
@@ -153,7 +188,10 @@ describe("Dymexjs_DI", () => {
             class Bar {}
             @AutoInjectable([Bar])
             class Foo {
-              constructor(public myBar?: Bar) {}
+              public myBar?: Bar;
+              constructor(myBar?: Bar) {
+                this.myBar = myBar;
+              }
             }
 
             const myBar = new Bar();
@@ -168,10 +206,13 @@ describe("Dymexjs_DI", () => {
             class FooBar {}
             @AutoInjectable([Bar])
             class Foo {
-              constructor(
-                public myFooBar: FooBar,
-                public myBar?: Bar,
-              ) {}
+              public myFooBar: FooBar;
+              public myBar?: Bar;
+
+              constructor(myFooBar: FooBar, myBar?: Bar) {
+                this.myFooBar = myFooBar;
+                this.myBar = myBar;
+              }
             }
 
             const myFooBar = new FooBar();
@@ -189,7 +230,10 @@ describe("Dymexjs_DI", () => {
 
             @AutoInjectable([Foo])
             class Ancestor {
-              constructor(public myFoo?: Foo) {}
+              public myFoo?: Foo;
+              constructor(myFoo?: Foo) {
+                this.myFoo = myFoo;
+              }
             }
 
             class Child extends Ancestor {
@@ -215,7 +259,9 @@ describe("Dymexjs_DI", () => {
             @AutoInjectable([Foo])
             class Ancestor {
               public a: number;
-              constructor(public myFoo?: Foo) {
+              public myFoo?: Foo;
+              constructor(myFoo?: Foo) {
+                this.myFoo = myFoo;
                 this.a = a;
               }
             }
@@ -239,11 +285,17 @@ describe("Dymexjs_DI", () => {
             class Foo {}
             @Transient([Foo])
             class Bar {
-              constructor(public myFoo: Foo) {}
+              public myFoo: Foo;
+              constructor(myFoo: Foo) {
+                this.myFoo = myFoo;
+              }
             }
             @AutoInjectable([Bar])
             class FooBar {
-              constructor(public myBar?: Bar) {}
+              public myBar?: Bar;
+              constructor(myBar?: Bar) {
+                this.myBar = myBar;
+              }
             }
 
             const myFooBar = new FooBar();
@@ -257,7 +309,10 @@ describe("Dymexjs_DI", () => {
             @Singleton([Bar])
             @AutoInjectable([Bar])
             class Foo {
-              constructor(public bar: Bar) {}
+              public bar: Bar;
+              constructor(bar: Bar) {
+                this.bar = bar;
+              }
             }
 
             const instance1 = container.resolve<Foo>(Foo);
@@ -281,7 +336,10 @@ describe("Dymexjs_DI", () => {
 
             @AutoInjectable(["Bar"], { all: ["Bar"] })
             class Foo {
-              constructor(public bar?: Array<Bar>) {}
+              public bar?: Array<Bar>;
+              constructor(bar?: Array<Bar>) {
+                this.bar = bar;
+              }
             }
 
             const foo = new Foo();
@@ -296,7 +354,10 @@ describe("Dymexjs_DI", () => {
 
             @AutoInjectable([Foo], { all: [Foo] })
             class Bar {
-              constructor(public foo?: Array<Foo>) {}
+              public foo?: Array<Foo>;
+              constructor(foo?: Array<Foo>) {
+                this.foo = foo;
+              }
             }
 
             const bar = new Bar();
@@ -311,11 +372,15 @@ describe("Dymexjs_DI", () => {
             class TestA {}
             @AutoInjectable([TestA])
             class TestB {
-              constructor(
-                public hello: string,
-                public num: number,
-                public a?: TestA,
-              ) {}
+              public hello: string;
+              public num: number;
+              public a?: TestA;
+
+              constructor(hello: string, num: number, a?: TestA) {
+                this.hello = hello;
+                this.num = num;
+                this.a = a;
+              }
             }
             const testB = container.resolveWithArgs<TestB>(TestB, ["test", 1]);
             assert.ok(testB instanceof TestB);
@@ -328,7 +393,10 @@ describe("Dymexjs_DI", () => {
             class Bar {}
             @AutoInjectable([Bar])
             class Foo {
-              constructor(public myBar?: Bar) {}
+              public myBar?: Bar;
+              constructor(myBar?: Bar) {
+                this.myBar = myBar;
+              }
             }
 
             const myBar = new Bar();
@@ -343,10 +411,13 @@ describe("Dymexjs_DI", () => {
             class FooBar {}
             @AutoInjectable([Bar])
             class Foo {
-              constructor(
-                public myFooBar: FooBar,
-                public myBar?: Bar,
-              ) {}
+              public myFooBar: FooBar;
+              public myBar?: Bar;
+
+              constructor(myFooBar: FooBar, myBar?: Bar) {
+                this.myFooBar = myFooBar;
+                this.myBar = myBar;
+              }
             }
 
             const myFooBar = new FooBar();
@@ -364,7 +435,10 @@ describe("Dymexjs_DI", () => {
 
             @AutoInjectable([Foo])
             class Ancestor {
-              constructor(public myFoo?: Foo) {}
+              public myFoo?: Foo;
+              constructor(myFoo?: Foo) {
+                this.myFoo = myFoo;
+              }
             }
 
             class Child extends Ancestor {
@@ -390,7 +464,9 @@ describe("Dymexjs_DI", () => {
             @AutoInjectable([Foo])
             class Ancestor {
               public a: number;
-              constructor(public myFoo?: Foo) {
+              public myFoo?: Foo;
+              constructor(myFoo?: Foo) {
+                this.myFoo = myFoo;
                 this.a = a;
               }
             }
@@ -416,11 +492,17 @@ describe("Dymexjs_DI", () => {
             class Foo {}
             @Transient([Foo])
             class Bar {
-              constructor(public myFoo: Foo) {}
+              public myFoo: Foo;
+              constructor(myFoo: Foo) {
+                this.myFoo = myFoo;
+              }
             }
             @AutoInjectable([Bar])
             class FooBar {
-              constructor(public myBar?: Bar) {}
+              public myBar?: Bar;
+              constructor(myBar?: Bar) {
+                this.myBar = myBar;
+              }
             }
 
             const myFooBar = container.resolveWithArgs<FooBar>(FooBar);
@@ -434,7 +516,10 @@ describe("Dymexjs_DI", () => {
             @Singleton([Bar])
             @AutoInjectable([Bar])
             class Foo {
-              constructor(public bar: Bar) {}
+              public bar: Bar;
+              constructor(bar: Bar) {
+                this.bar = bar;
+              }
             }
 
             const instance1 = container.resolve<Foo>(Foo);
@@ -457,7 +542,10 @@ describe("Dymexjs_DI", () => {
 
             @AutoInjectable(["Bar"], { all: ["Bar"] })
             class Foo {
-              constructor(public bar?: Array<Bar>) {}
+              public bar?: Array<Bar>;
+              constructor(bar?: Array<Bar>) {
+                this.bar = bar;
+              }
             }
 
             const foo = container.resolveWithArgs(Foo);
@@ -472,7 +560,10 @@ describe("Dymexjs_DI", () => {
 
             @AutoInjectable([Foo], { all: [Foo] })
             class Bar {
-              constructor(public foo?: Array<Foo>) {}
+              public foo?: Array<Foo>;
+              constructor(foo?: Array<Foo>) {
+                this.foo = foo;
+              }
             }
 
             const bar = container.resolveWithArgs(Bar);
@@ -660,7 +751,10 @@ describe("Dymexjs_DI", () => {
         class TestA {}
         @Singleton([TestA])
         class TestB {
-          constructor(public a: TestA) {}
+          public a: TestA;
+          constructor(a: TestA) {
+            this.a = a;
+          }
         }
         const test = container.resolve<TestB>(TestB);
         assert.ok(test instanceof TestB);
@@ -671,18 +765,21 @@ describe("Dymexjs_DI", () => {
       test("should create an target and inject singleton", () => {
         // eslint-disable-next-line @typescript-eslint/no-empty-object-type
         interface SA {}
-        const SA = getInterfaceToken<SA>("SA");
+        const SA = getInterfaceToken("SA");
         interface SB {
           readonly serviceA: SA;
         }
-        const SB = getInterfaceToken<SB>("SB");
+        const SB = getInterfaceToken("SB");
 
         @Singleton(SA)
         // eslint-disable-next-line @typescript-eslint/no-extraneous-class
         class ServiceA implements SA {}
         @Singleton(SB, [SA])
         class ServiceB implements SB {
-          constructor(public serviceA: SA) {}
+          public serviceA: SA;
+          constructor(serviceA: SA) {
+            this.serviceA = serviceA;
+          }
         }
         const b = container.resolve<SB>(SB);
         assert.ok(b instanceof ServiceB);
@@ -694,18 +791,21 @@ describe("Dymexjs_DI", () => {
       test("should create an target and inject transient", () => {
         // eslint-disable-next-line @typescript-eslint/no-empty-object-type
         interface SA {}
-        const SA = getInterfaceToken<SA>("SA");
+        const SA = getInterfaceToken("SA");
         interface SB {
           readonly serviceA: SA;
         }
-        const SB = getInterfaceToken<SB>("SB");
+        const SB = getInterfaceToken("SB");
 
         @Transient(SA)
         // eslint-disable-next-line @typescript-eslint/no-extraneous-class
         class ServiceA implements SA {}
         @Singleton(SB, [SA])
         class ServiceB implements SB {
-          constructor(public serviceA: SA) {}
+          public serviceA: SA;
+          constructor(serviceA: SA) {
+            this.serviceA = serviceA;
+          }
         }
         const b = container.resolve<SB>(SB);
         assert.ok(b instanceof ServiceB);
@@ -718,17 +818,20 @@ describe("Dymexjs_DI", () => {
       test("should create transients", () => {
         // eslint-disable-next-line @typescript-eslint/no-empty-object-type
         interface SA {}
-        const SA = getInterfaceToken<SA>("SA");
+        const SA = getInterfaceToken("SA");
         interface SB {
           readonly serviceA: SA;
         }
-        const SB = getInterfaceToken<SB>("SB");
+        const SB = getInterfaceToken("SB");
         @Transient(SA)
         // eslint-disable-next-line @typescript-eslint/no-extraneous-class
         class ServiceA implements SA {}
         @Transient(SB, [SA])
         class ServiceB implements SB {
-          constructor(public serviceA: SA) {}
+          public serviceA: SA;
+          constructor(serviceA: SA) {
+            this.serviceA = serviceA;
+          }
         }
         const b = container.resolve<SB>(SB);
         assert.ok(b instanceof ServiceB);
@@ -744,17 +847,20 @@ describe("Dymexjs_DI", () => {
       test("should create scoped", () => {
         // eslint-disable-next-line @typescript-eslint/no-empty-object-type
         interface SA {}
-        const SA = getInterfaceToken<SA>("SA");
+        const SA = getInterfaceToken("SA");
         interface SB {
           readonly serviceA: SA;
         }
-        const SB = getInterfaceToken<SB>("SB");
+        const SB = getInterfaceToken("SB");
         @Scoped(SA)
         // eslint-disable-next-line @typescript-eslint/no-extraneous-class
         class ServiceA implements SA {}
         @Scoped(SB, [SA])
         class ServiceB implements SB {
-          constructor(public serviceA: SA) {}
+          public serviceA: SA;
+          constructor(serviceA: SA) {
+            this.serviceA = serviceA;
+          }
         }
         const scope = container.createScope();
         const b = container.resolve<SB>(SB, scope);
@@ -769,18 +875,21 @@ describe("Dymexjs_DI", () => {
       test("should create diferent keyed singletons", () => {
         // eslint-disable-next-line @typescript-eslint/no-empty-object-type
         interface SA {}
-        const SA = getInterfaceToken<SA>("SA");
+        const SA = getInterfaceToken("SA");
         interface SB {
           readonly serviceA: SA;
         }
-        const SB = getInterfaceToken<SB>("SB");
+        const SB = getInterfaceToken("SB");
 
         //@Singleton(SA)
         // eslint-disable-next-line @typescript-eslint/no-extraneous-class
         class ServiceA implements SA {}
         //@Singleton(SB, [SA])
         class ServiceB implements SB {
-          constructor(public serviceA: SA) {}
+          public serviceA: SA;
+          constructor(serviceA: SA) {
+            this.serviceA = serviceA;
+          }
         }
         container.registerSingleton("sa1", ServiceA);
         container.registerSingleton("sa2", ServiceA);

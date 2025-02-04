@@ -11,11 +11,13 @@ export interface Registration<T = any> {
   injections: Array<InjectionToken>;
 }
 
-export enum Lifetime {
-  Singleton,
-  Transient,
-  Scoped,
-}
+export const Lifetime = {
+  Singleton: "Singleton",
+  Transient: "Transient",
+  Scoped: "Scoped",
+} as const;
+
+export type Lifetime = keyof typeof Lifetime;
 
 export interface RegistrationOptions {
   lifetime: Lifetime;

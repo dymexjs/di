@@ -1,6 +1,12 @@
 import { beforeEach, describe, test } from "node:test";
 import * as assert from "node:assert/strict";
-import { container, Lifetime, STATIC_INJECTION_LIFETIME, STATIC_INJECTIONS, StaticInjectable } from "../../src";
+import {
+  container,
+  Lifetime,
+  STATIC_INJECTION_LIFETIME,
+  STATIC_INJECTIONS,
+  type StaticInjectable,
+} from "../../src/index.ts";
 
 describe("Dymexjs_DI", () => {
   beforeEach(async () => await container.reset());
@@ -11,10 +17,17 @@ describe("Dymexjs_DI", () => {
           public propertyA = "test";
         }
         class TestClass2 {
-          constructor(public test: TestClass) {}
+          public test: TestClass;
+          constructor(test: TestClass) {
+            this.test = test;
+          }
           public static [STATIC_INJECTIONS] = ["test"];
         }
-        container.register("test", { useClass: TestClass }, { lifetime: Lifetime.Singleton });
+        container.register(
+          "test",
+          { useClass: TestClass },
+          { lifetime: Lifetime.Singleton },
+        );
         const test2 = await container.resolveAsync(TestClass2);
         const test = await container.resolveAsync<TestClass>("test");
         assert.ok(test2 instanceof TestClass2);
@@ -33,7 +46,10 @@ describe("Dymexjs_DI", () => {
           public static [STATIC_INJECTION_LIFETIME] = Lifetime.Singleton;
         }
         class TestClass2 {
-          constructor(public test: TestClass) {}
+          public test: TestClass;
+          constructor(test: TestClass) {
+            this.test = test;
+          }
           public static [STATIC_INJECTIONS] = ["test"];
         }
         container.register("test", { useClass: TestClass });
@@ -55,7 +71,10 @@ describe("Dymexjs_DI", () => {
           public static [STATIC_INJECTION_LIFETIME] = Lifetime.Singleton;
         }
         class TestClass2 implements StaticInjectable<typeof TestClass2> {
-          constructor(public test: TestClass) {}
+          public test: TestClass;
+          constructor(test: TestClass) {
+            this.test = test;
+          }
           public static [STATIC_INJECTIONS] = ["test"];
         }
         container.register("test", { useClass: TestClass });

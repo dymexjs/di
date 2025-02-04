@@ -1,6 +1,13 @@
 import { beforeEach, describe, test } from "node:test";
 import * as assert from "node:assert/strict";
-import { container, Scoped, Singleton, TokenNotFoundError, Transient, UndefinedScopeError } from "../src";
+import {
+  container,
+  Scoped,
+  Singleton,
+  TokenNotFoundError,
+  Transient,
+  UndefinedScopeError,
+} from "../src/index.ts";
 
 describe("Container Complex Scenarios", () => {
   beforeEach(async () => await container.reset());
@@ -13,17 +20,26 @@ describe("Container Complex Scenarios", () => {
       }
       @Transient([Level3])
       class Level2 {
-        constructor(public l3: Level3) {}
+        public l3: Level3;
+        constructor(l3: Level3) {
+          this.l3 = l3;
+        }
         value = "level2";
       }
       @Scoped([Level2])
       class Level1 {
-        constructor(public l2: Level2) {}
+        public l2: Level2;
+        constructor(l2: Level2) {
+          this.l2 = l2;
+        }
         value = "level1";
       }
       @Transient("root", [Level1])
       class Root {
-        constructor(public l1: Level1) {}
+        public l1: Level1;
+        constructor(l1: Level1) {
+          this.l1 = l1;
+        }
         value = "root";
       }
 
@@ -46,11 +62,17 @@ describe("Container Complex Scenarios", () => {
         value = "A";
       }
       class ServiceB {
-        constructor(public a: ServiceA) {}
+        public a: ServiceA;
+        constructor(a: ServiceA) {
+          this.a = a;
+        }
         value = "B";
       }
       class ServiceC {
-        constructor(public b: ServiceB) {}
+        public b: ServiceB;
+        constructor(b: ServiceB) {
+          this.b = b;
+        }
         value = "C";
       }
 
@@ -62,7 +84,10 @@ describe("Container Complex Scenarios", () => {
       childContainer.registerScoped("serviceB", ServiceB, ["serviceA"]);
       container.registerTransient("serviceC", ServiceC, ["serviceB"]);
 
-      assert.throws(() => container.resolve<ServiceB>("serviceB"), TokenNotFoundError);
+      assert.throws(
+        () => container.resolve<ServiceB>("serviceB"),
+        TokenNotFoundError,
+      );
       const instance1 = childContainer.resolve<ServiceC>("serviceC", scope1);
       const instance2 = childContainer.resolve<ServiceC>("serviceC", scope2);
 
@@ -71,7 +96,10 @@ describe("Container Complex Scenarios", () => {
       assert.notStrictEqual(instance1.b, instance2.b);
 
       await container.disposeScope(scope1);
-      await assert.rejects(() => container.resolveAsync("serviceC", scope1), TokenNotFoundError);
+      await assert.rejects(
+        () => container.resolveAsync("serviceC", scope1),
+        TokenNotFoundError,
+      );
       const instance3 = childContainer.resolve<ServiceC>("serviceC", scope2);
       assert.notStrictEqual(instance2, instance3);
     });
@@ -103,7 +131,10 @@ describe("Container Complex Scenarios", () => {
   describe("Multiple Child Container Hierarchies", () => {
     test("should handle complex container hierarchies", async () => {
       class Service {
-        constructor(public value: string) {}
+        public value: string;
+        constructor(value: string) {
+          this.value = value;
+        }
       }
 
       const child1 = container.createChildContainer();
@@ -128,22 +159,34 @@ describe("Container Complex Scenarios", () => {
       assert.strictEqual(grandchild2Instance.value, "grandchild2");
 
       await container[Symbol.asyncDispose]();
-      await assert.rejects(() => grandchild2.resolveAsync("service"), TokenNotFoundError);
+      await assert.rejects(
+        () => grandchild2.resolveAsync("service"),
+        TokenNotFoundError,
+      );
     });
   });
 
   describe("Complex Circular Dependencies", () => {
     test("should resolve circular dependencies with mixed lifetimes", () => {
       class ServiceA {
-        constructor(public b?: ServiceB) {}
+        public b?: ServiceB;
+        constructor(b?: ServiceB) {
+          this.b = b;
+        }
         value = "A";
       }
       class ServiceB {
-        constructor(public c: ServiceC) {}
+        public c: ServiceC;
+        constructor(c: ServiceC) {
+          this.c = c;
+        }
         value = "B";
       }
       class ServiceC {
-        constructor(public a: ServiceA) {}
+        public a: ServiceA;
+        constructor(a: ServiceA) {
+          this.a = a;
+        }
         value = "C";
       }
 

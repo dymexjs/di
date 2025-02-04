@@ -9,4 +9,5 @@ interface StaticInject {
   [STATIC_INJECTION_LIFETIME]?: Lifetime;
 }
 
-export type StaticInjectable<I extends StaticInject = StaticInject> = InstanceType<I>;
+export type StaticInjectable<I extends StaticInject = StaticInject> =
+  InstanceType<I>;

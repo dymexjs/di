@@ -3,83 +3,103 @@ import * as assert from "node:assert/strict";
 import {
   container,
   getInterfaceToken,
-  IContainer,
+  IContainerResolve,
   Lifetime,
   Singleton,
   STATIC_INJECTION_LIFETIME,
   STATIC_INJECTIONS,
   StaticInjectable,
   Transient,
-} from "../../src";
+} from "../../src/index.ts";
 
 describe("Dymexjs_DI ", () => {
   beforeEach(async () => await container.reset());
   describe("async", () => {
     describe("Static inject", () => {
       class ServiceA implements StaticInjectable<typeof ServiceA> {
-        constructor(
-          public serviceB: ServiceB,
-          public serviceC: ServiceC,
-        ) {}
+        public serviceB: ServiceB;
+        public serviceC: ServiceC;
+
+        constructor(serviceB: ServiceB, serviceC: ServiceC) {
+          this.serviceB = serviceB;
+          this.serviceC = serviceC;
+        }
         public static [STATIC_INJECTIONS] = ["serviceB", "serviceC"];
         public static [STATIC_INJECTION_LIFETIME] = Lifetime.Singleton;
       }
       class ServiceB implements StaticInjectable<typeof ServiceB> {
-        constructor(
-          public serviceA: ServiceA,
-          public serviceD: ServiceD,
-        ) {}
+        public serviceA: ServiceA;
+        public serviceD: ServiceD;
+
+        constructor(serviceA: ServiceA, serviceD: ServiceD) {
+          this.serviceA = serviceA;
+          this.serviceD = serviceD;
+        }
         public static [STATIC_INJECTIONS] = ["serviceA", "serviceD"];
         public static [STATIC_INJECTION_LIFETIME] = Lifetime.Singleton;
       }
       class ServiceC implements StaticInjectable<typeof ServiceC> {
-        constructor(
-          public serviceB: ServiceB,
-          public serviceD: ServiceD,
-        ) {}
+        public serviceB: ServiceB;
+        public serviceD: ServiceD;
+        constructor(serviceB: ServiceB, serviceD: ServiceD) {
+          this.serviceB = serviceB;
+          this.serviceD = serviceD;
+        }
         public static [STATIC_INJECTIONS] = ["serviceB", "serviceD"];
         public static [STATIC_INJECTION_LIFETIME] = Lifetime.Singleton;
       }
       class ServiceD implements StaticInjectable<typeof ServiceD> {
-        constructor(
-          public serviceA: ServiceA,
-          public serviceC: ServiceC,
-        ) {}
+        public serviceA: ServiceA;
+        public serviceC: ServiceC;
+        constructor(serviceA: ServiceA, serviceC: ServiceC) {
+          this.serviceA = serviceA;
+          this.serviceC = serviceC;
+        }
         public static [STATIC_INJECTIONS] = ["serviceA", "serviceC"];
         public static [STATIC_INJECTION_LIFETIME] = Lifetime.Singleton;
       }
 
       test("circular dependency resolution simple case", async () => {
-        const factoryTest = async (cont: IContainer) => {
+        const factoryTest = async (cont: IContainerResolve) => {
           return await cont.resolveAsync(TestClass);
         };
-        const factoryTest2 = async (cont: IContainer) => {
+        const factoryTest2 = async (cont: IContainerResolve) => {
           return await cont.resolveAsync(TestClass2);
         };
         class TestClass2 implements StaticInjectable<typeof TestClass2> {
-          constructor(public test: TestClass) {}
+          public test: TestClass;
+          constructor(test: TestClass) {
+            this.test = test;
+          }
           public static [STATIC_INJECTIONS] = ["factoryTest"];
           public static [STATIC_INJECTION_LIFETIME] = Lifetime.Singleton;
         }
         class TestClass implements StaticInjectable<typeof TestClass> {
           public propertyA = "test";
-          constructor(public test2: TestClass2) {}
+          public test2: TestClass2;
+          constructor(test2: TestClass2) {
+            this.test2 = test2;
+          }
           public static [STATIC_INJECTIONS] = ["factoryTest2"];
           public static [STATIC_INJECTION_LIFETIME] = Lifetime.Singleton;
         }
-        container.register("factoryTest", { useFactory: factoryTest });
-        container.register("factoryTest2", { useFactory: factoryTest2 });
+        container.registerFactory("factoryTest", factoryTest, [
+          getInterfaceToken("IContainer"),
+        ]);
+        container.registerFactory("factoryTest2", factoryTest2, [
+          getInterfaceToken("IContainer"),
+        ]);
         const test2 = await container.resolveAsync(TestClass2);
-        const test = await container.resolveAsync(TestClass);
+        const test1 = await container.resolveAsync(TestClass);
         assert.ok(test2 instanceof TestClass2);
-        assert.ok(test instanceof TestClass);
+        assert.ok(test1 instanceof TestClass);
         assert.ok(test2.test instanceof TestClass);
-        const t = test.test2.test;
+        const t = test1.test2.test;
         assert.ok(t instanceof TestClass);
-        assert.strictEqual(test2.test, test);
+        assert.strictEqual(test2.test, test1);
         //This needs to be toEqual because where comparing the generated proxy, and toEqual will make a deep equal assertion
-        assert.deepStrictEqual(test.test2, test2);
-        assert.strictEqual(test.test2.test.propertyA, "test");
+        assert.deepStrictEqual(test1.test2, test2);
+        assert.strictEqual(test1.test2.test.propertyA, "test");
       });
       test("circular dependency resolution complex case", async () => {
         container.register("serviceA", { useClass: ServiceA });
@@ -159,52 +179,70 @@ describe("Dymexjs_DI ", () => {
         test("circular dependency resolution simple case", async () => {
           @Singleton("test", ["test2"])
           class TestClass {
+            public test2: TestClass2;
             public propertyA = "test";
-            constructor(public test2: TestClass2) {}
+            constructor(test2: TestClass2) {
+              this.test2 = test2;
+            }
           }
           @Singleton("test2", ["test"])
           class TestClass2 {
-            constructor(public test: TestClass) {}
+            public test: TestClass;
+            constructor(test: TestClass) {
+              this.test = test;
+            }
           }
 
-          const test = await container.resolveAsync<TestClass>("test");
+          const test1 = await container.resolveAsync<TestClass>("test");
           const test2 = await container.resolveAsync<TestClass2>("test2");
-          assert.ok(test instanceof TestClass);
+          assert.ok(test1 instanceof TestClass);
           assert.ok(test2 instanceof TestClass2);
-          assert.ok(test.test2 instanceof TestClass2);
+          assert.ok(test1.test2 instanceof TestClass2);
           assert.ok(test2.test instanceof TestClass);
-          assert.strictEqual(test.test2, test2);
+          assert.strictEqual(test1.test2, test2);
           //This needs to be toEqual because where comparing the generated proxy, and toEqual will make a deep equal assertion
-          assert.deepStrictEqual(test2.test, test);
+          assert.deepStrictEqual(test2.test, test1);
         });
         test("circular dependency complex case", async () => {
           @Singleton("serviceA", ["serviceB", "serviceC"])
           class ServiceA {
-            constructor(
-              public serviceB: ServiceB,
-              public serviceC: ServiceC,
-            ) {}
+            public serviceB: ServiceB;
+            public serviceC: ServiceC;
+
+            constructor(serviceB: ServiceB, serviceC: ServiceC) {
+              this.serviceB = serviceB;
+              this.serviceC = serviceC;
+            }
           }
           @Singleton("serviceB", ["serviceA", "serviceD"])
           class ServiceB {
-            constructor(
-              public serviceA: ServiceA,
-              public serviceD: ServiceD,
-            ) {}
+            public serviceA: ServiceA;
+            public serviceD: ServiceD;
+
+            constructor(serviceA: ServiceA, serviceD: ServiceD) {
+              this.serviceA = serviceA;
+              this.serviceD = serviceD;
+            }
           }
           @Singleton("serviceC", ["serviceB", "serviceD"])
           class ServiceC {
-            constructor(
-              public serviceB: ServiceB,
-              public serviceD: ServiceD,
-            ) {}
+            public serviceB: ServiceB;
+            public serviceD: ServiceD;
+
+            constructor(serviceB: ServiceB, serviceD: ServiceD) {
+              this.serviceB = serviceB;
+              this.serviceD = serviceD;
+            }
           }
           @Singleton("serviceD", ["serviceA", "serviceC"])
           class ServiceD {
-            constructor(
-              public serviceA: ServiceA,
-              public serviceC: ServiceC,
-            ) {}
+            public serviceA: ServiceA;
+            public serviceC: ServiceC;
+
+            constructor(serviceA: ServiceA, serviceC: ServiceC) {
+              this.serviceA = serviceA;
+              this.serviceC = serviceC;
+            }
           }
           /*
                         When resolving for ServiceA the path is:
@@ -275,7 +313,10 @@ describe("Dymexjs_DI ", () => {
         test("Lazily created proxy allows iterating over keys of the original service", async () => {
           @Transient(["TestB"])
           class TestA {
-            constructor(public b: TestB) {}
+            public b: TestB;
+            constructor(b: TestB) {
+              this.b = b;
+            }
           }
           @Transient("TestB", [TestA])
           class TestB {
@@ -283,7 +324,10 @@ describe("Dymexjs_DI ", () => {
             public prop = {
               defined: false,
             };
-            constructor(public a: TestA) {}
+            public a: TestA;
+            constructor(a: TestA) {
+              this.a = a;
+            }
           }
           const a = await container.resolveAsync(TestA);
           const b = await container.resolveAsync(TestB);
@@ -292,7 +336,11 @@ describe("Dymexjs_DI ", () => {
           assert.deepStrictEqual(Object.keys(a), ["b"]);
           assert.deepStrictEqual(Object.keys(b).sort(), ["a", "name", "prop"]);
           assert.deepStrictEqual(Object.getOwnPropertyNames(a), ["b"]);
-          assert.deepStrictEqual(Object.getOwnPropertyNames(b).sort(), ["a", "name", "prop"]);
+          assert.deepStrictEqual(Object.getOwnPropertyNames(b).sort(), [
+            "a",
+            "name",
+            "prop",
+          ]);
         });
       });
       describe("Interface", () => {
@@ -301,30 +349,36 @@ describe("Dymexjs_DI ", () => {
             readonly propertyA: string;
             readonly test2: TC2;
           }
-          const TC = getInterfaceToken<TC>("TC");
+          const TC = getInterfaceToken("TC");
           interface TC2 {
             readonly test: TC;
           }
-          const TC2 = getInterfaceToken<TC2>("TC2");
+          const TC2 = getInterfaceToken("TC2");
 
           @Singleton(TC, [TC2])
           class TestClass implements TC {
+            public test2: TestClass2;
             public propertyA = "test";
-            constructor(public test2: TestClass2) {}
+            constructor(test2: TestClass2) {
+              this.test2 = test2;
+            }
           }
           @Singleton(TC2, [TC])
           class TestClass2 implements TC2 {
-            constructor(public test: TestClass) {}
+            public test: TestClass;
+            constructor(test: TestClass) {
+              this.test = test;
+            }
           }
           const test2 = await container.resolveAsync<TC2>(TC2);
-          const test = await container.resolveAsync<TestClass>(TC);
+          const test1 = await container.resolveAsync<TestClass>(TC);
           assert.ok(test2 instanceof TestClass2);
-          assert.ok(test instanceof TestClass);
+          assert.ok(test1 instanceof TestClass);
           assert.ok(test2.test instanceof TestClass);
-          assert.ok(test.test2 instanceof TestClass2);
-          assert.strictEqual(test2.test, test);
+          assert.ok(test1.test2 instanceof TestClass2);
+          assert.strictEqual(test2.test, test1);
           //This needs to be toEqual because where comparing the generated proxy, and toEqual will make a deep equal assertion
-          assert.deepStrictEqual(test.test2, test2);
+          assert.deepStrictEqual(test1.test2, test2);
         });
         test("Lazy creation with proxies allow circular dependencies using interfaces", async () => {
           interface ITestA {
@@ -339,13 +393,19 @@ describe("Dymexjs_DI ", () => {
           @Transient(ITestA, [ITestB])
           class TestA implements ITestA {
             public name = "testA";
-            constructor(public b: ITestB) {}
+            public b: ITestB;
+            constructor(b: ITestB) {
+              this.b = b;
+            }
           }
 
           @Transient(ITestB, [ITestA])
           class TestB implements ITestB {
             public name = "testB";
-            constructor(public a: ITestA) {}
+            public a: ITestA;
+            constructor(a: ITestA) {
+              this.a = a;
+            }
           }
 
           const a = await container.resolveAsync<TestA>(ITestA);
@@ -360,49 +420,61 @@ describe("Dymexjs_DI ", () => {
             readonly serviceB: SB;
             readonly serviceC: SC;
           }
-          const SA = getInterfaceToken<SA>("SA");
+          const SA = getInterfaceToken("SA");
           interface SB {
             readonly serviceA: SA;
             readonly serviceD: SD;
           }
-          const SB = getInterfaceToken<SB>("SB");
+          const SB = getInterfaceToken("SB");
           interface SC {
             readonly serviceB: SB;
             readonly serviceD: SD;
           }
-          const SC = getInterfaceToken<SC>("SC");
+          const SC = getInterfaceToken("SC");
           interface SD {
             readonly serviceA: SA;
             readonly serviceC: SC;
           }
-          const SD = getInterfaceToken<SD>("SD");
+          const SD = getInterfaceToken("SD");
           @Singleton(SA, [SB, SC])
           class ServiceA {
-            constructor(
-              public serviceB: ServiceB,
-              public serviceC: ServiceC,
-            ) {}
+            public serviceB: ServiceB;
+            public serviceC: ServiceC;
+
+            constructor(serviceB: ServiceB, serviceC: ServiceC) {
+              this.serviceB = serviceB;
+              this.serviceC = serviceC;
+            }
           }
           @Singleton(SB, [SA, SD])
           class ServiceB {
-            constructor(
-              public serviceA: ServiceA,
-              public serviceD: ServiceD,
-            ) {}
+            public serviceA: ServiceA;
+            public serviceD: ServiceD;
+
+            constructor(serviceA: ServiceA, serviceD: ServiceD) {
+              this.serviceA = serviceA;
+              this.serviceD = serviceD;
+            }
           }
           @Singleton(SC, [SB, SD])
           class ServiceC {
-            constructor(
-              public serviceB: ServiceB,
-              public serviceD: ServiceD,
-            ) {}
+            public serviceB: ServiceB;
+            public serviceD: ServiceD;
+
+            constructor(serviceB: ServiceB, serviceD: ServiceD) {
+              this.serviceB = serviceB;
+              this.serviceD = serviceD;
+            }
           }
           @Singleton(SD, [SA, SC])
           class ServiceD {
-            constructor(
-              public serviceA: ServiceA,
-              public serviceC: ServiceC,
-            ) {}
+            public serviceA: ServiceA;
+            public serviceC: ServiceC;
+
+            constructor(serviceA: ServiceA, serviceC: ServiceC) {
+              this.serviceA = serviceA;
+              this.serviceC = serviceC;
+            }
           }
           /*
                         When resolving for ServiceA the path is:

@@ -2,15 +2,15 @@ import { beforeEach, describe, test } from "node:test";
 import * as assert from "node:assert/strict";
 import {
   container,
-  Singleton,
-  StaticInjectable,
-  STATIC_INJECTION_LIFETIME,
   Lifetime,
-  STATIC_INJECTIONS,
   Scoped,
-  UndefinedScopeError,
+  Singleton,
+  STATIC_INJECTION_LIFETIME,
+  STATIC_INJECTIONS,
+  StaticInjectable,
   Token,
-} from "../src";
+  UndefinedScopeError,
+} from "../src/index.ts";
 
 describe("Dymexjs_DI ", () => {
   beforeEach(async () => await container.reset());
@@ -25,7 +25,10 @@ describe("Dymexjs_DI ", () => {
 
         @Singleton([TestService])
         class Test {
-          constructor(public testService: TestService) {}
+          public testService: TestService;
+          constructor(testService: TestService) {
+            this.testService = testService;
+          }
         }
 
         const testInstance = container.resolve(Test);
@@ -41,7 +44,10 @@ describe("Dymexjs_DI ", () => {
             public static [STATIC_INJECTION_LIFETIME] = Lifetime.Singleton;
           }
           class TestClass2 implements StaticInjectable<typeof TestClass2> {
-            constructor(public test: TestClass) {}
+            public test: TestClass;
+            constructor(test: TestClass) {
+              this.test = test;
+            }
             public static [STATIC_INJECTIONS] = ["test"];
           }
           container.register("test", { useClass: TestClass });
@@ -54,7 +60,10 @@ describe("Dymexjs_DI ", () => {
             public static [STATIC_INJECTION_LIFETIME] = Lifetime.Singleton;
           }
           class TestClass2 implements StaticInjectable<typeof TestClass2> {
-            constructor(public test: TestClass) {}
+            public test: TestClass;
+            constructor(test: TestClass) {
+              this.test = test;
+            }
             public static [STATIC_INJECTIONS] = [TestClass];
           }
           const test2 = container.resolve(TestClass2);
@@ -76,7 +85,10 @@ describe("Dymexjs_DI ", () => {
         class ServiceA {}
         @Singleton(["serviceA"]) //With an array of dependencies to resolve when creating the instance
         class ServiceB {
-          constructor(public serviceA: ServiceA) {}
+          public serviceA: ServiceA;
+          constructor(serviceA: ServiceA) {
+            this.serviceA = serviceA;
+          }
         }
         const b = container.resolve<ServiceB>(ServiceB);
         assert.ok(b instanceof ServiceB);
@@ -88,7 +100,10 @@ describe("Dymexjs_DI ", () => {
         class ServiceA {}
         @Singleton([ServiceA]) //With an array of dependencies to resolve when creating the instance
         class ServiceB {
-          constructor(public serviceA: ServiceA) {}
+          public serviceA: ServiceA;
+          constructor(serviceA: ServiceA) {
+            this.serviceA = serviceA;
+          }
         }
         const b = container.resolve<ServiceB>(ServiceB);
         assert.ok(b instanceof ServiceB);

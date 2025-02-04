@@ -2,14 +2,14 @@ import pluginJs from "@eslint/js";
 import tseslint from "typescript-eslint";
 import eslintPrettier from "eslint-config-prettier";
 import security from "eslint-plugin-security";
+import tsdoc from "eslint-plugin-tsdoc";
 
-/** @type {import('eslint').Linter.Config[]} */
-export default [
+export default tseslint.config(
   {
-    files: ["**/*.{js,mjs,cjs,ts}"],
+    files: ["src/**/*.{js,mjs,cjs,ts}"],
   },
   {
-    ignores: ["dist"],
+    ignores: ["dist", "old"],
   },
   pluginJs.configs.recommended,
   ...tseslint.configs.strict,
@@ -17,8 +17,16 @@ export default [
   security.configs.recommended,
   eslintPrettier,
   {
+    plugins: {
+      tsdoc,
+    },
+    rules: {
+      "tsdoc/syntax": "warn",
+    },
+  },
+  {
     rules: {
       "@typescript-eslint/array-type": ["error", { default: "generic" }],
     },
   },
-];
+);

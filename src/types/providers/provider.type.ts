@@ -5,20 +5,29 @@ import { isTokenProvider, type TokenProvider } from "./token-provider.ts";
 import { isConstructorType } from "../constructor.type.ts";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type Provider<T = any> = ClassProvider<T> | ValueProvider<T> | FactoryProvider<T> | TokenProvider<T>;
+export type Provider<T = any> =
+  | ClassProvider<T>
+  | ValueProvider<T>
+  | FactoryProvider<T>
+  | TokenProvider<T>;
 
-export enum ProvidersType {
-  ValueProvider,
-  ClassProvider,
-  FactoryProvider,
-  ConstructorProvider,
-  TokenProvider,
-}
+export const ProvidersType = {
+  ClassProvider: "ClassProvider",
+  ConstructorProvider: "ConstructorProvider",
+  FactoryProvider: "FactoryProvider",
+  TokenProvider: "TokenProvider",
+  ValueProvider: "ValueProvider",
+} as const;
+
+export type ProvidersType = keyof typeof ProvidersType;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isProvider(provider: any): provider is Provider {
   return (
-    isClassProvider(provider) || isValueProvider(provider) || isFactoryProvider(provider) || isTokenProvider(provider)
+    isClassProvider(provider) ||
+    isValueProvider(provider) ||
+    isFactoryProvider(provider) ||
+    isTokenProvider(provider)
   );
 }
 
