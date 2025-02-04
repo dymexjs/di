@@ -630,7 +630,7 @@ describe("Dymexjs_DI", () => {
               prop = "testA";
             }
 
-            // eslint-disable-next-line @typescript-eslint/no-extraneous-class
+             
             class TestB {
               @Inject(TestA)
               accessor testA!: TestA;
@@ -648,7 +648,7 @@ describe("Dymexjs_DI", () => {
             container.registerSingleton(TestA, TestA);
             container.registerSingleton(TestA, TestA);
 
-            // eslint-disable-next-line @typescript-eslint/no-extraneous-class
+             
             class TestB {
               @InjectAll(TestA)
               accessor testA!: Array<TestA>;
