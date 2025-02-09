@@ -120,7 +120,7 @@ _Correct way:_
 @Scoped()
 class TestClass {}
 const scope = container.createScope(); // Note the createScope call to create a scope for the resolution
-const instance1 = container.resolve(TestClass, scope); // Note the scope passed to the resolution
+const instance1 = scope.resolve(TestClass); // Note the resolution in the scope
 ```
 
 ## @AutoInjectable

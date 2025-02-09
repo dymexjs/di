@@ -24,7 +24,7 @@ Registrations take the form of Token/Provider pair.
 A token may be either a string, a symbol, a class constructor, a `Token` or an `InterfaceId`
 
 ```typescript
-type InjectionToken<T = any> = string | symbol | ConstructorType<T> | Token | InterfaceId<T>;
+type InjectionToken<T = any> = string | symbol | ConstructorType<T> | Token;
 ```
 
 ### Token
@@ -49,16 +49,23 @@ let secret = container.resolve(JWT_SECRET);
 // secret = "my secure secret"
 ```
 
-The `InterfaceId` is a special object to allow for the registration of interfaces, and must be create with `getInterfaceToken()`
+There's a special kind of token `InterfaceToken` that inherits from `Token` and is an object to allow for the registration of interfaces, and must be created with `getInterfaceToken()`
+
+```typescript
+ getInterfaceToken(interfaceId: string): InterfaceToken
+```
+
+The `interfaceId` should be unique for each interface, this value will be cached so that it will always return the same `InterfaceToken` object.
+
 
 ```typescript
 interface SA {}
-const SA = getInterfaceToken<SA>("SA"); // the const variable and the interface should have the same name
+const SA = getInterfaceToken("SA");
 
 interface SB {
   readonly serviceA: SA;
 }
-const SB = getInterfaceToken<SB>("SB");
+const SB = getInterfaceToken("SB");
 
 @Singleton(SA)
 class ServiceA implements SA {}
