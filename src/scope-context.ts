@@ -27,19 +27,31 @@ export class ScopeContext implements IScopeContext {
 
   resolve<T>(token: InjectionToken<T>): T {
     this.checkDisposed();
+    if (this.#_services.has(token)) {
+      return this.#_services.get(token).instance as T;
+    }
     return this.#_container.resolve(token, this);
   }
 
   resolveAll<T>(token: InjectionToken<T>): Array<T> {
     this.checkDisposed();
+    if (this.#_services.has(token)) {
+      return this.#_services.getAll(token).map((r) => r.instance as T);
+    }
     return this.#_container.resolveAll(token, this);
   }
-  resolveAllAsync<T>(token: InjectionToken<T>): Promise<Array<T>> {
+  async resolveAllAsync<T>(token: InjectionToken<T>): Promise<Array<T>> {
     this.checkDisposed();
+    if (this.#_services.has(token)) {
+      return this.#_services.getAll(token).map((r) => r.instance as T);
+    }
     return this.#_container.resolveAllAsync(token, this);
   }
-  resolveAsync<T>(token: InjectionToken<T>): Promise<T> {
+  async resolveAsync<T>(token: InjectionToken<T>): Promise<T> {
     this.checkDisposed();
+    if (this.#_services.has(token)) {
+      return this.#_services.get(token).instance as T;
+    }
     return this.#_container.resolveAsync(token, this);
   }
   resolveWithArgs<T>(token: InjectionToken<T>, args?: Array<unknown>): T {

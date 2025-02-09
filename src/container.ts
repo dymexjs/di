@@ -40,7 +40,6 @@ import { ScopeContext } from "./scope-context.ts";
 
 export class Container implements IContainer {
   readonly #_services = new ServiceMap<InjectionToken, Registration>();
-  //readonly #_scopes = new Set<IScopeContext>();
   readonly #_resolutionStack = new Map<InjectionToken, unknown>();
   #_childContainer?: IContainer;
   readonly #_parent?: Container;
@@ -50,10 +49,6 @@ export class Container implements IContainer {
     this.#_parent = parent;
     this.#_IContainerToken = getInterfaceToken("IContainer");
   }
-
-  /*get scopes(): Set<IScopeContext> {
-    return this.#_scopes;
-  }*/
 
   async [Symbol.asyncDispose]() {
     if (typeof this.#_childContainer !== "undefined") {
@@ -124,21 +119,8 @@ export class Container implements IContainer {
    */
   createScope(): IScopeContext {
     const scope = new ScopeContext(this);
-    //this.#_scopes.add(scope);
     return scope;
   }
-
-  /**
-   * Dispose a scope and it's contents
-   * @param scope - scope to be disposed
-   */
-  /*async disposeScope(scope: IScopeContext): Promise<void> {
-    //Dispose instances
-    //The scope will dispose all instances registered with the scoped lifetime
-    await scope[Symbol.asyncDispose]();
-    //Remove scope from the container's scope list
-    this.#_scopes.delete(scope);
-  }*/
 
   //#region Register
 
@@ -411,12 +393,6 @@ export class Container implements IContainer {
    * @returns A promise that resolves when all registrations and scopes have been cleared.
    */
   async dispose(): Promise<void> {
-    // Dispose all scopes
-    // We use Promise.allSettled instead of Promise.all to ensure that all scopes are disposed of, even if one of them throws an error
-    /*await Promise.allSettled(
-      Array.from(this.#_scopes).map((s) => this.disposeScope(s)),
-    );*/
-
     // Dispose all registrations
     // We use the [Symbol.asyncDispose] method to ensure that all registrations are disposed of, even if one of them throws an error
     return this[Symbol.asyncDispose]();
@@ -520,7 +496,7 @@ export class Container implements IContainer {
 
     // If the token is registered, get all registrations and resolve them
     const registrations = this.getAllRegistrations(token);
-    const result = [];
+    const result: Array<T> = [];
     for (const registration of registrations) {
       // Resolve each registration asynchronously
       result.push(
