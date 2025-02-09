@@ -2,6 +2,15 @@
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v1.1.0 - 2025-02-09
+
+### What's Changed 👀
+
+- chore: scope resolution mechanism changed @n3okill ([#16](https://github.com/$OWNER/$REPOSITORY/pull/16))
+- chore: refactor getInterfaceId @n3okill ([#15](https://github.com/$OWNER/$REPOSITORY/pull/15))
+
+**Full Changelog**: https://github.com/dymexjs/di/compare/1.0.8...v1.1.0
+
 ## v1.0.8 - 2025-01-21
 
 ### What's Changed 👀
