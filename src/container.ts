@@ -1,4 +1,3 @@
-import { type IScopeContext, ScopeContext } from "./scope-context.ts";
 import {
   Lifetime,
   type Registration,
@@ -36,10 +35,11 @@ import {
   type ValueProvider,
 } from "./types/providers/index.ts";
 import { getInterfaceToken } from "./types/interface-token.type.ts";
+import type { IScopeContext } from "./types/scope-context.interface.ts";
+import { ScopeContext } from "./scope-context.ts";
 
 export class Container implements IContainer {
   readonly #_services = new ServiceMap<InjectionToken, Registration>();
-  readonly #_scopes = new Set<IScopeContext>();
   readonly #_resolutionStack = new Map<InjectionToken, unknown>();
   #_childContainer?: IContainer;
   readonly #_parent?: Container;
@@ -50,15 +50,11 @@ export class Container implements IContainer {
     this.#_IContainerToken = getInterfaceToken("IContainer");
   }
 
-  get scopes(): Set<IScopeContext> {
-    return this.#_scopes;
-  }
-
   async [Symbol.asyncDispose]() {
     if (typeof this.#_childContainer !== "undefined") {
       await this.#_childContainer[Symbol.asyncDispose]();
     }
-    await this.reset();
+    await this.#_services[Symbol.asyncDispose]();
     this.#_resolutionStack.clear();
   }
 
@@ -122,21 +118,8 @@ export class Container implements IContainer {
    * @returns The new scope.
    */
   createScope(): IScopeContext {
-    const scope = new ScopeContext();
-    this.#_scopes.add(scope);
+    const scope = new ScopeContext(this);
     return scope;
-  }
-
-  /**
-   * Dispose a scope and it's contents
-   * @param scope - scope to be disposed
-   */
-  async disposeScope(scope: IScopeContext): Promise<void> {
-    //Dispose instances
-    //The scope will dispose all instances registered with the scoped lifetime
-    await scope[Symbol.asyncDispose]();
-    //Remove scope from the container's scope list
-    this.#_scopes.delete(scope);
   }
 
   //#region Register
@@ -409,16 +392,10 @@ export class Container implements IContainer {
    * and scopes, so you can start from a clean slate.
    * @returns A promise that resolves when all registrations and scopes have been cleared.
    */
-  async reset(): Promise<void> {
-    // Dispose all scopes
-    // We use Promise.allSettled instead of Promise.all to ensure that all scopes are disposed of, even if one of them throws an error
-    await Promise.allSettled(
-      Array.from(this.#_scopes).map((s) => this.disposeScope(s)),
-    );
-
+  async dispose(): Promise<void> {
     // Dispose all registrations
     // We use the [Symbol.asyncDispose] method to ensure that all registrations are disposed of, even if one of them throws an error
-    await this.#_services[Symbol.asyncDispose]();
+    return this[Symbol.asyncDispose]();
   }
 
   //#region Resolve
@@ -519,7 +496,7 @@ export class Container implements IContainer {
 
     // If the token is registered, get all registrations and resolve them
     const registrations = this.getAllRegistrations(token);
-    const result = [];
+    const result: Array<T> = [];
     for (const registration of registrations) {
       // Resolve each registration asynchronously
       result.push(

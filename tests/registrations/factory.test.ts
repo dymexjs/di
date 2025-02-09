@@ -8,7 +8,7 @@ import assert from "node:assert";
 
 describe("Registrations", () => {
   beforeEach(async () => {
-    await container[Symbol.asyncDispose]();
+    await container.dispose();
   });
   describe("Factory", () => {
     test("should register a factory", () => {

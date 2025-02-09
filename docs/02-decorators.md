@@ -25,7 +25,8 @@
 
 ## @Singleton
 
-Class decorator factory that registers the class as a `singleton` in the container.
+Class decorator factory that registers the class as a `singleton` in the
+container.
 
 ```typescript
 function Singleton(
@@ -36,7 +37,8 @@ function Singleton(
 
 > @param id Optional token or array of dependencies to inject into the class.  
 > @param dependencies Optional array of dependencies to inject into the class.  
-> @returns A class decorator that registers the class as a singleton in the container.
+> @returns A class decorator that registers the class as a singleton in the
+> container.
 
 ### Example
 
@@ -74,7 +76,8 @@ const b = container.resolve<ServiceB>(ServiceB);
 
 ## @Transient
 
-Class decorator factory that registers the class as transient within the container.
+Class decorator factory that registers the class as transient within the
+container.
 
 ```typescript
 function Transient(
@@ -85,7 +88,8 @@ function Transient(
 
 > @param id Optional token or array of dependencies to inject into the class.  
 > @param dependencies Optional array of dependencies to inject into the class.  
-> @returns A class decorator that registers the class as a transient in the container.
+> @returns A class decorator that registers the class as a transient in the
+> container.
 
 ## @Scoped
 
@@ -100,7 +104,8 @@ function Scoped(
 
 > @param id Optional token or array of dependencies to inject into the class.  
 > @param dependencies Optional array of dependencies to inject into the class.  
-> @returns A class decorator that registers the class as a scoped in the container.
+> @returns A class decorator that registers the class as a scoped in the
+> container.
 
 ### Example<!-- markdownlint-disable-line no-duplicate-heading -->
 
@@ -112,7 +117,8 @@ class TestClass {}
 const test = container.resolve(TestClass);
 ```
 
-will throw an `UndefinedScopeError` because the resolve method has no scope to resolve the instance of the object
+will throw an `UndefinedScopeError` because the resolve method has no scope to
+resolve the instance of the object
 
 _Correct way:_
 
@@ -120,7 +126,7 @@ _Correct way:_
 @Scoped()
 class TestClass {}
 const scope = container.createScope(); // Note the createScope call to create a scope for the resolution
-const instance1 = container.resolve(TestClass, scope); // Note the scope passed to the resolution
+const instance1 = scope.resolve(TestClass); // Note the resolution in the scope
 ```
 
 ## @AutoInjectable
@@ -137,7 +143,9 @@ function AutoInjectable(
 ```
 
 > @param dependencies Optional array of dependencies to inject into the class.  
-> @returns A class decorator factory that replaces the decorated class constructor with a parameterless constructor that will resolve the dependencies automatically
+> @returns A class decorator factory that replaces the decorated class
+> constructor with a parameterless constructor that will resolve the
+> dependencies automatically
 
 ### Example<!-- markdownlint-disable-line no-duplicate-heading -->
 
@@ -234,7 +242,8 @@ class TestB {
 function InjectAll(token: InjectionToken | Array<InjectionToken>);
 ```
 
-Works like the [@Inject](#inject) decorator but will solve all the registrations of the token(s) and return array(s) of instance(s).
+Works like the [@Inject](#inject) decorator but will solve all the registrations
+of the token(s) and return array(s) of instance(s).
 
 ### Inject all instances into a class field
 

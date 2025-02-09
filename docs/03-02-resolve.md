@@ -1,6 +1,7 @@
 # Resolution
 
-Process to resolve a token into an instance, resolving all the necessary dependencies in between.
+Process to resolve a token into an instance, resolving all the necessary
+dependencies in between.
 
 - [Resolution](#resolution)
   - [resolve](#resolve)
@@ -15,13 +16,13 @@ Process to resolve a token into an instance, resolving all the necessary depende
 The most common method to resolve an object is by using the `resolve()` method.
 
 ```typescript
- resolve<T>(token: InjectionToken<T>, scope?: ScopeContext): T;
+ resolve<T>(token: InjectionToken<T>): T;
 ```
 
 or
 
 ```typescript
- resolveAsync<T>(token: InjectionToken<T>, scope?: ScopeContext): Promise<T>;
+ resolveAsync<T>(token: InjectionToken<T>): Promise<T>;
 ```
 
 ### Example
@@ -41,13 +42,13 @@ const obj: TestClass = await container.resolveAsync<TestClass>("testClass");
 To resolve all instances registered for a token it's done using `resolveAll()`
 
 ```typescript
- resolveAll<T>(token: InjectionToken<T>, scope?: ScopeContext): Array<T>;
+ resolveAll<T>(token: InjectionToken<T>): Array<T>;
 ```
 
 or
 
 ```typescript
- resolveAllAsync<T>(token: InjectionToken<T>, scope?: ScopeContext): Promise<Array<T>>;
+ resolveAllAsync<T>(token: InjectionToken<T>): Promise<Array<T>>;
 ```
 
 ### Example<!-- markdownlint-disable-line no-duplicate-heading -->
@@ -65,18 +66,21 @@ const obj: TestClass[] =
 
 ## resolveWithArgs
 
-It's also possible to resolve objects with extra arguments, used when the instance should be constructed with some arguments passed into the constructor and some arguments injected.
+It's also possible to resolve objects with extra arguments, used when the
+instance should be constructed with some arguments passed into the constructor
+and some arguments injected.
 
-This method is used with [@AutoInjectable](02-decorators.md##autoinjectable) decorator
+This method is used with [@AutoInjectable](02-decorators.md##autoinjectable)
+decorator
 
 ```typescript
- resolveWithArgs<T>(token: InjectionToken<T>, args?: Array<unknown>, scope?: ScopeContext): T;
+ resolveWithArgs<T>(token: InjectionToken<T>, args?: Array<unknown>): T;
 ```
 
 or
 
 ```typescript
- resolveWithArgsAsync<T>(token: InjectionToken<T>, args?: Array<unknown>, scope?: ScopeContext): Promise<T>;
+ resolveWithArgsAsync<T>(token: InjectionToken<T>, args?: Array<unknown>): Promise<T>;
 ```
 
 ### Example<!-- markdownlint-disable-line no-duplicate-heading -->

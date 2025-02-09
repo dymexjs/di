@@ -1,6 +1,7 @@
 # Dymexjs/DI
 
-Dymexjs/DI is a dependency injection library for Typescript/Javascript to help build well-structured code and easily testable applications.
+Dymexjs/DI is a dependency injection library for Typescript/Javascript to help
+build well-structured code and easily testable applications.
 
 <!-- TOC depthFrom:1 depthTo:3 -->
 
@@ -17,7 +18,11 @@ Dymexjs/DI is a dependency injection library for Typescript/Javascript to help b
 
 ## Getting Started
 
-Dymexjs/DI performs [Constructor Injection](https://en.wikipedia.org/wiki/Dependency_injection#Constructor_injection) on the constructors of decorated classes or classes with the properties `STATIC_INJECTIONS` and `STATIC_INJECTION_LIFETIME`, but also allows for injection into class fields, accessor's, methods and getter's.
+Dymexjs/DI performs
+[Constructor Injection](https://en.wikipedia.org/wiki/Dependency_injection#Constructor_injection)
+on the constructors of decorated classes or classes with the properties
+`STATIC_INJECTIONS` and `STATIC_INJECTION_LIFETIME`, but also allows for
+injection into class fields, accessor's, methods and getter's.
 
 ## Instalation
 
@@ -84,9 +89,12 @@ console.log(test2.test.propertyA);
 // logs "test"
 ```
 
-This snippet creates (resolves to) one instance of `TestClass` that will be a `Singleton` instance and a `Transient` instance of `TestClass2` that will have `TestClass` injected into the constructor.
+This snippet creates (resolves to) one instance of `TestClass` that will be a
+`Singleton` instance and a `Transient` instance of `TestClass2` that will have
+`TestClass` injected into the constructor.
 
-Instead of using `container.register` it's also possible to use the `TestClass` directly:
+Instead of using `container.register` it's also possible to use the `TestClass`
+directly:
 
 ```typescript
 import {
@@ -122,12 +130,20 @@ enum Lifetime {
 ```
 
 - **Singleton**
-  - Each resolve will return the same instance ( including resolves from child containers)
+  - Each resolve will return the same instance ( including resolves from child
+    containers)
 - **Transient**
-  - This is the default registration scope, a new instance will be created with each resolve
+  - This is the default registration scope, a new instance will be created with
+    each resolve
 - **Scoped**
-  - The container will resolve always to the same instance, like the singleton, but only when inside a Scope, [createScope](03-03-child_scope.md#createscope) for more info, when a scope is not defined the resolution will throw an Error.
+  - The container will resolve always to the same instance, like the singleton,
+    but only when inside a Scope,
+    [createScope](03-03-child_scope.md#createscope) for more info, when a scope
+    is not defined the resolution will throw an Error.
 
 ## Circular Dependencies
 
-Cyclic dependencies are a problem, and should be avoided, but sometimes it's easiest to have them, to solve this problem the container resolves an already existing instance in resolution by creating a proxy of the instance that will later be resolved into the instance.
+Cyclic dependencies are a problem, and should be avoided, but sometimes it's
+easiest to have them, to solve this problem the container resolves an already
+existing instance in resolution by creating a proxy of the instance that will
+later be resolved into the instance.

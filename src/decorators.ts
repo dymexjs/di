@@ -1,6 +1,5 @@
 import { Container, container } from "./container.ts";
 import { InvalidDecoratorError } from "./exceptions/index.ts";
-import { ScopeContext } from "./scope-context.ts";
 import type { ConstructorType } from "./types/constructor.type.ts";
 import type { UnwrapDecoratorArgs } from "./types/interface-token.type.ts";
 import type { InjectionToken } from "./types/injection-token.type.ts";
@@ -192,7 +191,7 @@ function createRegistration<T extends ConstructorType<any>>(
  */
 interface IAutoInjectableOptions {
   all?: Array<InjectionToken>;
-  scope?: ScopeContext;
+  //scope?: ScopeContext;
 }
 
 /**
@@ -228,8 +227,8 @@ export function AutoInjectable<
             ...args.concat(
               (dependencies ?? []).map((a) =>
                 options.all?.includes(a)
-                  ? container.resolveAll(a, options.scope)
-                  : container.resolve(a, options.scope),
+                  ? container.resolveAll(a)
+                  : container.resolve(a),
               ),
             ),
           );

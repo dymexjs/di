@@ -4,13 +4,13 @@ import type {
 } from "./registration.interface.ts";
 import type { InjectionToken } from "./injection-token.type.ts";
 import type { ConstructorType } from "./constructor.type.ts";
-import type { IScopeContext } from "../scope-context.ts";
 import type {
   ClassProvider,
   FactoryFunction,
   Provider,
   TokenProvider,
 } from "./providers/index.ts";
+import type { IScopeContext } from "./scope-context.interface.ts";
 
 export interface IContainerRegistration {
   addSingleton<T>(
@@ -135,33 +135,27 @@ export interface IContainerResolve {
    * If the token is already being resolved (i.e. a circular dependency is detected),
    * a proxy is returned instead.
    * @param token - The token to resolve.
-   * @param scope - Optional scope to resolve the token in.
    * @returns The resolved instance.
    */
-  resolve<T>(token: InjectionToken<T>, scope?: IScopeContext): T;
+  resolve<T>(token: InjectionToken<T>): T;
 
   /**
    * Resolves all instances of the specified token.
    * If the token is not registered, it will throw an error.
    * If the token is registered, it will return an array of resolved instances.
    * @param token - The token to resolve.
-   * @param scope - Optional scope to resolve the token in.
    * @returns An array of resolved instances.
    */
-  resolveAll<T>(token: InjectionToken<T>, scope?: IScopeContext): Array<T>;
+  resolveAll<T>(token: InjectionToken<T>): Array<T>;
 
   /**
    * Resolves all instances of the specified token asynchronously.
    * If the token is not registered, it will throw an error.
    * If the token is registered, it will return an array of resolved instances.
    * @param token - The token to resolve.
-   * @param scope - Optional scope to resolve the token in.
    * @returns A promise that resolves with an array of resolved instances.
    */
-  resolveAllAsync<T>(
-    token: InjectionToken<T>,
-    scope?: IScopeContext,
-  ): Promise<Array<T>>;
+  resolveAllAsync<T>(token: InjectionToken<T>): Promise<Array<T>>;
 
   /**
    * Resolves the specified token asynchronously.
@@ -170,10 +164,9 @@ export interface IContainerResolve {
    * If the token is already being resolved (i.e. a circular dependency is detected),
    * a proxy is returned instead.
    * @param token - The token to resolve.
-   * @param scope - Optional scope to resolve the token in.
    * @returns A promise that resolves with an instance of the type.
    */
-  resolveAsync<T>(token: InjectionToken<T>, scope?: IScopeContext): Promise<T>;
+  resolveAsync<T>(token: InjectionToken<T>): Promise<T>;
 
   /**
    * Resolves the specified token with the given arguments.
@@ -181,14 +174,9 @@ export interface IContainerResolve {
    * If the token is registered, it will return an instance of the type.
    * @param token - The token to resolve.
    * @param args - Optional arguments to pass to the constructor.
-   * @param scope - Optional scope to resolve the token in.
    * @returns An instance of the type.
    */
-  resolveWithArgs<T>(
-    token: InjectionToken<T>,
-    args?: Array<unknown>,
-    scope?: IScopeContext,
-  ): T;
+  resolveWithArgs<T>(token: InjectionToken<T>, args?: Array<unknown>): T;
 
   /**
    * Resolves the specified token with the given arguments asynchronously.
@@ -196,13 +184,11 @@ export interface IContainerResolve {
    * If the token is registered, it will return an instance of the type.
    * @param token - The token to resolve.
    * @param args - Optional arguments to pass to the constructor.
-   * @param scope - Optional scope to resolve the token in.
    * @returns A promise that resolves with an instance of the type.
    */
   resolveWithArgsAsync<T>(
     token: InjectionToken<T>,
     args?: Array<unknown>,
-    scope?: IScopeContext,
   ): Promise<T>;
 
   //#endregion Resolve
@@ -249,7 +235,7 @@ export interface IContainerClear extends AsyncDisposable {
    * Dispose a scope and it's contents
    * @param scope - scope to be disposed
    */
-  disposeScope(scope: IScopeContext): Promise<void>;
+  //disposeScope(scope: IScopeContext): Promise<void>;
 
   //#region Register
 
@@ -282,7 +268,7 @@ export interface IContainerClear extends AsyncDisposable {
    * @returns A promise that resolves when all registrations and scopes have been cleared.
    * NOTE: don't clean child containers
    */
-  reset(): Promise<void>;
+  dispose(): Promise<void>;
 }
 
 export interface IContainer
@@ -290,5 +276,5 @@ export interface IContainer
     IContainerResolve,
     IContainerCreate,
     IContainerClear {
-  readonly scopes: Set<IScopeContext>;
+  //readonly scopes: Set<IScopeContext>;
 }

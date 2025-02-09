@@ -8,17 +8,17 @@ import {
   UndefinedScopeError,
   ScopeContext,
 } from "../../src/index.ts";
+import { DisposedScopeError } from "../../src/exceptions/DisposedScopeError.ts";
 
 describe("Dymexjs_DI", () => {
-  beforeEach(async () => await container.reset());
+  beforeEach(async () => await container.dispose());
   describe("async", () => {
     describe("scope", () => {
       test("dispose scope", async () => {
         const scope = container.createScope();
-        assert.strictEqual(container.scopes.size, 1);
         assert.ok(scope instanceof ScopeContext);
-        await container.disposeScope(scope);
-        assert.strictEqual(container.scopes.size, 0);
+        await scope.dispose();
+        assert.throws(() => scope.resolve("anyKey"), DisposedScopeError);
       });
       describe("Class provider", () => {
         test("should register and resolveAsync scoped correctly", async () => {
@@ -29,11 +29,11 @@ describe("Dymexjs_DI", () => {
           container.register(TestClass, TestClass, {
             lifetime: Lifetime.Scoped,
           });
-          const value = await container.resolveAsync(TestClass, scope);
+          const value = await scope.resolveAsync(TestClass);
           assert.ok(value instanceof TestClass);
           assert.strictEqual(value.propertyA, "test");
           value.propertyA = "test2";
-          const value2 = await container.resolveAsync(TestClass, scope);
+          const value2 = await scope.resolveAsync(TestClass);
           assert.ok(value2 instanceof TestClass);
           assert.strictEqual(value2.propertyA, "test2");
         });
@@ -45,12 +45,12 @@ describe("Dymexjs_DI", () => {
           container.register(TestClass, TestClass, {
             lifetime: Lifetime.Scoped,
           });
-          const value = await container.resolveAsync(TestClass, scope);
+          const value = await scope.resolveAsync(TestClass);
           assert.ok(value instanceof TestClass);
           assert.strictEqual(value.propertyA, "test");
           value.propertyA = "test2";
           const scope2 = container.createScope();
-          const value2 = await container.resolveAsync(TestClass, scope2);
+          const value2 = await scope2.resolveAsync(TestClass);
           assert.ok(value2 instanceof TestClass);
           assert.strictEqual(value2.propertyA, "test");
         });
@@ -62,7 +62,7 @@ describe("Dymexjs_DI", () => {
             static [STATIC_INJECTION_LIFETIME] = Lifetime.Scoped;
           }
           const scope = container.createScope();
-          const test = await container.resolveAsync(Test, scope);
+          const test = await scope.resolveAsync(Test);
           assert.ok(test instanceof Test);
         });
         test("throw register constructor without scope", async () => {
@@ -77,7 +77,7 @@ describe("Dymexjs_DI", () => {
           // eslint-disable-next-line @typescript-eslint/no-extraneous-class
           class Test {}
           const scope = container.createScope();
-          const test = await container.resolveAsync(Test, scope);
+          const test = await scope.resolveAsync(Test);
           assert.ok(test instanceof Test);
         });
         test("throw register constructor without scope with decorator", () => {

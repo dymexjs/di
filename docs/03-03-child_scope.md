@@ -5,13 +5,15 @@
     - [createChildContainer](#createchildcontainer)
   - [Scopes](#scopes)
     - [createScope](#createscope)
-    - [disposeScope](#disposescope)
+    - [dispose scope](#dispose-scope)
 
 ## Child Containers
 
 ### createChildContainer
 
-It's possible to use child containers to maintain diferrent sets of registrations, but if one registration is not found in the child container the container will try to resolve the token from the parent container.
+It's possible to use child containers to maintain diferrent sets of
+registrations, but if one registration is not found in the child container the
+container will try to resolve the token from the parent container.
 
 ```typescript
  createChildContainer(): IContainer;
@@ -21,20 +23,26 @@ It's possible to use child containers to maintain diferrent sets of registration
 
 ## Scopes
 
-To use [@Scoped](02-decorators.md##scoped) there's the need to create scopes inside the container, this scopes allow for the resolution of instances only inside the defined scope, for example, if there's the need to create a specialized scope to resolve instances on a per-request basis.
+To use [@Scoped](02-decorators.md##scoped) there's the need to create scopes
+inside the container, this scopes allow for the resolution of instances only
+inside the defined scope, for example, if there's the need to create a
+specialized scope to resolve instances on a per-request basis.
 
 ```typescript
-  createScope(): ScopeContext;
-
-  disposeScope(scope: ScopeContext): Promise<void>;
+  const scope = createScope(): IScopeContext;
 ```
 
 ### createScope
 
 It's used to create a scope where to resolve the dependencies.
 
-### disposeScope
+### dispose scope
 
-Is used to dispose one scope.
+To dispose the scope you need to call the dispose method.
 
-**NOTE:** This method is async because of the disposition of instances that may implement `AsyncDispose`
+```typescipt
+  await scope.dispose();
+```
+
+**NOTE:** This method is async because of the disposition of instances that may
+implement `AsyncDispose`

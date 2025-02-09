@@ -13,7 +13,7 @@ import {
 } from "../../src/index.ts";
 
 describe("Dymexjs_DI ", () => {
-  beforeEach(async () => await container.reset());
+  beforeEach(async () => await container.dispose());
   describe("async", () => {
     describe("Static inject", () => {
       class ServiceA implements StaticInjectable<typeof ServiceA> {

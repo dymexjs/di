@@ -1,8 +1,13 @@
 # Container
 
-The container is the place where the dependencies are registered and latter will be resolved, for this you give a token to the container and after all the resolutions necessary the container will return the required object instance.
+The container is the place where the dependencies are registered and latter will
+be resolved, for this you give a token to the container and after all the
+resolutions necessary the container will return the required object instance.
 
-The decorators [@Singleton](02-decorators.md#singleton), [@Transient](02-decorators.md##transient) and [@Scoped](02-decorators.md##scoped) will auto-register the classes where they're being called into the container.
+The decorators [@Singleton](02-decorators.md#singleton),
+[@Transient](02-decorators.md##transient) and
+[@Scoped](02-decorators.md##scoped) will auto-register the classes where they're
+being called into the container.
 
 <!-- TOC depthFrom:1 depthTo:3 -->
 
@@ -21,15 +26,17 @@ Registrations take the form of Token/Provider pair.
 
 ## InjectionToken
 
-A token may be either a string, a symbol, a class constructor, a `Token` or an `InterfaceId`
+A token may be either a string, a symbol, a class constructor, a `Token` or an
+`InterfaceId`
 
 ```typescript
-type InjectionToken<T = any> = string | symbol | ConstructorType<T> | Token | InterfaceId<T>;
+type InjectionToken<T = any> = string | symbol | ConstructorType<T> | Token;
 ```
 
 ### Token
 
-The `Token` object is just an helper class to allow for type-safe access to a registration in the container.
+The `Token` object is just an helper class to allow for type-safe access to a
+registration in the container.
 
 ```typescript
 //File: jwt.secret.ts
@@ -49,16 +56,25 @@ let secret = container.resolve(JWT_SECRET);
 // secret = "my secure secret"
 ```
 
-The `InterfaceId` is a special object to allow for the registration of interfaces, and must be create with `getInterfaceToken()`
+There's a special kind of token `InterfaceToken` that inherits from `Token` and
+is an object to allow for the registration of interfaces, and must be created
+with `getInterfaceToken()`
+
+```typescript
+ getInterfaceToken(interfaceId: string): InterfaceToken
+```
+
+The `interfaceId` should be unique for each interface, this value will be cached
+so that it will always return the same `InterfaceToken` object.
 
 ```typescript
 interface SA {}
-const SA = getInterfaceToken<SA>("SA"); // the const variable and the interface should have the same name
+const SA = getInterfaceToken("SA");
 
 interface SB {
   readonly serviceA: SA;
 }
-const SB = getInterfaceToken<SB>("SB");
+const SB = getInterfaceToken("SB");
 
 @Singleton(SA)
 class ServiceA implements SA {}
@@ -70,11 +86,13 @@ const b = container.resolve<SB>(SB);
 // 'b' will be an instance of ServiceB, resolved trough the interface
 ```
 
-For more examples see `tests/sync/decorators.test.ts` or `tests/async/decorators.test.ts`) -> `Interface Decorators`
+For more examples see `tests/sync/decorators.test.ts` or
+`tests/async/decorators.test.ts`) -> `Interface Decorators`
 
 ## Providers
 
-The container uses the providers to register information needed to resolve an instance for a given token.
+The container uses the providers to register information needed to resolve an
+instance for a given token.
 
 ### Class Provider
 
@@ -100,7 +118,8 @@ type ConstructorType<T> = new (...args: Array<any>) => T;
 }
 ```
 
-This provider is used to resolve a value in the container, this value can be a constant or an instance that as been instantiated in a particular way.
+This provider is used to resolve a value in the container, this value can be a
+constant or an instance that as been instantiated in a particular way.
 
 ### Factory Provider
 
@@ -111,7 +130,8 @@ This provider is used to resolve a value in the container, this value can be a c
 }
 ```
 
-This provider is used to resolve a token given a factory function. The factory function has access to the container.
+This provider is used to resolve a token given a factory function. The factory
+function has access to the container.
 
 ```typescript
 type FactoryFunction<T> = (container: IContainer) => T | Promise<T>;
@@ -126,4 +146,5 @@ type FactoryFunction<T> = (container: IContainer) => T | Promise<T>;
 }
 ```
 
-This provider acts like a redirect or an alias, given token 'x' it will resolve instance for token 'y'.
+This provider acts like a redirect or an alias, given token 'x' it will resolve
+instance for token 'y'.

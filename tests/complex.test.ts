@@ -10,7 +10,7 @@ import {
 } from "../src/index.ts";
 
 describe("Container Complex Scenarios", () => {
-  beforeEach(async () => await container.reset());
+  beforeEach(async () => await container.dispose());
 
   describe("Nested Dependency Resolution", () => {
     test("should resolve deeply nested dependencies with mixed lifetimes", () => {
@@ -46,8 +46,8 @@ describe("Container Complex Scenarios", () => {
       const scope1 = container.createScope();
       const scope2 = container.createScope();
 
-      const instance1 = container.resolve<Root>("root", scope1);
-      const instance2 = container.resolve<Root>("root", scope2);
+      const instance1 = scope1.resolve<Root>("root");
+      const instance2 = scope2.resolve<Root>("root");
 
       assert.notStrictEqual(instance1, instance2);
       assert.notStrictEqual(instance1.l1, instance2.l1);
@@ -88,19 +88,17 @@ describe("Container Complex Scenarios", () => {
         () => container.resolve<ServiceB>("serviceB"),
         TokenNotFoundError,
       );
-      const instance1 = childContainer.resolve<ServiceC>("serviceC", scope1);
-      const instance2 = childContainer.resolve<ServiceC>("serviceC", scope2);
-
-      assert.notStrictEqual(instance1, instance2);
-      assert.strictEqual(instance1.b.a, instance2.b.a);
-      assert.notStrictEqual(instance1.b, instance2.b);
-
-      await container.disposeScope(scope1);
-      await assert.rejects(
-        () => container.resolveAsync("serviceC", scope1),
+      const instance2 = scope2.resolve<ServiceC>("serviceC");
+      assert.throws(
+        () => scope1.resolve<ServiceC>("serviceC"),
         TokenNotFoundError,
       );
-      const instance3 = childContainer.resolve<ServiceC>("serviceC", scope2);
+
+      await assert.rejects(
+        () => scope1.resolveAsync("serviceC"),
+        TokenNotFoundError,
+      );
+      const instance3 = scope2.resolve<ServiceC>("serviceC");
       assert.notStrictEqual(instance2, instance3);
     });
   });
@@ -195,9 +193,9 @@ describe("Container Complex Scenarios", () => {
       container.registerScoped("serviceC", ServiceC, ["serviceA"]);
 
       const scope = container.createScope();
-      const instanceA = container.resolve<ServiceA>("serviceA", scope);
-      const instanceB = container.resolve<ServiceB>("serviceB", scope);
-      const instanceC = container.resolve<ServiceC>("serviceC", scope);
+      const instanceA = scope.resolve<ServiceA>("serviceA");
+      const instanceB = scope.resolve<ServiceB>("serviceB");
+      const instanceC = scope.resolve<ServiceC>("serviceC");
 
       assert.strictEqual(instanceA.b, instanceB);
       assert.strictEqual(instanceB.c, instanceC);

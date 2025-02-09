@@ -13,7 +13,7 @@ import {
 } from "../src/index.ts";
 
 describe("Dymexjs_DI ", () => {
-  beforeEach(async () => await container.reset());
+  beforeEach(async () => await container.dispose());
   describe("README", () => {
     describe("Basic Usage", () => {
       test("Decorators", () => {
@@ -120,7 +120,7 @@ describe("Dymexjs_DI ", () => {
         // eslint-disable-next-line @typescript-eslint/no-extraneous-class
         class TestClass {}
         const scope = container.createScope();
-        const instance1 = container.resolve(TestClass, scope);
+        const instance1 = scope.resolve(TestClass);
         assert.ok(instance1 instanceof TestClass);
       });
     });
