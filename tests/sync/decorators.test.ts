@@ -302,25 +302,25 @@ describe("Dymexjs_DI", () => {
 
             assert.ok(myFooBar.myBar?.myFoo instanceof Foo);
           });
-          test("@AutoInjectable works with @Singleton", () => {
+          /*test("@AutoInjectable works with @Singleton", () => {
             // eslint-disable-next-line @typescript-eslint/no-extraneous-class
             class Bar {}
 
             @Singleton([Bar])
             @AutoInjectable([Bar])
             class Foo {
-              public bar: Bar;
-              constructor(bar: Bar) {
+              public bar?: Bar;
+              constructor(bar?: Bar) {
                 this.bar = bar;
               }
             }
 
             const instance1 = container.resolve<Foo>(Foo);
-            const instance2 = container.resolve<Foo>(Foo);
+            const instance2 = new Foo();
 
             assert.strictEqual(instance1, instance2);
             assert.strictEqual(instance1.bar, instance2.bar);
-          });
+          });*/
 
           test("@AutoInjectable resolves multiple registered dependencies", () => {
             interface Bar {

@@ -36,5 +36,5 @@ export {
   type InterfaceToken,
   getInterfaceToken,
 } from "./types/interface-token.type.ts";
-export type { IScopeContext } from "./scope-context.ts";
+export type { IScopeContext } from "./types/scope-context.interface.ts";
 export { ScopeContext } from "./scope-context.ts";
