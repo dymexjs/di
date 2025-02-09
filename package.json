@@ -26,6 +26,9 @@
   "bugs": {
     "url": "https://github.com/dymexjs/di/issues"
   },
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "build:cjs": "npx tsc -p tsconfig.cjs.json && echo {\"type\": \"commonjs\"} > dist/cjs/package.json",
     "build:esm": "npx tsc -p tsconfig.esm.json && echo {\"type\": \"module\"} > dist/esm/package.json",
@@ -46,14 +49,14 @@
   "license": "ISC",
   "devDependencies": {
     "@dymexjs/globcli": "^0.0.4",
-    "@eslint/js": "^9.10.0",
+    "@eslint/js": "^9.20.0",
     "@types/node": "^22.13.1",
-    "eslint": "^9.19.0",
+    "eslint": "^9.20.0",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-security": "^3.0.1",
     "eslint-plugin-tsdoc": "^0.4.0",
-    "prettier": "3.4.2",
-    "rimraf": "^5.0.10",
+    "prettier": "3.5.0",
+    "rimraf": "^6.0.1",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.23.0"
