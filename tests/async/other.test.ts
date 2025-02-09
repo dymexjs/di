@@ -9,7 +9,7 @@ import {
 } from "../../src/index.ts";
 
 describe("Dymexjs_DI ", () => {
-  beforeEach(async () => container.reset());
+  beforeEach(async () => container.dispose());
   describe("async", () => {
     describe("other", () => {
       describe("register and resolve", () => {
@@ -139,7 +139,7 @@ describe("Dymexjs_DI ", () => {
           const childContainer = container.createChildContainer();
           const scope = childContainer.createScope();
           assert.strictEqual(
-            (await childContainer.resolveAsync<Test>("test", scope)).propertyA,
+            (await scope.resolveAsync<Test>("test")).propertyA,
             "test",
           );
         });

@@ -4,7 +4,7 @@ import assert from "node:assert";
 
 describe("Registrations", () => {
   beforeEach(async () => {
-    await container[Symbol.asyncDispose]();
+    await container.dispose();
   });
   describe("Value", () => {
     test("should register a value", () => {

@@ -9,7 +9,7 @@ import {
 } from "../../src/index.ts";
 
 describe("Dymexjs_DI", () => {
-  beforeEach(async () => await container.reset());
+  beforeEach(async () => await container.dispose());
   describe("async", () => {
     describe("Static Injector", () => {
       test("should register and resolveAsync with static injector", async () => {

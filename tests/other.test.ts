@@ -195,7 +195,7 @@ describe("Dymexjs_DI ", () => {
       });
     });
     describe("Container", () => {
-      beforeEach(async () => container.reset());
+      beforeEach(async () => container.dispose());
       test("Should register an instance", () => {
         container.registerInstance("anyToken", 4);
         assert.strictEqual(container.resolve("anyToken"), 4);

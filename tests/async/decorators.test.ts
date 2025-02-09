@@ -11,7 +11,7 @@ import {
 } from "../../src/index.ts";
 
 describe("Dymexjs_DI", () => {
-  beforeEach(async () => await container.reset());
+  beforeEach(async () => await container.dispose());
   describe("async", () => {
     describe("Class Decorators", () => {
       describe("Singleton", () => {
@@ -118,8 +118,8 @@ describe("Dymexjs_DI", () => {
           // eslint-disable-next-line @typescript-eslint/no-extraneous-class
           class TestClass {}
           const scope = container.createScope();
-          const instance1 = await container.resolveAsync(TestClass, scope);
-          const instance2 = await container.resolveAsync(TestClass, scope);
+          const instance1 = await scope.resolveAsync(TestClass);
+          const instance2 = await scope.resolveAsync(TestClass);
           assert.strictEqual(instance1, instance2);
         });
         test("should create scoped", async () => {
@@ -134,10 +134,10 @@ describe("Dymexjs_DI", () => {
             }
           }
           const scope = container.createScope();
-          const b = await container.resolveAsync(ServiceB, scope);
+          const b = await scope.resolveAsync(ServiceB);
           assert.ok(b instanceof ServiceB);
           assert.ok(b.serviceA instanceof ServiceA);
-          const a = await container.resolveAsync(ServiceA, scope);
+          const a = await scope.resolveAsync(ServiceA);
           assert.ok(a instanceof ServiceA);
           assert.strictEqual(b.serviceA, a);
           assert.rejects(
@@ -473,10 +473,10 @@ describe("Dymexjs_DI", () => {
           }
         }
         const scope = container.createScope();
-        const b = await container.resolveAsync<SB>(SB, scope);
+        const b = await scope.resolveAsync<SB>(SB);
         assert.ok(b instanceof ServiceB);
         assert.ok(b.serviceA instanceof ServiceA);
-        const a = await container.resolveAsync<SA>(SA, scope);
+        const a = await scope.resolveAsync<SA>(SA);
         assert.ok(a instanceof ServiceA);
         assert.strictEqual(b.serviceA, a);
         assert.deepStrictEqual(b.serviceA, a);

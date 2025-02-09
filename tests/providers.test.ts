@@ -115,7 +115,7 @@ describe("Provider", () => {
       assert.strictEqual(isTokenProvider({} as Provider<unknown>), false);
     });
     test("should throw circular token registration", async () => {
-      await container.reset();
+      await container.dispose();
       container.register("test", { useToken: "test2" });
       assert.throws(
         () => container.register("test2", { useToken: "test" }),

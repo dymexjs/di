@@ -9,7 +9,7 @@ import {
 } from "../../src/index.ts";
 
 describe("Dymexjs_DI ", () => {
-  beforeEach(async () => container.reset());
+  beforeEach(async () => container.dispose());
   describe("async", () => {
     describe("Provider", () => {
       describe("ValueProvider", () => {

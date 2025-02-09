@@ -10,7 +10,7 @@ import {
 } from "../../src/index.ts";
 
 describe("Dymexjs_DI ", () => {
-  beforeEach(async () => container.reset());
+  beforeEach(async () => container.dispose());
   describe("sync", () => {
     describe("other", () => {
       describe("register and resolve", () => {
@@ -109,10 +109,7 @@ describe("Dymexjs_DI ", () => {
           container.register("test", Test, { lifetime: Lifetime.Scoped });
           const childContainer = container.createChildContainer();
           const scope = childContainer.createScope();
-          assert.strictEqual(
-            childContainer.resolve<Test>("test", scope).propertyA,
-            "test",
-          );
+          assert.strictEqual(scope.resolve<Test>("test").propertyA, "test");
         });
         test("child container resolves even when parent doesn't have registration", () => {
           // eslint-disable-next-line @typescript-eslint/no-empty-object-type
