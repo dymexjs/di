@@ -1,6 +1,7 @@
 # Resolution
 
-Process to resolve a token into an instance, resolving all the necessary dependencies in between.
+Process to resolve a token into an instance, resolving all the necessary
+dependencies in between.
 
 - [Resolution](#resolution)
   - [resolve](#resolve)
@@ -65,9 +66,12 @@ const obj: TestClass[] =
 
 ## resolveWithArgs
 
-It's also possible to resolve objects with extra arguments, used when the instance should be constructed with some arguments passed into the constructor and some arguments injected.
+It's also possible to resolve objects with extra arguments, used when the
+instance should be constructed with some arguments passed into the constructor
+and some arguments injected.
 
-This method is used with [@AutoInjectable](02-decorators.md##autoinjectable) decorator
+This method is used with [@AutoInjectable](02-decorators.md##autoinjectable)
+decorator
 
 ```typescript
  resolveWithArgs<T>(token: InjectionToken<T>, args?: Array<unknown>): T;

@@ -39,7 +39,7 @@
     "test": "globcli -- tsx --test \"tests/**/*.test.ts\"",
     "test:coverage": "globcli -- tsx --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=lcov.info --test \"tests/**/*.test.ts\"",
     "test:watch": "globcli -- tsx --test --watch \"tests/**/*.test.ts\"",
-    "format": "prettier --config .prettierrc \"src/**/*.ts\" \"tests/**/*.ts\" --write",
+    "format": "prettier --config .prettierrc \"src/**/*.ts\" \"tests/**/*.ts\" \"docs/**/*.md\" --write",
     "prepare": "npm run build",
     "preversion": "npm run format && npm run lint && npm test",
     "version": "npm run format && git add -A .",
