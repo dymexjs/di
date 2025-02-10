@@ -30,10 +30,11 @@
     "node": ">=18.0.0"
   },
   "scripts": {
-    "build:cjs": "npx tsc -p tsconfig.cjs.json && echo {\"type\": \"commonjs\"} > dist/cjs/package.json",
-    "build:esm": "npx tsc -p tsconfig.esm.json && echo {\"type\": \"module\"} > dist/esm/package.json",
+    "build:cjs": "npx tsc -p tsconfig.cjs.json",
+    "build:esm": "npx tsc -p tsconfig.esm.json",
     "build:types": "npx tsc -p tsconfig.types.json",
-    "build": "npm run clean && npm run build:cjs && npm run build:esm && npm run build:types",
+    "build:packageJson": "node ./write_package-json.js",
+    "build": "npm run clean && npm run build:cjs && npm run build:esm && npm run build:types && npm run build:packageJson",
     "clean": "npx rimraf dist",
     "lint": "eslint",
     "test": "globcli -- tsx --test \"tests/**/*.test.ts\"",
