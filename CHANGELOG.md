@@ -2,6 +2,16 @@
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v1.1.1 - 2025-02-10
+
+### What's Changed 👀
+
+### 🐛 Bug Fixes
+
+- fix: package.json build output type @n3okill ([#17](https://github.com/$OWNER/$REPOSITORY/pull/17))
+
+**Full Changelog**: https://github.com/dymexjs/di/compare/v1.1.0...v1.1.1
+
 ## v1.1.0 - 2025-02-09
 
 ### What's Changed 👀
