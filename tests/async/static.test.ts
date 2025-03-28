@@ -1,5 +1,7 @@
-import { beforeEach, describe, test } from "node:test";
+/* eslint-disable sonarjs/no-nested-functions */
 import * as assert from "node:assert/strict";
+import { beforeEach, describe, test } from "node:test";
+
 import {
   container,
   Lifetime,
@@ -17,11 +19,13 @@ describe("Dymexjs_DI", () => {
           public propertyA = "test";
         }
         class TestClass2 {
+          public static readonly [STATIC_INJECTIONS] = ["test"];
+
           public test: TestClass;
+
           constructor(test: TestClass) {
             this.test = test;
           }
-          public static [STATIC_INJECTIONS] = ["test"];
         }
         container.register(
           "test",
@@ -42,15 +46,19 @@ describe("Dymexjs_DI", () => {
       });
       test("should register singleton from STATIC_INJECTION_LIFETIME", async () => {
         class TestClass {
+          public static readonly [STATIC_INJECTION_LIFETIME] =
+            Lifetime.Singleton;
+
           public propertyA = "test";
-          public static [STATIC_INJECTION_LIFETIME] = Lifetime.Singleton;
         }
         class TestClass2 {
+          public static readonly [STATIC_INJECTIONS] = ["test"];
+
           public test: TestClass;
+
           constructor(test: TestClass) {
             this.test = test;
           }
-          public static [STATIC_INJECTIONS] = ["test"];
         }
         container.register("test", { useClass: TestClass });
         const test2 = await container.resolveAsync(TestClass2);
@@ -67,15 +75,19 @@ describe("Dymexjs_DI", () => {
       });
       test("should register singleton from impements StaticInjectable", async () => {
         class TestClass implements StaticInjectable<typeof TestClass> {
+          public static readonly [STATIC_INJECTION_LIFETIME] =
+            Lifetime.Singleton;
+
           public propertyA = "test";
-          public static [STATIC_INJECTION_LIFETIME] = Lifetime.Singleton;
         }
         class TestClass2 implements StaticInjectable<typeof TestClass2> {
+          public static readonly [STATIC_INJECTIONS] = ["test"];
+
           public test: TestClass;
+
           constructor(test: TestClass) {
             this.test = test;
           }
-          public static [STATIC_INJECTIONS] = ["test"];
         }
         container.register("test", { useClass: TestClass });
         const test2 = await container.resolveAsync(TestClass2);

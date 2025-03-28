@@ -1,5 +1,7 @@
-import { beforeEach, describe, test } from "node:test";
+/* eslint-disable sonarjs/no-nested-functions */
 import * as assert from "node:assert/strict";
+import { beforeEach, describe, test } from "node:test";
+
 import {
   Container,
   container,
@@ -26,6 +28,7 @@ describe("Dymexjs_DI ", () => {
           @Singleton()
           class Test2 {
             public readonly test: Test;
+
             constructor(test: Test = container.resolve(Test)) {
               this.test = test;
             }
@@ -137,7 +140,7 @@ describe("Dymexjs_DI ", () => {
           const childContainer = container.createChildContainer();
           childContainer.register("IFoo", { useClass: Foo });
           const myFoo = childContainer.resolveAll<IFoo>("IFoo");
-          assert.ok(myFoo instanceof Array);
+          assert.ok(Array.isArray(myFoo));
           assert.strictEqual(myFoo.length, 1);
           assert.ok(myFoo[0] instanceof Foo);
         });
@@ -150,7 +153,7 @@ describe("Dymexjs_DI ", () => {
           container.register("IFoo", { useClass: Foo });
           const childContainer = container.createChildContainer();
           const myFoo = childContainer.resolveAll<IFoo>("IFoo");
-          assert.ok(myFoo instanceof Array);
+          assert.ok(Array.isArray(myFoo));
           assert.strictEqual(myFoo.length, 1);
           assert.ok(myFoo[0] instanceof Foo);
         });

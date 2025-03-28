@@ -1,8 +1,8 @@
-import { Token, type InjectionToken } from "./injection-token.type.ts";
+import { type InjectionToken, Token } from "./injection-token.type.ts";
 
 const interfaceTokens = new Map<string, InterfaceToken>();
 
-export type UnwrapDecoratorArgs<T extends Array<InjectionToken>> = {
+export type UnwrapDecoratorArguments<T extends Array<InjectionToken>> = {
   [K in keyof T]: T[K] extends string
     ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
       any
@@ -13,11 +13,6 @@ export type UnwrapDecoratorArgs<T extends Array<InjectionToken>> = {
         ? U
         : never;
 };
-
-/**
- * Creates a runtime identifier of an interface used for dependency injection.
- */
-//export const getInterfaceToken = <T>(id: string): InterfaceId<T> => `${id}_interface` as InterfaceId<T>;
 
 export class InterfaceToken extends Token {
   constructor(token: string) {

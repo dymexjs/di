@@ -1,5 +1,7 @@
-import { beforeEach, describe, test } from "node:test";
+/* eslint-disable sonarjs/no-nested-functions */
 import * as assert from "node:assert/strict";
+import { beforeEach, describe, test } from "node:test";
+
 import {
   container,
   getInterfaceToken,
@@ -19,7 +21,7 @@ describe("Dymexjs_DI ", () => {
           const value = [new Test()];
           container.register("array", { useValue: value });
           const result = await container.resolveAsync<Array<Test>>("array");
-          assert.ok(result instanceof Array);
+          assert.ok(Array.isArray(result));
           assert.strictEqual(result.length, 1);
           assert.ok(result[0] instanceof Test);
           assert.strictEqual(result, value);
@@ -38,18 +40,18 @@ describe("Dymexjs_DI ", () => {
           container.register(Test, { useClass: Test });
           container.registerFactory(
             "array",
-            async (cont): Promise<Array<Test>> =>
-              Promise.resolve([await cont.resolve(Test)]),
+            async (cont): Promise<Array<Test>> => [await cont.resolve(Test)],
             [getInterfaceToken("IContainer")],
           );
           const result = await container.resolveAsync<Array<Test>>("array");
-          assert.ok(result instanceof Array);
+          assert.ok(Array.isArray(result));
           assert.strictEqual(result.length, 1);
           assert.ok(result[0] instanceof Test);
         });
         test("should register and resolve a factory", async () => {
           class TestClass {
             public propertyFactory;
+
             constructor() {
               this.propertyFactory = "test";
             }
@@ -60,11 +62,12 @@ describe("Dymexjs_DI ", () => {
           assert.strictEqual(value.propertyFactory, "test");
         });
         test("should handle async factory providers", async () => {
-          const asyncFactory = async () => {
+          // eslint-disable-next-line unicorn/consistent-function-scoping
+          async function asyncFactory() {
             return new Promise((resolve) => {
               setTimeout(() => resolve({ key: "asyncValue" }), 100);
             });
-          };
+          }
           container.register("asyncToken", { useFactory: asyncFactory });
           const resolved = await container.resolveAsync("asyncToken");
           assert.deepStrictEqual(resolved, { key: "asyncValue" });
@@ -185,8 +188,10 @@ describe("Dymexjs_DI ", () => {
       describe("Constructor Provider", () => {
         test("constructor token provider", async () => {
           class TestClass {
+            public static readonly [STATIC_INJECTION_LIFETIME] =
+              Lifetime.Singleton;
+
             propertyA = "test";
-            public static [STATIC_INJECTION_LIFETIME] = Lifetime.Singleton;
           }
           const value = await container.resolveAsync(TestClass);
           assert.ok(value instanceof TestClass);

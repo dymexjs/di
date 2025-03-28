@@ -1,5 +1,7 @@
-import { beforeEach, describe, test } from "node:test";
+/* eslint-disable sonarjs/no-nested-functions */
 import * as assert from "node:assert/strict";
+import { beforeEach, describe, test } from "node:test";
+
 import {
   container,
   Lifetime,
@@ -88,6 +90,7 @@ describe("Dymexjs_DI ", () => {
           @Transient()
           class Bar {
             public foo: Array<Foo>;
+
             constructor(foo: Array<Foo> = container.resolveAll(Foo)) {
               this.foo = foo;
             }
@@ -139,6 +142,7 @@ describe("Dymexjs_DI ", () => {
           const childContainer = container.createChildContainer();
           const scope = childContainer.createScope();
           assert.strictEqual(
+            // eslint-disable-next-line unicorn/no-await-expression-member
             (await scope.resolveAsync<Test>("test")).propertyA,
             "test",
           );
@@ -173,7 +177,7 @@ describe("Dymexjs_DI ", () => {
           const childContainer = container.createChildContainer();
           childContainer.register("IFoo", { useClass: Foo });
           const myFoo = await childContainer.resolveAllAsync<IFoo>("IFoo");
-          assert.ok(myFoo instanceof Array);
+          assert.ok(Array.isArray(myFoo));
           assert.strictEqual(myFoo.length, 1);
           assert.ok(myFoo[0] instanceof Foo);
         });
@@ -186,7 +190,7 @@ describe("Dymexjs_DI ", () => {
           container.register("IFoo", { useClass: Foo });
           const childContainer = container.createChildContainer();
           const myFoo = await childContainer.resolveAllAsync<IFoo>("IFoo");
-          assert.ok(myFoo instanceof Array);
+          assert.ok(Array.isArray(myFoo));
           assert.strictEqual(myFoo.length, 1);
           assert.ok(myFoo[0] instanceof Foo);
         });
@@ -213,7 +217,7 @@ describe("Dymexjs_DI ", () => {
           container.register("test", Test, { lifetime: Lifetime.Singleton });
           container.register("test", Test, { lifetime: Lifetime.Transient });
           const instances = container.resolveAll("test");
-          assert.ok(instances instanceof Array);
+          assert.ok(Array.isArray(instances));
           assert.strictEqual(instances.length, 2);
           assert.ok(instances[0] instanceof Test);
           assert.ok(instances[1] instanceof Test);
@@ -223,7 +227,7 @@ describe("Dymexjs_DI ", () => {
             (reg) => reg.options.lifetime === Lifetime.Transient,
           );
           const instances2 = container.resolveAll("test");
-          assert.ok(instances2 instanceof Array);
+          assert.ok(Array.isArray(instances2));
           assert.strictEqual(instances2.length, 1);
           assert.ok(instances2[0] instanceof Test);
           assert.strictEqual(instances2[0], instances[0]);

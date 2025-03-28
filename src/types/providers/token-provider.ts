@@ -10,8 +10,7 @@ export function isTokenProvider<T>(
 ): provider is TokenProvider<T> {
   try {
     return "useToken" in provider;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  } catch (_) {
+  } catch {
     return false;
   }
 }

@@ -1,10 +1,11 @@
 import type { Container } from "./container.ts";
-import { DisposedScopeError } from "./exceptions/DisposedScopeError.ts";
-import { isAsyncDisposable, isDisposable } from "./helpers.ts";
-import { ServiceMap } from "./service-map.ts";
 import type { InjectionToken } from "./types/injection-token.type.ts";
 import type { Registration } from "./types/registration.interface.ts";
 import type { IScopeContext } from "./types/scope-context.interface.ts";
+
+import { DisposedScopeError } from "./exceptions/disposed-scope.error.ts";
+import { isAsyncDisposable, isDisposable } from "./helpers.ts";
+import { ServiceMap } from "./service-map.ts";
 
 export class ScopeContext implements IScopeContext {
   #_isDisposed = false;
@@ -19,12 +20,6 @@ export class ScopeContext implements IScopeContext {
     return this.#_services;
   }
 
-  private checkDisposed() {
-    if (this.#_isDisposed) {
-      throw new DisposedScopeError();
-    }
-  }
-
   resolve<T>(token: InjectionToken<T>): T {
     this.checkDisposed();
     if (this.#_services.has(token)) {
@@ -32,7 +27,6 @@ export class ScopeContext implements IScopeContext {
     }
     return this.#_container.resolve(token, this);
   }
-
   resolveAll<T>(token: InjectionToken<T>): Array<T> {
     this.checkDisposed();
     if (this.#_services.has(token)) {
@@ -54,22 +48,20 @@ export class ScopeContext implements IScopeContext {
     }
     return this.#_container.resolveAsync(token, this);
   }
-  resolveWithArgs<T>(token: InjectionToken<T>, args?: Array<unknown>): T {
+  resolveWithArgs<T>(token: InjectionToken<T>, arguments_?: Array<unknown>): T {
     this.checkDisposed();
-    return this.#_container.resolveWithArgs(token, args, this);
+    return this.#_container.resolveWithArgs(token, arguments_, this);
   }
   resolveWithArgsAsync<T>(
     token: InjectionToken<T>,
-    args?: Array<unknown>,
+    arguments_?: Array<unknown>,
   ): Promise<T> {
     this.checkDisposed();
-    return this.#_container.resolveWithArgsAsync(token, args, this);
+    return this.#_container.resolveWithArgsAsync(token, arguments_, this);
   }
-
   async dispose(): Promise<void> {
     return this[Symbol.asyncDispose]();
   }
-
   async [Symbol.asyncDispose]() {
     this.checkDisposed();
     for (const registrations of this.services.values()) {
@@ -84,5 +76,11 @@ export class ScopeContext implements IScopeContext {
     }
     this.services.clear();
     this.#_isDisposed = true;
+  }
+
+  private checkDisposed() {
+    if (this.#_isDisposed) {
+      throw new DisposedScopeError();
+    }
   }
 }

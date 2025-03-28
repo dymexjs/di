@@ -1,14 +1,16 @@
-import { beforeEach, describe, test } from "node:test";
+/* eslint-disable sonarjs/no-nested-functions */
 import * as assert from "node:assert/strict";
+import { beforeEach, describe, test } from "node:test";
+
 import {
   container,
+  DisposedScopeError,
   Lifetime,
+  ScopeContext,
   Scoped,
   STATIC_INJECTION_LIFETIME,
   UndefinedScopeError,
-  ScopeContext,
 } from "../../src/index.ts";
-import { DisposedScopeError } from "../../src/exceptions/DisposedScopeError.ts";
 
 describe("Dymexjs_DI", () => {
   beforeEach(async () => await container.dispose());
@@ -59,7 +61,8 @@ describe("Dymexjs_DI", () => {
         test("register constructor in scope", async () => {
           // eslint-disable-next-line @typescript-eslint/no-extraneous-class
           class Test {
-            static [STATIC_INJECTION_LIFETIME] = Lifetime.Scoped;
+            public static readonly [STATIC_INJECTION_LIFETIME] =
+              Lifetime.Scoped;
           }
           const scope = container.createScope();
           const test = await scope.resolveAsync(Test);
@@ -68,7 +71,8 @@ describe("Dymexjs_DI", () => {
         test("throw register constructor without scope", async () => {
           // eslint-disable-next-line @typescript-eslint/no-extraneous-class
           class Test {
-            static [STATIC_INJECTION_LIFETIME] = Lifetime.Scoped;
+            public static readonly [STATIC_INJECTION_LIFETIME] =
+              Lifetime.Scoped;
           }
           assert.rejects(container.resolveAsync(Test), UndefinedScopeError);
         });

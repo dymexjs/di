@@ -1,6 +1,7 @@
-import test, { beforeEach, describe } from "node:test";
-import { container } from "../../src/index.ts";
 import assert from "node:assert";
+import test, { beforeEach, describe } from "node:test";
+
+import { container } from "../../src/index.ts";
 
 describe("Registrations", () => {
   beforeEach(async () => {

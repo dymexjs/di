@@ -1,5 +1,5 @@
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type ConstructorType<T> = new (...args: Array<any>) => T;
+export type ConstructorType<T> = new (...arguments_: Array<any>) => T;
 
 export function isConstructorType(
   token?: unknown,
