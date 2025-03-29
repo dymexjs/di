@@ -19,7 +19,10 @@ import {
   type InjectionToken,
   isNormalToken,
 } from "./types/injection-token.type.ts";
-import { getInterfaceToken } from "./types/interface-token.type.ts";
+import {
+  getInterfaceToken,
+  InterfaceToken,
+} from "./types/interface-token.type.ts";
 import {
   type ClassProvider,
   type FactoryFunction,
@@ -44,7 +47,7 @@ export class Container implements IContainer {
   readonly #_resolutionStack = new Map<InjectionToken, unknown>();
   #_childContainer?: IContainer;
   readonly #_parent?: Container;
-  readonly #_IContainerToken;
+  readonly #_IContainerToken: InterfaceToken;
 
   constructor(parent?: Container) {
     this.#_parent = parent;
@@ -417,7 +420,8 @@ export class Container implements IContainer {
       }
 
       // If the token is registered, get the registration and resolve it
-      const registration = this.getRegistration(token);
+      const registration =
+        (scope && scope.getRegistration(token)) ?? this.getRegistration(token);
       if (registration) {
         return this.resolveRegistration(token, registration, scope);
       } else {
@@ -447,7 +451,9 @@ export class Container implements IContainer {
     }
 
     // If the token is registered, get all registrations and resolve them
-    const registrations = this.getAllRegistrations(token);
+    const registrations =
+      (scope && scope.getAllRegistrations(token)) ??
+      this.getAllRegistrations(token);
     return registrations.map((registration) =>
       this.resolveRegistration(token, registration, scope),
     );
@@ -474,7 +480,9 @@ export class Container implements IContainer {
     }
 
     // If the token is registered, get all registrations and resolve them
-    const registrations = this.getAllRegistrations(token);
+    const registrations =
+      (scope && scope.getAllRegistrations(token)) ??
+      this.getAllRegistrations(token);
     const result: Array<T> = [];
     for (const registration of registrations) {
       // Resolve each registration asynchronously
@@ -524,7 +532,8 @@ export class Container implements IContainer {
       }
 
       // If the token is registered, get the registration and resolve it
-      const registration = this.getRegistration(token);
+      const registration =
+        (scope && scope.getRegistration(token)) ?? this.getRegistration(token);
       if (registration) {
         return await this.resolveRegistrationAsync(token, registration, scope);
       } else {
@@ -559,7 +568,9 @@ export class Container implements IContainer {
     }
 
     // If the token is registered, get the registration and resolve it
-    const registration = this.getRegistration(token) as Registration<T>;
+    const registration =
+      (scope && scope.getRegistration(token)) ??
+      (this.getRegistration(token) as Registration<T>);
     const resolvedArguments = this.createArgs(registration, scope);
     return this.createInstance<T>(
       (registration.provider as ClassProvider<T>).useClass,
@@ -590,13 +601,40 @@ export class Container implements IContainer {
     }
 
     // If the token is registered, get the registration and resolve it
-    const registration = this.getRegistration(token) as Registration<T>;
+    const registration =
+      (scope && scope.getRegistration(token)) ??
+      (this.getRegistration(token) as Registration<T>);
     const resolvedArguments = await this.createArgsAsync(registration, scope);
     // Create an instance of the class with the resolved arguments and the arguments passed by the user
     return this.createInstance<T>(
       (registration.provider as ClassProvider<T>).useClass,
       [...arguments_, ...resolvedArguments],
     );
+  }
+  /**
+   * Gets all registrations for the specified token.
+   * @param token - The token to get the registrations for.
+   * @returns An array of registrations.
+   */
+  getAllRegistrations<T>(token: InjectionToken<T>): Array<Registration> {
+    /**
+     * If the token is registered in the current container, return the registrations.
+     */
+    const regs = this.#_services.getAll(token);
+    if (regs.length > 0) {
+      return regs;
+    }
+    /**
+     * If the token is not registered in the current container, but there is a parent container,
+     * call the parent container's getAllRegistrations method to get the registrations.
+     */
+    if (this.#_parent !== undefined) {
+      return this.#_parent.getAllRegistrations(token);
+    }
+    /**
+     * If the token is not registered in any container, return an empty array.
+     */
+    return [];
   }
 
   //#endregion Resolve
@@ -611,7 +649,9 @@ export class Container implements IContainer {
     registration: Registration,
     scope?: IScopeContext,
   ): Array<unknown> {
-    return registration.injections.map((token) => this.resolve(token, scope));
+    return registration.injections.map((token) =>
+      scope ? scope.resolve(token) : this.resolve(token, scope),
+    );
   }
   /**
    * Creates an array of arguments to pass to the constructor of the implementation of the specified registration asynchronously.
@@ -629,7 +669,7 @@ export class Container implements IContainer {
     // Iterate over the tokens in the registration's `injections` property
     for (const token of registration.injections) {
       // Resolve each token asynchronously and add the result to the arguments array
-      arguments_.push(await this.resolveAsync(token, scope));
+      arguments_.push(await (scope ? scope.resolveAsync(token) : this.resolveAsync(token, scope)));
     }
     // Return the array of resolved arguments
     return arguments_;
@@ -719,33 +759,6 @@ export class Container implements IContainer {
     const proxy = new Proxy<any>({}, handler) as T;
     // Return the proxy
     return proxy;
-  }
-  /**
-   * Gets all registrations for the specified token.
-   * @param token - The token to get the registrations for.
-   * @returns An array of registrations.
-   */
-  private getAllRegistrations<T>(
-    token: InjectionToken<T>,
-  ): Array<Registration> {
-    /**
-     * If the token is registered in the current container, return the registrations.
-     */
-    const regs = this.#_services.getAll(token);
-    if (regs.length > 0) {
-      return regs;
-    }
-    /**
-     * If the token is not registered in the current container, but there is a parent container,
-     * call the parent container's getAllRegistrations method to get the registrations.
-     */
-    if (this.#_parent !== undefined) {
-      return this.#_parent.getAllRegistrations(token);
-    }
-    /**
-     * If the token is not registered in any container, return an empty array.
-     */
-    return [];
   }
   /**
    * Gets the registration for the specified token.
@@ -854,7 +867,7 @@ export class Container implements IContainer {
       if (scope === undefined) {
         throw new UndefinedScopeError(token);
       }
-      scope.services.set(token, {
+      scope.registerRegistration(token, {
         injections,
         instance,
         options: { lifetime },
@@ -901,7 +914,7 @@ export class Container implements IContainer {
       if (scope === undefined) {
         throw new UndefinedScopeError(token);
       }
-      scope.services.set(token, {
+      scope.registerRegistration(token, {
         injections,
         instance,
         options: { lifetime },
@@ -932,27 +945,17 @@ export class Container implements IContainer {
     scope?: IScopeContext,
   ): T {
     // If the lifetime is scoped, store the instance in the scope.
-    if (registration.options.lifetime === Lifetime.Scoped) {
-      if (scope === undefined) {
-        throw new UndefinedScopeError(token);
-      }
-      if (!scope.services.has(token)) {
-        scope.services.set(token, {
-          injections: registration.injections,
-          instance: this.createInstance(
-            (registration.provider as ClassProvider<T>).useClass,
-            // Create the arguments for the class.
-            this.createArgs(registration, scope),
-          ),
-          options: registration.options,
-          provider: registration.provider,
-          providerType: registration.providerType,
-        });
-      }
-      return scope.services.get(token).instance;
+    if (
+      registration.options.lifetime === Lifetime.Scoped &&
+      scope === undefined
+    ) {
+      throw new UndefinedScopeError(token);
     }
     // If the lifetime is singleton, store the instance in the registration.
-    if (registration.options.lifetime === Lifetime.Singleton) {
+    if (
+      registration.options.lifetime === Lifetime.Singleton ||
+      registration.options.lifetime === Lifetime.Scoped
+    ) {
       if (registration.instance === undefined) {
         registration.instance = this.createInstance(
           (registration.provider as ClassProvider<T>).useClass,
@@ -982,27 +985,17 @@ export class Container implements IContainer {
     scope?: IScopeContext,
   ): Promise<T> {
     // If the lifetime is scoped, store the instance in the scope.
-    if (registration.options.lifetime === Lifetime.Scoped) {
-      if (scope === undefined) {
-        throw new UndefinedScopeError(token);
-      }
-      if (!scope.services.has(token)) {
-        scope.services.set(token, {
-          injections: registration.injections,
-          instance: this.createInstance(
-            (registration.provider as ClassProvider<T>).useClass,
-            // Create the arguments for the class.
-            await this.createArgsAsync(registration, scope),
-          ),
-          options: registration.options,
-          provider: registration.provider,
-          providerType: registration.providerType,
-        });
-      }
-      return scope.services.get(token).instance;
+    if (
+      registration.options.lifetime === Lifetime.Scoped &&
+      scope === undefined
+    ) {
+      throw new UndefinedScopeError(token);
     }
     // If the lifetime is singleton, store the instance in the registration.
-    if (registration.options.lifetime === Lifetime.Singleton) {
+    if (
+      registration.options.lifetime === Lifetime.Singleton ||
+      registration.options.lifetime === Lifetime.Scoped
+    ) {
       if (registration.instance === undefined) {
         registration.instance = this.createInstance(
           (registration.provider as ClassProvider<T>).useClass,

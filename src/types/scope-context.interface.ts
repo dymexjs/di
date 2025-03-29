@@ -1,4 +1,3 @@
-import type { ServiceMap } from "../service-map.ts";
 import type { IContainerResolve } from "./container.interface.ts";
 import type { InjectionToken } from "./injection-token.type.ts";
 import type { Registration } from "./registration.interface.ts";
@@ -12,5 +11,12 @@ export interface IScopeContext extends AsyncDisposable, IContainerResolve {
    */
   dispose(): Promise<void>;
 
-  get services(): ServiceMap<InjectionToken, Registration>;
+  getAllRegistrations<T>(token: InjectionToken<T>): Array<Registration>;
+
+  getRegistration(token: InjectionToken): Registration | undefined;
+
+  registerRegistration(
+    token: InjectionToken,
+    registration: Registration,
+  ): IScopeContext;
 }
