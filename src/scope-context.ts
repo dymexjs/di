@@ -3,7 +3,6 @@ import type { InjectionToken } from "./types/injection-token.type.ts";
 import type { IScopeContext } from "./types/scope-context.interface.ts";
 
 import { DisposedScopeError } from "./exceptions/disposed-scope.error.ts";
-import { isAsyncDisposable, isDisposable } from "./helpers.ts";
 import { ServiceMap } from "./service-map.ts";
 import { Lifetime, type Registration } from "./types/registration.interface.ts";
 
@@ -54,17 +53,7 @@ export class ScopeContext implements IScopeContext {
   }
   async [Symbol.asyncDispose]() {
     this.checkDisposed();
-    for (const registrations of this.#_services.values()) {
-      await Promise.all(
-        registrations
-          .filter((r) => isAsyncDisposable(r))
-          .map((r) => r[Symbol.asyncDispose]()),
-      );
-      registrations
-        .filter((r) => isDisposable(r))
-        .map((r) => r[Symbol.dispose]());
-    }
-    this.#_services.clear();
+    await this.#_services[Symbol.asyncDispose]();
     this.#_isDisposed = true;
   }
   /**
