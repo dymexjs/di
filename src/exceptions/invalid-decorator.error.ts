@@ -10,5 +10,6 @@ export class InvalidDecoratorError extends Error {
     super(
       `Decorator '${decorator}' found on '"${isConstructorType(target) ? target.name : target.toString()}"' ${message}.`,
     );
+    this.name = "InvalidDecoratorError";
   }
 }

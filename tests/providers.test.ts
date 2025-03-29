@@ -1,19 +1,20 @@
-import { describe, test } from "node:test";
 import * as assert from "node:assert/strict";
+import { describe, test } from "node:test";
+
 import {
-  type Provider,
   container,
+  type Provider,
   TokenRegistrationCycleError,
 } from "../src/index.ts";
 import { isConstructorType } from "../src/types/constructor.type.ts";
 import {
-  isProvider,
   getProviderType,
-  ProvidersType,
-  isValueProvider,
   isClassProvider,
   isFactoryProvider,
+  isProvider,
   isTokenProvider,
+  isValueProvider,
+  ProvidersType,
 } from "../src/types/providers/index.ts";
 
 describe("Provider", () => {

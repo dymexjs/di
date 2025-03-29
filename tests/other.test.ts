@@ -1,15 +1,18 @@
-import { beforeEach, describe, test } from "node:test";
+/* eslint-disable sonarjs/no-nested-functions */
 import * as assert from "node:assert/strict";
+import { beforeEach, describe, test } from "node:test";
+
 import {
-  InvalidDecoratorError,
-  Registration,
-  container,
-  TokenNotFoundError,
-  Singleton,
-  Transient,
-  Scoped,
   AutoInjectable,
+  container,
+  InjectAll,
+  InvalidDecoratorError,
   Lifetime,
+  Registration,
+  Scoped,
+  Singleton,
+  TokenNotFoundError,
+  Transient,
 } from "../src/index.ts";
 import { ServiceMap } from "../src/service-map.ts";
 import { ProvidersType } from "../src/types/providers/index.ts";
@@ -61,26 +64,39 @@ describe("Dymexjs_DI ", () => {
           InvalidDecoratorError,
         );
       });
+      test("InjectAll", () => {
+        assert.throws(
+          () => {
+              //@ts-expect-error  This should throw because the decorator is invalid here
+              @InjectAll()
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            class Test {
+              prop = 1;
+            }
+          },
+          InvalidDecoratorError,
+        );
+      });
     });
     describe("ServiceMap", () => {
       test("should create a ServiceMapInstance that implements AsyncDisposable", () => {
         const serviceMap = new ServiceMap();
         assert.ok(serviceMap instanceof ServiceMap);
-        assert.ok(serviceMap[Symbol.asyncDispose] instanceof Function);
+        assert.ok(typeof serviceMap[Symbol.asyncDispose] === "function");
       });
       describe("Service Map methods", () => {
         const serviceMap = new ServiceMap();
         const registration: Registration = {
           injections: [],
+          options: { lifetime: Lifetime.Transient },
           provider: { useValue: "test" },
           providerType: ProvidersType.ValueProvider,
-          options: { lifetime: Lifetime.Transient },
         };
         const registration2: Registration = {
           injections: [],
+          options: { lifetime: Lifetime.Transient },
           provider: { useValue: "test" },
           providerType: ProvidersType.ClassProvider,
-          options: { lifetime: Lifetime.Transient },
         };
 
         beforeEach(async () => serviceMap[Symbol.asyncDispose]);
@@ -141,12 +157,14 @@ describe("Dymexjs_DI ", () => {
           serviceMap.set("anyKey2", registration2);
           class TestDisposable implements Disposable {
             disposed = false;
+
             [Symbol.dispose](): void {
               this.disposed = true;
             }
           }
           class TestAsyncDisposable implements AsyncDisposable {
             disposed = false;
+
             async [Symbol.asyncDispose](): Promise<void> {
               this.disposed = true;
             }
@@ -165,19 +183,21 @@ describe("Dymexjs_DI ", () => {
         test("should clear all entries", () => {
           serviceMap.setAll("anyKey", [registration, registration2]);
           serviceMap.clear();
-          assert.strictEqual(Array.from(serviceMap.entries()).length, 0);
+          assert.strictEqual([...serviceMap.entries()].length, 0);
         });
         test("should dispose and asyncDispose instances", async () => {
           serviceMap.set("anyKey", registration);
           serviceMap.set("anyKey2", registration2);
           class TestDisposable implements Disposable {
             disposed = false;
+
             [Symbol.dispose](): void {
               this.disposed = true;
             }
           }
           class TestAsyncDisposable implements AsyncDisposable {
             disposed = false;
+
             async [Symbol.asyncDispose](): Promise<void> {
               this.disposed = true;
             }
@@ -224,6 +244,7 @@ describe("Dymexjs_DI ", () => {
         @Singleton([TestService])
         class Test {
           public testService: TestService;
+
           constructor(testService: TestService) {
             this.testService = testService;
           }

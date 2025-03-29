@@ -10,8 +10,7 @@ export function isClassProvider<T>(
 ): provider is ClassProvider<T> {
   try {
     return "useClass" in provider;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  } catch (_) {
+  } catch {
     return false;
   }
 }

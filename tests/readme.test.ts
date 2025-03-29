@@ -1,5 +1,7 @@
-import { beforeEach, describe, test } from "node:test";
+/* eslint-disable sonarjs/no-nested-functions */
 import * as assert from "node:assert/strict";
+import { beforeEach, describe, test } from "node:test";
+
 import {
   container,
   Lifetime,
@@ -26,6 +28,7 @@ describe("Dymexjs_DI ", () => {
         @Singleton([TestService])
         class Test {
           public testService: TestService;
+
           constructor(testService: TestService) {
             this.testService = testService;
           }
@@ -40,15 +43,19 @@ describe("Dymexjs_DI ", () => {
       describe("Static inject", () => {
         test("Example 1", () => {
           class TestClass implements StaticInjectable<typeof TestClass> {
+            public static readonly [STATIC_INJECTION_LIFETIME] =
+              Lifetime.Singleton;
+
             public propertyA = "test";
-            public static [STATIC_INJECTION_LIFETIME] = Lifetime.Singleton;
           }
           class TestClass2 implements StaticInjectable<typeof TestClass2> {
+            public static readonly [STATIC_INJECTIONS] = ["test"];
+
             public test: TestClass;
+
             constructor(test: TestClass) {
               this.test = test;
             }
-            public static [STATIC_INJECTIONS] = ["test"];
           }
           container.register("test", { useClass: TestClass });
           const test2 = container.resolve(TestClass2);
@@ -56,15 +63,19 @@ describe("Dymexjs_DI ", () => {
         });
         test("Example 2", () => {
           class TestClass implements StaticInjectable<typeof TestClass> {
+            public static readonly [STATIC_INJECTION_LIFETIME] =
+              Lifetime.Singleton;
+
             public propertyA = "test";
-            public static [STATIC_INJECTION_LIFETIME] = Lifetime.Singleton;
           }
           class TestClass2 implements StaticInjectable<typeof TestClass2> {
+            public static readonly [STATIC_INJECTIONS] = [TestClass];
+
             public test: TestClass;
+
             constructor(test: TestClass) {
               this.test = test;
             }
-            public static [STATIC_INJECTIONS] = [TestClass];
           }
           const test2 = container.resolve(TestClass2);
           assert.strictEqual(test2.test.propertyA, "test");
@@ -86,6 +97,7 @@ describe("Dymexjs_DI ", () => {
         @Singleton(["serviceA"]) //With an array of dependencies to resolve when creating the instance
         class ServiceB {
           public serviceA: ServiceA;
+
           constructor(serviceA: ServiceA) {
             this.serviceA = serviceA;
           }
@@ -101,6 +113,7 @@ describe("Dymexjs_DI ", () => {
         @Singleton([ServiceA]) //With an array of dependencies to resolve when creating the instance
         class ServiceB {
           public serviceA: ServiceA;
+
           constructor(serviceA: ServiceA) {
             this.serviceA = serviceA;
           }

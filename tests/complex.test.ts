@@ -1,5 +1,6 @@
-import { beforeEach, describe, test } from "node:test";
 import * as assert from "node:assert/strict";
+import { beforeEach, describe, test } from "node:test";
+
 import {
   container,
   Scoped,
@@ -21,26 +22,29 @@ describe("Container Complex Scenarios", () => {
       @Transient([Level3])
       class Level2 {
         public l3: Level3;
+        value = "level2";
+
         constructor(l3: Level3) {
           this.l3 = l3;
         }
-        value = "level2";
       }
       @Scoped([Level2])
       class Level1 {
         public l2: Level2;
+        value = "level1";
+
         constructor(l2: Level2) {
           this.l2 = l2;
         }
-        value = "level1";
       }
       @Transient("root", [Level1])
       class Root {
         public l1: Level1;
+        value = "root";
+
         constructor(l1: Level1) {
           this.l1 = l1;
         }
-        value = "root";
       }
 
       const scope1 = container.createScope();
@@ -63,17 +67,19 @@ describe("Container Complex Scenarios", () => {
       }
       class ServiceB {
         public a: ServiceA;
+        value = "B";
+
         constructor(a: ServiceA) {
           this.a = a;
         }
-        value = "B";
       }
       class ServiceC {
         public b: ServiceB;
+        value = "C";
+
         constructor(b: ServiceB) {
           this.b = b;
         }
-        value = "C";
       }
 
       const childContainer = container.createChildContainer();
@@ -130,6 +136,7 @@ describe("Container Complex Scenarios", () => {
     test("should handle complex container hierarchies", async () => {
       class Service {
         public value: string;
+
         constructor(value: string) {
           this.value = value;
         }
@@ -168,24 +175,27 @@ describe("Container Complex Scenarios", () => {
     test("should resolve circular dependencies with mixed lifetimes", () => {
       class ServiceA {
         public b?: ServiceB;
+        value = "A";
+
         constructor(b?: ServiceB) {
           this.b = b;
         }
-        value = "A";
       }
       class ServiceB {
         public c: ServiceC;
+        value = "B";
+
         constructor(c: ServiceC) {
           this.c = c;
         }
-        value = "B";
       }
       class ServiceC {
         public a: ServiceA;
+        value = "C";
+
         constructor(a: ServiceA) {
           this.a = a;
         }
-        value = "C";
       }
 
       container.registerTransient("serviceA", ServiceA, ["serviceB"]);

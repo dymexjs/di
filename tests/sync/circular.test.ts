@@ -1,5 +1,7 @@
-import { beforeEach, describe, test } from "node:test";
+/* eslint-disable sonarjs/no-nested-functions */
 import * as assert from "node:assert";
+import { beforeEach, describe, test } from "node:test";
+
 import {
   container,
   getInterfaceToken,
@@ -17,44 +19,52 @@ describe("Dymexjs_DI ", () => {
   describe("async", () => {
     describe("Static inject", () => {
       class ServiceA implements StaticInjectable<typeof ServiceA> {
+        public static readonly [STATIC_INJECTIONS] = ["serviceB", "serviceC"];
+        public static readonly [STATIC_INJECTION_LIFETIME] = Lifetime.Singleton;
+
         public serviceB: ServiceB;
         public serviceC: ServiceC;
+
         constructor(serviceB: ServiceB, serviceC: ServiceC) {
           this.serviceB = serviceB;
           this.serviceC = serviceC;
         }
-        public static [STATIC_INJECTIONS] = ["serviceB", "serviceC"];
-        public static [STATIC_INJECTION_LIFETIME] = Lifetime.Singleton;
       }
       class ServiceB implements StaticInjectable<typeof ServiceB> {
+        public static readonly [STATIC_INJECTIONS] = ["serviceA", "serviceD"];
+        public static readonly [STATIC_INJECTION_LIFETIME] = Lifetime.Singleton;
+
         public serviceA: ServiceA;
         public serviceD: ServiceD;
+
         constructor(serviceA: ServiceA, serviceD: ServiceD) {
           this.serviceA = serviceA;
           this.serviceD = serviceD;
         }
-        public static [STATIC_INJECTIONS] = ["serviceA", "serviceD"];
-        public static [STATIC_INJECTION_LIFETIME] = Lifetime.Singleton;
       }
       class ServiceC implements StaticInjectable<typeof ServiceC> {
+        public static readonly [STATIC_INJECTIONS] = ["serviceB", "serviceD"];
+        public static readonly [STATIC_INJECTION_LIFETIME] = Lifetime.Singleton;
+
         public serviceB: ServiceB;
         public serviceD: ServiceD;
+
         constructor(serviceB: ServiceB, serviceD: ServiceD) {
           this.serviceB = serviceB;
           this.serviceD = serviceD;
         }
-        public static [STATIC_INJECTIONS] = ["serviceB", "serviceD"];
-        public static [STATIC_INJECTION_LIFETIME] = Lifetime.Singleton;
       }
       class ServiceD implements StaticInjectable<typeof ServiceD> {
+        public static readonly [STATIC_INJECTIONS] = ["serviceA", "serviceC"];
+        public static readonly [STATIC_INJECTION_LIFETIME] = Lifetime.Singleton;
+
         public serviceA: ServiceA;
         public serviceC: ServiceC;
+
         constructor(serviceA: ServiceA, serviceC: ServiceC) {
           this.serviceA = serviceA;
           this.serviceC = serviceC;
         }
-        public static [STATIC_INJECTIONS] = ["serviceA", "serviceC"];
-        public static [STATIC_INJECTION_LIFETIME] = Lifetime.Singleton;
       }
 
       test("circular dependency resolution simple case", () => {
@@ -65,21 +75,27 @@ describe("Dymexjs_DI ", () => {
           return cont.resolve(TestClass2);
         };
         class TestClass2 implements StaticInjectable<typeof TestClass2> {
+          public static readonly [STATIC_INJECTIONS] = ["factoryTest"];
+          public static readonly [STATIC_INJECTION_LIFETIME] =
+            Lifetime.Singleton;
+
           public test: TestClass;
+
           constructor(test: TestClass) {
             this.test = test;
           }
-          public static [STATIC_INJECTIONS] = ["factoryTest"];
-          public static [STATIC_INJECTION_LIFETIME] = Lifetime.Singleton;
         }
         class TestClass implements StaticInjectable<typeof TestClass> {
+          public static readonly [STATIC_INJECTIONS] = ["factoryTest2"];
+          public static readonly [STATIC_INJECTION_LIFETIME] =
+            Lifetime.Singleton;
+
           public propertyA = "test";
           public test2: TestClass2;
+
           constructor(test2: TestClass2) {
             this.test2 = test2;
           }
-          public static [STATIC_INJECTIONS] = ["factoryTest2"];
-          public static [STATIC_INJECTION_LIFETIME] = Lifetime.Singleton;
         }
         container.registerFactory("factoryTest", factoryTest, [
           getInterfaceToken("IContainer"),
@@ -179,6 +195,7 @@ describe("Dymexjs_DI ", () => {
           class TestClass {
             public propertyA = "test";
             public test2: TestClass2;
+
             constructor(test2: TestClass2) {
               this.test2 = test2;
             }
@@ -186,6 +203,7 @@ describe("Dymexjs_DI ", () => {
           @Singleton("test2", ["test"])
           class TestClass2 {
             public test: TestClass;
+
             constructor(test: TestClass) {
               this.test = test;
             }
@@ -206,6 +224,7 @@ describe("Dymexjs_DI ", () => {
           class ServiceA {
             public serviceB: ServiceB;
             public serviceC: ServiceC;
+
             constructor(serviceB: ServiceB, serviceC: ServiceC) {
               this.serviceB = serviceB;
               this.serviceC = serviceC;
@@ -215,6 +234,7 @@ describe("Dymexjs_DI ", () => {
           class ServiceB {
             public serviceA: ServiceA;
             public serviceD: ServiceD;
+
             constructor(serviceA: ServiceA, serviceD: ServiceD) {
               this.serviceA = serviceA;
               this.serviceD = serviceD;
@@ -224,6 +244,7 @@ describe("Dymexjs_DI ", () => {
           class ServiceC {
             public serviceB: ServiceB;
             public serviceD: ServiceD;
+
             constructor(serviceB: ServiceB, serviceD: ServiceD) {
               this.serviceB = serviceB;
               this.serviceD = serviceD;
@@ -233,6 +254,7 @@ describe("Dymexjs_DI ", () => {
           class ServiceD {
             public serviceA: ServiceA;
             public serviceC: ServiceC;
+
             constructor(serviceA: ServiceA, serviceC: ServiceC) {
               this.serviceA = serviceA;
               this.serviceC = serviceC;
@@ -308,6 +330,7 @@ describe("Dymexjs_DI ", () => {
           @Transient(["TestB"])
           class TestA {
             public b: TestB;
+
             constructor(b: TestB) {
               this.b = b;
             }
@@ -319,6 +342,7 @@ describe("Dymexjs_DI ", () => {
               defined: false,
             };
             public a: TestA;
+
             constructor(a: TestA) {
               this.a = a;
             }
@@ -355,6 +379,7 @@ describe("Dymexjs_DI ", () => {
           class TestClass implements TC {
             public propertyA = "test";
             public test2: TestClass2;
+
             constructor(test2: TestClass2) {
               this.test2 = test2;
             }
@@ -362,6 +387,7 @@ describe("Dymexjs_DI ", () => {
           @Singleton(TC2, [TC])
           class TestClass2 implements TC2 {
             public test: TestClass;
+
             constructor(test: TestClass) {
               this.test = test;
             }
@@ -390,6 +416,7 @@ describe("Dymexjs_DI ", () => {
           class TestA implements ITestA {
             public name = "testA";
             public b: ITestB;
+
             constructor(b: ITestB) {
               this.b = b;
             }
@@ -399,6 +426,7 @@ describe("Dymexjs_DI ", () => {
           class TestB implements ITestB {
             public name = "testB";
             public a: ITestA;
+
             constructor(a: ITestA) {
               this.a = a;
             }
@@ -436,6 +464,7 @@ describe("Dymexjs_DI ", () => {
           class ServiceA {
             public serviceB: ServiceB;
             public serviceC: ServiceC;
+
             constructor(serviceB: ServiceB, serviceC: ServiceC) {
               this.serviceB = serviceB;
               this.serviceC = serviceC;
@@ -445,6 +474,7 @@ describe("Dymexjs_DI ", () => {
           class ServiceB {
             public serviceA: ServiceA;
             public serviceD: ServiceD;
+
             constructor(serviceA: ServiceA, serviceD: ServiceD) {
               this.serviceA = serviceA;
               this.serviceD = serviceD;
@@ -454,6 +484,7 @@ describe("Dymexjs_DI ", () => {
           class ServiceC {
             public serviceB: ServiceB;
             public serviceD: ServiceD;
+
             constructor(serviceB: ServiceB, serviceD: ServiceD) {
               this.serviceB = serviceB;
               this.serviceD = serviceD;
@@ -463,6 +494,7 @@ describe("Dymexjs_DI ", () => {
           class ServiceD {
             public serviceA: ServiceA;
             public serviceC: ServiceC;
+
             constructor(serviceA: ServiceA, serviceC: ServiceC) {
               this.serviceA = serviceA;
               this.serviceC = serviceC;

@@ -1,9 +1,12 @@
-import { beforeEach, describe, test } from "node:test";
+/* eslint-disable sonarjs/no-nested-functions */
 import * as assert from "node:assert/strict";
+import { beforeEach, describe, test } from "node:test";
+
 import {
   Container,
   container,
   Lifetime,
+  Scoped,
   Singleton,
   TokenNotFoundError,
   TokenRegistrationCycleError,
@@ -26,6 +29,7 @@ describe("Dymexjs_DI ", () => {
           @Singleton()
           class Test2 {
             public readonly test: Test;
+
             constructor(test: Test = container.resolve(Test)) {
               this.test = test;
             }
@@ -44,6 +48,31 @@ describe("Dymexjs_DI ", () => {
             () => container.resolveAll("NotRegistered"),
             TokenNotFoundError,
           );
+        });
+        test("resolves an array of singleton instances bound to a single interface", () => {
+          interface FooInterface {
+            bar: string;
+          }
+
+          class FooOne implements FooInterface {
+            public bar = "foo1";
+          }
+
+          class FooTwo implements FooInterface {
+            public bar = "foo2";
+          }
+
+          container.registerSingleton<FooInterface>("FooInterface", {
+            useClass: FooOne,
+          });
+          container.registerSingleton<FooInterface>("FooInterface", {
+            useClass: FooTwo,
+          });
+
+          const fooArray = container.resolveAll<FooInterface>("FooInterface");
+          assert.ok(Array.isArray(fooArray));
+          assert.ok(fooArray[0] instanceof FooOne);
+          assert.ok(fooArray[1] instanceof FooTwo);
         });
         test("resolves an array of transient instances bound to a single interface", () => {
           interface FooInterface {
@@ -70,7 +99,33 @@ describe("Dymexjs_DI ", () => {
           assert.ok(fooArray[0] instanceof FooOne);
           assert.ok(fooArray[1] instanceof FooTwo);
         });
+        test("resolves an array of scoped instances bound to a single interface in scope context", () => {
+          interface FooInterface {
+            bar: string;
+          }
 
+          class FooOne implements FooInterface {
+            public bar = "foo1";
+          }
+
+          class FooTwo implements FooInterface {
+            public bar = "foo2";
+          }
+
+          container.registerScoped<FooInterface>("FooInterface", {
+            useClass: FooOne,
+          });
+          container.registerScoped<FooInterface>("FooInterface", {
+            useClass: FooTwo,
+          });
+
+          const scope = container.createScope();
+
+          const fooArray = scope.resolveAll<FooInterface>("FooInterface");
+          assert.ok(Array.isArray(fooArray));
+          assert.ok(fooArray[0] instanceof FooOne);
+          assert.ok(fooArray[1] instanceof FooTwo);
+        });
         test("resolves all transient instances when not registered", () => {
           // eslint-disable-next-line @typescript-eslint/no-extraneous-class
           class Foo {}
@@ -137,7 +192,7 @@ describe("Dymexjs_DI ", () => {
           const childContainer = container.createChildContainer();
           childContainer.register("IFoo", { useClass: Foo });
           const myFoo = childContainer.resolveAll<IFoo>("IFoo");
-          assert.ok(myFoo instanceof Array);
+          assert.ok(Array.isArray(myFoo));
           assert.strictEqual(myFoo.length, 1);
           assert.ok(myFoo[0] instanceof Foo);
         });
@@ -150,7 +205,7 @@ describe("Dymexjs_DI ", () => {
           container.register("IFoo", { useClass: Foo });
           const childContainer = container.createChildContainer();
           const myFoo = childContainer.resolveAll<IFoo>("IFoo");
-          assert.ok(myFoo instanceof Array);
+          assert.ok(Array.isArray(myFoo));
           assert.strictEqual(myFoo.length, 1);
           assert.ok(myFoo[0] instanceof Foo);
         });
@@ -204,6 +259,37 @@ describe("Dymexjs_DI ", () => {
             () => container.registerType("FooBar", "Bar"),
             TokenRegistrationCycleError,
           );
+        });
+      });
+      describe("disposable", () => {
+        test("Singleton", async () => {
+          @Singleton()
+          class Test implements Disposable {
+            public test = "test string";
+
+            [Symbol.dispose](): void {
+              this.test = "";
+            }
+          }
+          const test = container.resolve(Test);
+          assert.strictEqual(test.test, "test string");
+          await container.clearInstances();
+          assert.strictEqual(test.test, "");
+        });
+        test("Scoped", async () => {
+          @Scoped()
+          class Test implements Disposable {
+            public test = "test string";
+
+            [Symbol.dispose](): void {
+              this.test = "";
+            }
+          }
+          const scope = container.createScope();
+          const test = scope.resolve(Test);
+          assert.strictEqual(test.test, "test string");
+          await scope.dispose();
+          assert.strictEqual(test.test, "");
         });
       });
     });

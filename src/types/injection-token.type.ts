@@ -1,7 +1,15 @@
 import type { ConstructorType } from "./constructor.type.ts";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type InjectionToken<T = any> =
+  | ConstructorType<T>
+  | string
+  | symbol
+  | Token;
+
 export class Token {
   protected _token?: string | symbol;
+
   constructor(token?: string | symbol) {
     this._token = token;
   }
@@ -10,13 +18,6 @@ export class Token {
     return this._token ? this._token.toString() : "";
   }
 }
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type InjectionToken<T = any> =
-  | string
-  | symbol
-  | ConstructorType<T>
-  | Token;
 
 export function isNormalToken(
   token?: InjectionToken,

@@ -1,18 +1,107 @@
-import type {
-  Registration,
-  RegistrationOptions,
-} from "./registration.interface.ts";
-import type { InjectionToken } from "./injection-token.type.ts";
 import type { ConstructorType } from "./constructor.type.ts";
+import type { InjectionToken } from "./injection-token.type.ts";
 import type {
   ClassProvider,
   FactoryFunction,
   Provider,
   TokenProvider,
 } from "./providers/index.ts";
+import type {
+  Registration,
+  RegistrationOptions,
+} from "./registration.interface.ts";
 import type { IScopeContext } from "./scope-context.interface.ts";
 
+export interface IContainer
+  extends IContainerClear,
+    IContainerCreate,
+    IContainerRegistration,
+    IContainerResolve {
+  //readonly scopes: Set<IScopeContext>;
+}
+
+export interface IContainerClear extends AsyncDisposable {
+  /**
+   * Clears all instances from the container, disposing them if they
+   * implement the `IAsyncDisposable` or `IDisposable` interface.
+   *
+   * This method is useful for testing, as it allows you to clear out
+   * all instances from the container, so you can start from a clean
+   * slate.
+   *
+   * @returns A promise that resolves when all instances have been
+   * cleared.
+   */
+  clearInstances(): Promise<void>;
+
+  /**
+   * Dispose a scope and it's contents
+   * @param scope - scope to be disposed
+   */
+  //disposeScope(scope: IScopeContext): Promise<void>;
+
+  //#region Register
+
+  /**
+   * Registers a provider in the container.
+   * @param token - The token to register the provider with.
+   * @param provider - The provider to register. This can be an instance of `Provider`, a class, or a constructor token.
+   * @param options - Options for the registration. If not specified, the lifetime of the registration will be `Lifetime.Transient`. @see RegistrationOptions
+   * @returns The container used for the registration
+   */
+
+  /**
+   * Resets the container by clearing all registrations and disposing all scopes.
+   * This method is useful for testing, as it allows you to clear out all registrations
+   * and scopes, so you can start from a clean slate.
+   * @returns A promise that resolves when all registrations and scopes have been cleared.
+   * NOTE: don't clean child containers
+   */
+  dispose(): Promise<void>;
+
+  //#endregion Register
+
+  /**
+   * Removes all registrations that match the predicate from the container.
+   * If no predicate is specified, all registrations are removed.
+   * @param token - The token to remove registrations from
+   * @param predicate - A function that takes a Registration and returns a boolean indicating whether the registration should be removed
+   * @returns The container used for the removal
+   */
+  removeRegistration<T>(
+    token: InjectionToken<T>,
+    predicate?: (registration: Registration<T>) => boolean,
+  ): Promise<IContainer>;
+}
+
+export interface IContainerCreate {
+  /**
+   * Creates a new child container.
+   *
+   * The child container will have a reference to the current container as its parent.
+   * The child container is also stored in the current container, so it can be properly disposed when the parent container is disposed.
+   *
+   * @returns The new child container.
+   */
+  createChildContainer(): IContainer;
+
+  /**
+   * Creates a new scope.
+   *
+   * A scope is used to separate registrations into different groups.
+   * Each scope has its own set of registrations, which are stored
+   * in the scope's `services` property.
+   *
+   * @returns The new scope.
+   */
+  createScope(): IScopeContext;
+}
+
 export interface IContainerRegistration {
+  addScoped<T>(
+    target: ConstructorType<T>,
+    injections?: Array<InjectionToken>,
+  ): IContainer;
   addSingleton<T>(
     target: ConstructorType<T>,
     injections?: Array<InjectionToken>,
@@ -21,14 +110,10 @@ export interface IContainerRegistration {
     target: ConstructorType<T>,
     injections?: Array<InjectionToken>,
   ): IContainer;
-  addScoped<T>(
-    target: ConstructorType<T>,
-    injections?: Array<InjectionToken>,
-  ): IContainer;
 
   register<T>(
     token: InjectionToken<T>,
-    provider: Provider<T> | ConstructorType<T>,
+    provider: ConstructorType<T> | Provider<T>,
     options?: RegistrationOptions,
   ): IContainer;
 
@@ -75,7 +160,7 @@ export interface IContainerRegistration {
    */
   registerScoped<T>(
     token: InjectionToken<T>,
-    target: ConstructorType<T> | ClassProvider<T>,
+    target: ClassProvider<T> | ConstructorType<T>,
     injections?: Array<InjectionToken>,
   ): IContainer;
 
@@ -88,7 +173,7 @@ export interface IContainerRegistration {
    */
   registerSingleton<T>(
     token: InjectionToken<T>,
-    target: ConstructorType<T> | ClassProvider<T>,
+    target: ClassProvider<T> | ConstructorType<T>,
     injections?: Array<InjectionToken>,
   ): IContainer;
 
@@ -101,7 +186,7 @@ export interface IContainerRegistration {
    */
   registerTransient<T>(
     token: InjectionToken<T>,
-    target: ConstructorType<T> | ClassProvider<T>,
+    target: ClassProvider<T> | ConstructorType<T>,
     injections?: Array<InjectionToken>,
   ): IContainer;
 
@@ -176,7 +261,7 @@ export interface IContainerResolve {
    * @param args - Optional arguments to pass to the constructor.
    * @returns An instance of the type.
    */
-  resolveWithArgs<T>(token: InjectionToken<T>, args?: Array<unknown>): T;
+  resolveWithArgs<T>(token: InjectionToken<T>, arguments_?: Array<unknown>): T;
 
   /**
    * Resolves the specified token with the given arguments asynchronously.
@@ -188,93 +273,8 @@ export interface IContainerResolve {
    */
   resolveWithArgsAsync<T>(
     token: InjectionToken<T>,
-    args?: Array<unknown>,
+    arguments_?: Array<unknown>,
   ): Promise<T>;
 
   //#endregion Resolve
-}
-
-export interface IContainerCreate {
-  /**
-   * Creates a new child container.
-   *
-   * The child container will have a reference to the current container as its parent.
-   * The child container is also stored in the current container, so it can be properly disposed when the parent container is disposed.
-   *
-   * @returns The new child container.
-   */
-  createChildContainer(): IContainer;
-
-  /**
-   * Creates a new scope.
-   *
-   * A scope is used to separate registrations into different groups.
-   * Each scope has its own set of registrations, which are stored
-   * in the scope's `services` property.
-   *
-   * @returns The new scope.
-   */
-  createScope(): IScopeContext;
-}
-
-export interface IContainerClear extends AsyncDisposable {
-  /**
-   * Clears all instances from the container, disposing them if they
-   * implement the `IAsyncDisposable` or `IDisposable` interface.
-   *
-   * This method is useful for testing, as it allows you to clear out
-   * all instances from the container, so you can start from a clean
-   * slate.
-   *
-   * @returns A promise that resolves when all instances have been
-   * cleared.
-   */
-  clearInstances(): Promise<void>;
-
-  /**
-   * Dispose a scope and it's contents
-   * @param scope - scope to be disposed
-   */
-  //disposeScope(scope: IScopeContext): Promise<void>;
-
-  //#region Register
-
-  /**
-   * Registers a provider in the container.
-   * @param token - The token to register the provider with.
-   * @param provider - The provider to register. This can be an instance of `Provider`, a class, or a constructor token.
-   * @param options - Options for the registration. If not specified, the lifetime of the registration will be `Lifetime.Transient`. @see RegistrationOptions
-   * @returns The container used for the registration
-   */
-
-  /**
-   * Removes all registrations that match the predicate from the container.
-   * If no predicate is specified, all registrations are removed.
-   * @param token - The token to remove registrations from
-   * @param predicate - A function that takes a Registration and returns a boolean indicating whether the registration should be removed
-   * @returns The container used for the removal
-   */
-  removeRegistration<T>(
-    token: InjectionToken<T>,
-    predicate?: (registration: Registration<T>) => boolean,
-  ): Promise<IContainer>;
-
-  //#endregion Register
-
-  /**
-   * Resets the container by clearing all registrations and disposing all scopes.
-   * This method is useful for testing, as it allows you to clear out all registrations
-   * and scopes, so you can start from a clean slate.
-   * @returns A promise that resolves when all registrations and scopes have been cleared.
-   * NOTE: don't clean child containers
-   */
-  dispose(): Promise<void>;
-}
-
-export interface IContainer
-  extends IContainerRegistration,
-    IContainerResolve,
-    IContainerCreate,
-    IContainerClear {
-  //readonly scopes: Set<IScopeContext>;
 }

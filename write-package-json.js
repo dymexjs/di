@@ -1,3 +1,5 @@
+/* eslint-disable unicorn/no-null */
+/* eslint-disable unicorn/import-style */
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 

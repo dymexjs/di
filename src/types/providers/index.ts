@@ -1,14 +1,14 @@
 export { type ClassProvider, isClassProvider } from "./class-provider.ts";
 export {
-  type FactoryProvider,
   type FactoryFunction,
+  type FactoryProvider,
   isFactoryProvider,
 } from "./factory-provider.ts";
 export {
+  getProviderType,
+  isProvider,
   type Provider,
   ProvidersType,
-  isProvider,
-  getProviderType,
 } from "./provider.type.ts";
-export { type TokenProvider, isTokenProvider } from "./token-provider.ts";
-export { type ValueProvider, isValueProvider } from "./value-provider.ts";
+export { isTokenProvider, type TokenProvider } from "./token-provider.ts";
+export { isValueProvider, type ValueProvider } from "./value-provider.ts";
