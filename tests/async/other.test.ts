@@ -43,6 +43,31 @@ describe("Dymexjs_DI ", () => {
             TokenNotFoundError,
           );
         });
+        test("resolves an array of singleton instances bound to a single interface", async () => {
+          interface FooInterface {
+            bar: string;
+          }
+
+          class FooOne implements FooInterface {
+            public bar = "foo1";
+          }
+
+          class FooTwo implements FooInterface {
+            public bar = "foo2";
+          }
+
+          container.registerSingleton<FooInterface>("FooInterface", {
+            useClass: FooOne,
+          });
+          container.registerSingleton<FooInterface>("FooInterface", {
+            useClass: FooTwo,
+          });
+
+          const fooArray = await container.resolveAllAsync<FooInterface>("FooInterface");
+          assert.ok(Array.isArray(fooArray));
+          assert.ok(fooArray[0] instanceof FooOne);
+          assert.ok(fooArray[1] instanceof FooTwo);
+        });
         test("resolves an array of transient instances bound to a single interface", async () => {
           interface FooInterface {
             bar: string;
@@ -65,6 +90,33 @@ describe("Dymexjs_DI ", () => {
 
           const fooArray =
             await container.resolveAllAsync<FooInterface>("FooInterface");
+          assert.ok(Array.isArray(fooArray));
+          assert.ok(fooArray[0] instanceof FooOne);
+          assert.ok(fooArray[1] instanceof FooTwo);
+        });
+        test("resolves an array of scoped instances bound to a single interface in scope context", async () => {
+          interface FooInterface {
+            bar: string;
+          }
+
+          class FooOne implements FooInterface {
+            public bar = "foo1";
+          }
+
+          class FooTwo implements FooInterface {
+            public bar = "foo2";
+          }
+
+          container.registerScoped<FooInterface>("FooInterface", {
+            useClass: FooOne,
+          });
+          container.registerScoped<FooInterface>("FooInterface", {
+            useClass: FooTwo,
+          });
+
+          const scope = container.createScope();
+
+          const fooArray = await scope.resolveAllAsync<FooInterface>("FooInterface");
           assert.ok(Array.isArray(fooArray));
           assert.ok(fooArray[0] instanceof FooOne);
           assert.ok(fooArray[1] instanceof FooTwo);
@@ -258,6 +310,20 @@ describe("Dymexjs_DI ", () => {
             (await container.resolveAsync<Bar>("CoolName")) instanceof Bar,
           );
         });
+      });
+      describe("disposable", async () => {
+        @Singleton()
+        class Test implements AsyncDisposable {
+          public test = "test string";
+
+          async [Symbol.asyncDispose](): Promise<void> {
+            this.test = "";
+          }
+        }
+        const test = container.resolve(Test);
+        assert.strictEqual(test.test, "test string");
+        await container.clearInstances();
+        assert.strictEqual(test.test, "");
       });
     });
   });

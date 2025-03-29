@@ -295,7 +295,7 @@ export function Singleton<I = any>(
 /**
  * Decorator that registers a class as a transient in the container.
  *
- * @param id - Optional token or array of tokens to register the class with.
+ * @param id - Optional token or array of dependencies to register the class with.
  * @param dependencies - Optional array of dependencies to inject into the class.
  * @returns A class decorator that registers the class as a transient in the container.
  */

@@ -179,6 +179,34 @@ describe("Dymexjs_DI", () => {
             assert.strictEqual(testB.num, 1);
             assert.ok(testB.a instanceof TestA);
           });
+          test("should resolve an instance with extra args and @Scoped", async () => {
+            // eslint-disable-next-line @typescript-eslint/no-extraneous-class
+            class TestA {}
+
+            @Scoped()
+            @AutoInjectable([TestA])
+            class TestB {
+              public hello: string;
+              public num: number;
+              public a?: TestA;
+
+              // eslint-disable-next-line sonarjs/no-identical-functions
+              constructor(hello: string, number_: number, a?: TestA) {
+                this.hello = hello;
+                this.num = number_;
+                this.a = a;
+              }
+            }
+            const scope = container.createScope();
+            const testB = await scope.resolveWithArgsAsync(TestB, [
+              "test",
+              1,
+            ]);
+            assert.ok(testB instanceof TestB);
+            assert.strictEqual(testB.hello, "test");
+            assert.strictEqual(testB.num, 1);
+            assert.ok(testB.a instanceof TestA);
+          });
           test("@AutoInjectable allows for parameters to be specified manually", async () => {
             // eslint-disable-next-line @typescript-eslint/no-extraneous-class
             class Bar {}
@@ -309,7 +337,7 @@ describe("Dymexjs_DI", () => {
             // eslint-disable-next-line @typescript-eslint/no-extraneous-class
             class Bar {}
 
-            @Singleton([Bar])
+            @Singleton()
             @AutoInjectable([Bar])
             class Foo {
               public bar: Bar;
@@ -321,6 +349,27 @@ describe("Dymexjs_DI", () => {
 
             const instance1 = await container.resolveAsync(Foo);
             const instance2 = await container.resolveAsync(Foo);
+
+            assert.strictEqual(instance1, instance2);
+            assert.strictEqual(instance1.bar, instance2.bar);
+          });
+          test("@AutoInjectable works with @Scoped", async () => {
+            // eslint-disable-next-line @typescript-eslint/no-extraneous-class
+            class Bar {}
+
+            @Scoped()
+            @AutoInjectable([Bar])
+            class Foo {
+              public bar: Bar;
+
+              constructor(bar: Bar) {
+                this.bar = bar;
+              }
+            }
+
+            const scope = container.createScope();
+            const instance1 = await scope.resolveAsync(Foo);
+            const instance2 = await scope.resolveAsync(Foo);
 
             assert.strictEqual(instance1, instance2);
             assert.strictEqual(instance1.bar, instance2.bar);
