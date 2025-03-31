@@ -141,6 +141,12 @@ export class Container implements IContainer {
   ): IContainer {
     return this.registerScoped(target, { useClass: target }, injections);
   }
+  get<T>(token: InjectionToken<T>): Registration<T> | undefined {
+    return this.getRegistration(token);
+  }
+  has<T>(token: InjectionToken<T>): boolean {
+    return this.hasRegistration(token);
+  }
   /**
    * Registers a provider in the container.
    * @param token - The token to register the provider with.
@@ -340,6 +346,12 @@ export class Container implements IContainer {
       { useValue: value },
       { lifetime: Lifetime.Singleton },
     );
+  }
+  remove<T>(
+    token: InjectionToken<T>,
+    registration: Registration<T>,
+  ): Promise<IContainer> {
+    return this.removeRegistration(token, (x) => x === registration);
   }
   /**
    * Removes all registrations that match the predicate from the container.
@@ -669,7 +681,11 @@ export class Container implements IContainer {
     // Iterate over the tokens in the registration's `injections` property
     for (const token of registration.injections) {
       // Resolve each token asynchronously and add the result to the arguments array
-      arguments_.push(await (scope ? scope.resolveAsync(token) : this.resolveAsync(token, scope)));
+      arguments_.push(
+        await (scope
+          ? scope.resolveAsync(token)
+          : this.resolveAsync(token, scope)),
+      );
     }
     // Return the array of resolved arguments
     return arguments_;
