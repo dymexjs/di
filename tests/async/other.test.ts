@@ -63,7 +63,8 @@ describe("Dymexjs_DI ", () => {
             useClass: FooTwo,
           });
 
-          const fooArray = await container.resolveAllAsync<FooInterface>("FooInterface");
+          const fooArray =
+            await container.resolveAllAsync<FooInterface>("FooInterface");
           assert.ok(Array.isArray(fooArray));
           assert.ok(fooArray[0] instanceof FooOne);
           assert.ok(fooArray[1] instanceof FooTwo);
@@ -116,7 +117,8 @@ describe("Dymexjs_DI ", () => {
 
           const scope = container.createScope();
 
-          const fooArray = await scope.resolveAllAsync<FooInterface>("FooInterface");
+          const fooArray =
+            await scope.resolveAllAsync<FooInterface>("FooInterface");
           assert.ok(Array.isArray(fooArray));
           assert.ok(fooArray[0] instanceof FooOne);
           assert.ok(fooArray[1] instanceof FooTwo);

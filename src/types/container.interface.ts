@@ -35,22 +35,6 @@ export interface IContainerClear extends AsyncDisposable {
   clearInstances(): Promise<void>;
 
   /**
-   * Dispose a scope and it's contents
-   * @param scope - scope to be disposed
-   */
-  //disposeScope(scope: IScopeContext): Promise<void>;
-
-  //#region Register
-
-  /**
-   * Registers a provider in the container.
-   * @param token - The token to register the provider with.
-   * @param provider - The provider to register. This can be an instance of `Provider`, a class, or a constructor token.
-   * @param options - Options for the registration. If not specified, the lifetime of the registration will be `Lifetime.Transient`. @see RegistrationOptions
-   * @returns The container used for the registration
-   */
-
-  /**
    * Resets the container by clearing all registrations and disposing all scopes.
    * This method is useful for testing, as it allows you to clear out all registrations
    * and scopes, so you can start from a clean slate.
@@ -58,8 +42,6 @@ export interface IContainerClear extends AsyncDisposable {
    * NOTE: don't clean child containers
    */
   dispose(): Promise<void>;
-
-  //#endregion Register
 
   /**
    * Removes all registrations that match the predicate from the container.
@@ -98,18 +80,50 @@ export interface IContainerCreate {
 }
 
 export interface IContainerRegistration {
+  /**
+   * Registers a class as a scoped in the container.
+   * @param target - The class to register.
+   * @param injections - An array of tokens to inject into the class constructor.
+   * @returns The container used for the registration.
+   */
   addScoped<T>(
     target: ConstructorType<T>,
     injections?: Array<InjectionToken>,
   ): IContainer;
+  /**
+   * Registers a class as a singleton in the container.
+   * @param target - The class constructor to register.
+   * @param injections - Optional tokens to inject into the class constructor.
+   * @returns The container instance used for registration.
+   */
   addSingleton<T>(
     target: ConstructorType<T>,
     injections?: Array<InjectionToken>,
   ): IContainer;
+  /**
+   * Registers a class as a transient in the container.
+   * @param target - The class constructor to register.
+   * @param injections - Optional tokens to inject into the class constructor.
+   * @returns The container instance used for registration.
+   */
   addTransient<T>(
     target: ConstructorType<T>,
     injections?: Array<InjectionToken>,
   ): IContainer;
+
+  /**
+   * Gets the registration for the specified token.
+   * @param token - The token to get the registration for.
+   * @returns The registration or undefined if not found.
+   */
+  get<T>(token: InjectionToken<T>): Registration<T> | undefined;
+
+  /**
+   * Checks if a registration exists for the specified token.
+   * @param token - The token to check for.
+   * @returns `true` if a registration exists, `false` otherwise.
+   */
+  has<T>(token: InjectionToken<T>): boolean;
 
   register<T>(
     token: InjectionToken<T>,
@@ -210,6 +224,17 @@ export interface IContainerRegistration {
    * @returns The container used for the registration.
    */
   registerValue<T>(token: InjectionToken<T>, value: T): IContainer;
+
+  /**
+   * Removes a registration from the container.
+   * @param token - The token to remove the registration from.
+   * @param registration - The registration to remove.
+   * @returns The container used for the removal.
+   */
+  remove<T>(
+    token: InjectionToken<T>,
+    registration: Registration<T>,
+  ): Promise<IContainer>;
 }
 
 export interface IContainerResolve {

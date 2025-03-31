@@ -990,8 +990,6 @@ describe("Dymexjs_DI", () => {
 
         assert.throws(() => container.resolve("test2"), TokenNotFoundError);
         assert.ok(container2.resolve("test2") instanceof Test2);
-
-        
       });
     });
   });
