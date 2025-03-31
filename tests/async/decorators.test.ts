@@ -198,10 +198,7 @@ describe("Dymexjs_DI", () => {
               }
             }
             const scope = container.createScope();
-            const testB = await scope.resolveWithArgsAsync(TestB, [
-              "test",
-              1,
-            ]);
+            const testB = await scope.resolveWithArgsAsync(TestB, ["test", 1]);
             assert.ok(testB instanceof TestB);
             assert.strictEqual(testB.hello, "test");
             assert.strictEqual(testB.num, 1);

@@ -65,17 +65,14 @@ describe("Dymexjs_DI ", () => {
         );
       });
       test("InjectAll", () => {
-        assert.throws(
-          () => {
-              //@ts-expect-error  This should throw because the decorator is invalid here
-              @InjectAll()
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            class Test {
-              prop = 1;
-            }
-          },
-          InvalidDecoratorError,
-        );
+        assert.throws(() => {
+          //@ts-expect-error  This should throw because the decorator is invalid here
+          @InjectAll()
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          class Test {
+            prop = 1;
+          }
+        }, InvalidDecoratorError);
       });
     });
     describe("ServiceMap", () => {
